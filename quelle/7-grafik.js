@@ -614,7 +614,13 @@ const Grafik = (() => {
       c.globalAlpha = a;
       c.font = `${groesse}px 'Press Start 2P', monospace`;
       c.textAlign = 'center'; c.textBaseline = 'middle';
-      const x = Math.min(W - groesse * 4, Math.max(groesse * 4, sx(t.x))), y = Math.max(groesse * 3, sy(t.y + hoch));
+      let y = Math.max(groesse * 3, sy(t.y + hoch));
+      if (t.folgt && l) {
+        // immer knapp über Kalle, egal wie groß er gerade gezeichnet wird
+        const kalle = Math.max(K.KRABBE_BREITE * kam.z, K.KRABBE_MIN_PIXEL * dpr);
+        y = Math.max(groesse * 3, sy(l.y) - kalle * 0.95 - groesse * 0.6 - t.alt * 12 * dpr);
+      }
+      const x = Math.min(W - groesse * 4, Math.max(groesse * 4, sx(t.x)));
       c.lineWidth = groesse * 0.35; c.strokeStyle = '#10243a'; c.lineJoin = 'round';
       c.strokeText(t.inhalt, x, y);
       c.fillStyle = t.farbe;
