@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sonnenrutsch – Pixelhafen</title>
+<meta name="description" content="Kalle die Krabbe rutscht über Dünen, Inseln und Klippen und fliegt über die Hügelkuppen – bevor die Sonne untergeht. Ein-Tasten-Spiel, 12 Strecken. Kostenlos, ohne Anmeldung, ohne Werbung.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#10243A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sonnenrutsch">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+%%BASIS_CSS%%
+
+  /* ---------- Anzeige im Spiel ---------- */
+  #hud {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .hudblock {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 520px;
+    display: grid;
+    gap: 6px;
+    padding: 7px 10px 8px;
+    background: rgba(16, 36, 58, 0.8);
+    border: 2px solid rgba(255, 244, 220, 0.3);
+    border-radius: 12px;
+  }
+  .hudzeile { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; }
+  .hudzeile .ico { width: 22px; height: 22px; display: grid; place-items: center; }
+  .hudzeile b { font: 11px/1 var(--retro); color: var(--gelb); min-width: 44px; text-align: right; font-weight: 400; }
+  .balken { position: relative; height: 12px; border-radius: 6px; background: rgba(255, 244, 220, 0.16); overflow: visible; }
+  .balken > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+  #tagFuellung { width: 100%; background: linear-gradient(90deg, #ff6a4a, #ffb259 45%, #ffe27a); }
+  #wegFuellung { width: 0; background: var(--tuerkis); }
+  #wegKrabbe { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #e8503a; border: 2px solid #3a1418; }
+  #wegZiel { position: absolute; right: -4px; top: -6px; width: 10px; height: 22px; }
+  #hudTag.knapp b { color: #ff9a7a; }
+  #hudTag.knapp #tagFuellung { animation: puls 0.8s ease-in-out infinite; }
+  @keyframes puls { 50% { filter: brightness(1.5); } }
+  #hudName { font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hudName span { color: var(--gelb); font: 10px/1 var(--retro); margin-right: 6px; }
+  .hudrechts { display: flex; gap: 6px; margin-left: auto; }
+  .rund {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; padding: 0;
+    color: var(--text); cursor: pointer;
+    background: rgba(16, 36, 58, 0.82);
+    border: 2px solid rgba(255, 244, 220, 0.35);
+    border-radius: 12px;
+    pointer-events: auto; touch-action: manipulation;
+  }
+  .rund:hover { background: rgba(31, 64, 102, 0.95); }
+  .rund svg { width: 18px; height: 18px; }
+  :root:not([data-zustand="bereit"]):not([data-zustand="lauf"]):not([data-zustand="ende"]) #hud { visibility: hidden; }
+
+  /* Kette perfekter Landungen */
+  #kette { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 4px 10px; color: var(--auf-gelb); background: var(--gelb); border-radius: 8px; font: 10px/1.6 var(--retro); pointer-events: none; }
+
+  /* Erklärung vor dem Start, direkt im Spiel */
+  #erklaerung {
+    position: absolute; left: 50%; top: 54%;
+    z-index: 2;
+    width: min(440px, calc(100% - 24px));
+    transform: translate(-50%, -50%);
+    padding: 14px 16px;
+    background: rgba(16, 36, 58, 0.88);
+    border: 3px solid var(--gelb);
+    border-radius: 14px;
+    pointer-events: none;
+    text-align: center;
+  }
+  #erklaerung h2 { font: 12px/1.6 var(--retro); color: var(--gelb); }
+  #erklaerung ul { list-style: none; margin: 10px 0 8px; padding: 0; display: grid; gap: 6px; text-align: left; }
+  #erklaerung li { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 8px; font-size: 15px; line-height: 1.3; }
+  #erklaerung li i { display: grid; place-items: center; width: 34px; height: 30px; border-radius: 8px; background: var(--surface-2); font-style: normal; font: 9px/1 var(--retro); color: var(--gelb); }
+  #erklaerung .los { margin: 8px 0 0; font: 11px/1.6 var(--retro); color: var(--text); animation: puls 1.2s ease-in-out infinite; }
+  :root:not([data-zustand="bereit"]) #erklaerung { display: none; }
+
+  #hinweis {
+    position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 2;
+    transform: translateX(-50%);
+    width: max-content; max-width: calc(100% - 24px);
+    padding: 8px 14px;
+    color: var(--text);
+    background: rgba(16, 36, 58, 0.86);
+    border: 2px solid var(--tuerkis);
+    border-radius: 12px;
+    font: 600 16px/1.35 var(--body);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .nurTouch { display: none; }
+  .touch .nurTouch { display: inline; }
+  .touch .nurMaus { display: none; }
+
+  #startKrabbe { display: block; width: 176px; height: 144px; margin: 6px auto 0; }
+  .gebiet { --g: var(--tuerkis); }
+  @media (min-width: 561px) { .karten { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .karte .best { color: var(--muted); font: 600 12px/1.2 var(--body); }
+
+  @media (max-width: 520px) {
+    #hud { top: 6px; left: 6px; right: 6px; gap: 6px; }
+    .hudblock { padding: 6px 8px; gap: 5px; }
+    .hudzeile { grid-template-columns: 18px 1fr auto; gap: 6px; }
+    .hudzeile .ico { width: 18px; height: 18px; }
+    .hudzeile b { font-size: 9px; min-width: 36px; }
+    .rund { width: 40px; height: 40px; }
+    .hudrechts { flex-direction: column; gap: 4px; }
+    #kette { top: 84px; }
+    #erklaerung li { font-size: 14px; }
+    #hinweis { font-size: 15px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #startKrabbe { width: 92px; height: 75px; margin-top: 0; }
+    .unterzeile { margin-top: 4px; font-size: 15px; }
+    h1 { font-size: 18px; }
+    .hudblock { max-width: 380px; padding: 5px 8px; gap: 4px; }
+    #hudName { font-size: 12px; }
+    #erklaerung { top: 58%; padding: 10px 14px; }
+    #erklaerung ul { margin: 6px 0 4px; gap: 4px; }
+    #erklaerung li { font-size: 14px; }
+    #kette { top: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 11 11"><path fill="currentColor" d="M5 0h1v2H5zM3 2h5v1H3zM5 3h1v5H5zM1 6h1v1H1zM9 6h1v1H9zM1 7h2v1H1zM8 7h2v1H8zM2 8h3v1H2zM6 8h3v1H6zM3 9h5v1H3z"/></symbol>
+  <symbol id="schloss" viewBox="0 0 16 16"><path fill="currentColor" d="M5 2h6v1H5zM4 3h1v4H4zM11 3h1v4h-1zM3 7h10v7H3zM7 9h2v3H7z"/></symbol>
+  <symbol id="sonne" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5.5" fill="#ffd35a" stroke="#c9962a" stroke-width="1.2"/><g stroke="#ffd35a" stroke-width="2" stroke-linecap="round"><path d="M11 1.5v2.5M11 18v2.5M1.5 11H4M18 11h2.5M4.3 4.3l1.8 1.8M15.9 15.9l1.8 1.8M4.3 17.7l1.8-1.8M15.9 6.1l1.8-1.8"/></g></symbol>
+  <symbol id="flagge" viewBox="0 0 22 22"><path d="M5 2v19" stroke="#fff4dc" stroke-width="2" stroke-linecap="round"/><path d="M6 3h12l-3 4 3 4H6z" fill="#ff805b" stroke="#10243a" stroke-width="1"/></symbol>
+</svg>
+
+<div id="app">
+  <main id="buehne">
+    <canvas id="bild" tabindex="0" role="img" aria-label="Spielfeld von Sonnenrutsch: Kalle die Krabbe rutscht über weiche Hügel an der Küste. Gedrückt halten macht Kalle schwer, loslassen lässt ihn über die Kuppen fliegen. Leertaste, Maus oder Finger."></canvas>
+
+    <div id="hud">
+      <div class="hudblock">
+        <div id="hudName"><span id="hudNr">1</span><em id="hudTitel" style="font-style:normal"></em></div>
+        <div class="hudzeile" id="hudTag" title="Tageslicht">
+          <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#sonne"/></svg></span>
+          <div class="balken" role="meter" aria-label="Tageslicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="tagBalken"><i id="tagFuellung"></i></div>
+          <b id="tagText">0:00</b>
+        </div>
+        <div class="hudzeile" id="hudWeg" title="Strecke bis zum Ziel">
+          <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#flagge"/></svg></span>
+          <div class="balken" role="meter" aria-label="Strecke" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wegBalken"><i id="wegFuellung"></i><span id="wegKrabbe"></span></div>
+          <b id="wegText">0 %</b>
+        </div>
+      </div>
+      <div class="hudrechts">
+        <button class="rund" id="neuKnopfHud" type="button" aria-label="Strecke neu starten (R)">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2h6v1H5zM3 3h2v1H3zM11 3h2v1h-2zM2 4h1v2H2zM13 4h1v1h-1zM2 6h1v4H2zM2 10h1v2H2zM3 12h2v1H3zM5 13h6v1H5zM11 12h2v1h-2zM13 10h1v2h-1zM10 5h4v1h-4zM13 2h1v3h-1z"/></svg>
+        </button>
+        <button class="rund" id="pauseKnopf" type="button" aria-label="Pause (P)">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="kette" hidden></div>
+
+    <div id="erklaerung" aria-live="polite">
+      <h2 id="erklTitel">LERNSTRECKE</h2>
+      <ul id="erklListe">
+        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
+        <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
+        <li><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
+      </ul>
+      <p class="los"><span class="nurMaus">Leertaste oder Maus halten</span><span class="nurTouch">Bildschirm gedrückt halten</span> zum Losrutschen</p>
+    </div>
+
+    <p id="hinweis" role="status" aria-live="polite" hidden></p>
+  </main>
+</div>
+<p id="ansage" class="sr" aria-live="polite"></p>
+
+<div id="fenster">
+  <div class="tafel" role="dialog" aria-modal="true" aria-labelledby="fensterTitel">
+
+    <section id="fStart">
+      <p class="marke"><svg aria-hidden="true"><use href="#logo"/></svg>PIXELHAFEN</p>
+      <h1 data-titel>SONNEN-<br>RUTSCH</h1>
+      <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
+      <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
+      <div class="knoepfe">
+        <button class="btn main" id="spielenKnopf" type="button">Spielen</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="krabbeWahlKnopf" type="button">Krabbe wählen</button>
+          <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
+        </div>
+        <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
+      </div>
+    </section>
+
+    <section id="fKrabben" hidden>
+      <h2 data-titel>Krabbe wählen</h2>
+      <p class="hinweistext">Alle Krabben rutschen und fliegen gleich. Sie sehen nur anders aus.</p>
+      <div class="krabbenliste" id="krabbenListe"></div>
+      <div class="knoepfe"><button class="btn main" id="krabbenFertig" type="button">Fertig</button></div>
+    </section>
+
+    <section id="fLevel" hidden>
+      <div class="zeile zurueck">
+        <h2 data-titel>Strecke wählen</h2>
+        <button class="btn klein" id="levelZurueck" type="button">Zurück</button>
+      </div>
+      <div id="gebietListe"></div>
+    </section>
+
+    <section id="fPause" hidden>
+      <h2 data-titel>Kurze Pause</h2>
+      <p class="hinweistext">Die Sonne wartet, bis du weiterspielst.</p>
+      <div class="knoepfe">
+        <button class="btn main" id="weiterKnopf" type="button">Weiter</button>
+        <button class="btn klein" id="neuKnopf" type="button">Neu starten</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="pauseLevelKnopf" type="button">Streckenwahl</button>
+          <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="fErfolg" hidden>
+      <h2 data-titel id="erfolgTitel">Geschafft!</h2>
+      <canvas id="erfolgKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="erfolgSpruch"></p>
+      <div class="sternreihe" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
+      <p class="sr" id="sterneText"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Zeit</dt><dd id="eZeit">0</dd></div>
+        <div><dt>Tageslicht übrig</dt><dd id="eRest">0</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="ePerfekt">0</dd></div>
+        <div><dt>Weitester Flug</dt><dd id="eWeit">0</dd></div>
+        <div><dt>Bestzeit</dt><dd id="eBest">0</dd></div>
+      </dl>
+      <p class="hervor" id="neuBest" hidden>NEUE BESTZEIT!</p>
+      <p class="hinweistext" id="sternInfo"></p>
+      <div class="knoepfe">
+        <button class="btn main" id="weiterLevelKnopf" type="button">Nächste Strecke</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="nochmalErfolgKnopf" type="button">Noch einmal</button>
+          <button class="btn klein" id="erfolgLevelKnopf" type="button">Streckenwahl</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="fNacht" hidden>
+      <h2 data-titel>Die Sonne ist weg!</h2>
+      <canvas id="nachtKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="nachtSpruch"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Geschafft</dt><dd id="nAnteil">0 %</dd></div>
+        <div><dt>Fehlten noch</dt><dd id="nRest">0 m</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="nPerfekt">0</dd></div>
+        <div><dt>Bisher am weitesten</dt><dd id="nBest">0 %</dd></div>
+      </dl>
+      <p class="hinweistext" id="nachtTipp"></p>
+      <div class="knoepfe">
+        <button class="btn main" id="nochmalKnopf" type="button">Sofort nochmal</button>
+        <button class="btn klein" id="nachtLevelKnopf" type="button">Streckenwahl</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+%%SPIEL%%
+</script>
+</body>
+</html>

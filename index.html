@@ -1,0 +1,2669 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sonnenrutsch – Pixelhafen</title>
+<meta name="description" content="Kalle die Krabbe rutscht über Dünen, Inseln und Klippen und fliegt über die Hügelkuppen – bevor die Sonne untergeht. Ein-Tasten-Spiel, 12 Strecken. Kostenlos, ohne Anmeldung, ohne Werbung.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#10243A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sonnenrutsch">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+
+  /* Schrift "Press Start 2P", Copyright 2012 The Press Start 2P Project Authors,
+     SIL Open Font License 1.1 (https://openfontlicense.org). Sie steckt direkt in dieser
+     Datei, damit das Spiel auch offline richtig aussieht. */
+  @font-face {
+    font-family: 'Press Start 2P';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(data:font/woff2;base64,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) format('woff2');
+  }
+
+  /* Pixelhafen-Farben: Marineblau, Türkis, Sonnengelb, Korallorange, Creme */
+  :root {
+    color-scheme: dark;
+    --bg: #10243A;
+    --surface: #16314F;
+    --surface-2: #1F4066;
+    --line: #2F5A85;
+    --text: #FFF4DC;
+    --muted: #B5CBE0;
+    --gelb: #FFD35A;
+    --gelb-kante: #C9962A;
+    --koralle: #FF805B;
+    --tuerkis: #24D6CD;
+    --violett: #B58CFF;
+    --auf-gelb: #10243A;
+    --retro: 'Press Start 2P', 'Courier New', monospace;
+    --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { height: 100%; background: var(--bg); }
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: var(--text);
+    background: var(--bg);
+    font: 16px/1.5 var(--body);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible { outline: 3px solid var(--gelb); outline-offset: 3px; border-radius: 6px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  #app {
+    position: fixed;
+    inset: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background: var(--bg);
+  }
+  #buehne {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Nur hier: kein Scrollen, kein Zoomen beim Ziehen */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  canvas#bild { display: block; width: 100%; height: 100%; cursor: pointer; }
+  canvas#bild:focus-visible { outline: none; }
+
+  /* ---------- Fenster ---------- */
+  #fenster {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    overflow-y: auto;
+    background: rgba(8, 20, 34, 0.55);
+    touch-action: manipulation;
+  }
+  .tafel {
+    width: min(400px, 100%);
+    margin: auto;
+    padding: 22px;
+    background: var(--surface);
+    border: 3px solid var(--bg);
+    border-radius: 14px;
+    box-shadow: 0 0 0 3px var(--gelb), 0 18px 44px rgba(0, 0, 0, 0.55);
+  }
+  .tafel.breit { width: min(760px, 100%); }
+  .marke { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; color: var(--muted); font: 9px/1.5 var(--retro); }
+  .marke svg { width: 20px; height: 20px; flex: none; color: var(--gelb); }
+  #startKrabbe { display: block; width: 176px; height: 144px; margin: 6px auto 0; }
+  h1, h2, h3 { margin: 0; font-weight: 400; }
+  h1 { font: 400 clamp(19px, 6.4vw, 26px)/1.35 var(--retro); color: var(--gelb); text-shadow: 3px 3px 0 var(--koralle), 5px 5px 0 var(--bg); text-align: center; }
+  h2 { font: 400 clamp(14px, 4.4vw, 17px)/1.5 var(--retro); }
+  h3 { font: 400 11px/1.5 var(--retro); }
+  .unterzeile { margin: 10px 0 0; font-size: 17px; font-weight: 600; text-align: center; }
+  .spruch { margin: 10px 0 0; color: var(--tuerkis); font-size: 16px; font-style: italic; }
+  .knoepfe { display: grid; gap: 10px; margin-top: 18px; }
+  .knoepfe.zwei { grid-template-columns: 1fr 1fr; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 10px 16px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 4px 0 var(--bg);
+    font: 600 16px/1.3 var(--body);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--bg); }
+  .btn.main {
+    min-height: 56px;
+    color: var(--auf-gelb);
+    background: var(--gelb);
+    border-color: var(--bg);
+    box-shadow: 0 4px 0 var(--gelb-kante), 0 4px 0 2px var(--bg);
+    font: 400 15px/1.3 var(--retro);
+  }
+  .btn.main:active { box-shadow: 0 2px 0 var(--gelb-kante); }
+  .btn.klein { min-height: 44px; font-size: 15px; }
+  .zeile { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  .zurueck { margin-bottom: 12px; }
+
+  /* Levelauswahl */
+  .gebiet { margin-top: 16px; padding: 12px; border-radius: 12px; background: var(--surface-2); border-left: 6px solid var(--g, var(--tuerkis)); }
+  .gebiet h3 { color: var(--g, var(--tuerkis)); }
+  .gebiet p { margin: 4px 0 10px; color: var(--muted); font-size: 14px; }
+  .karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+  @media (max-width: 560px) { .karten { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .karte {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: 6px;
+    color: var(--text);
+    text-align: left;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    font: 600 13px/1.25 var(--body);
+    touch-action: manipulation;
+  }
+  .karte:hover:not(:disabled) { border-color: var(--gelb); }
+  .karte canvas { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; display: block; }
+  .karte .nr { font: 10px/1.4 var(--retro); color: var(--gelb); }
+  .karte .sterne { color: var(--gelb); font-size: 15px; letter-spacing: 2px; }
+  .karte .sterne i { color: rgba(255, 244, 220, 0.25); font-style: normal; }
+  .karte:disabled { cursor: not-allowed; }
+  .karte:disabled .sterne, .karte:disabled .nr { opacity: 0.6; }
+  .schloss { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 30px; height: 30px; background: rgba(16, 36, 58, 0.9); border: 2px solid var(--text); border-radius: 8px; }
+  .schloss svg { width: 14px; height: 14px; }
+
+  /* Krabbenwahl */
+  .krabbenliste { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 14px; }
+  .krabbenkarte {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    font: 600 14px/1.3 var(--body);
+    touch-action: manipulation;
+  }
+  .krabbenkarte canvas { width: 88px; height: 72px; }
+  .krabbenkarte small { color: var(--muted); font-weight: 400; font-size: 13px; text-align: center; }
+  .krabbenkarte[aria-pressed="true"] { border-color: var(--gelb); box-shadow: 0 0 0 2px var(--gelb); }
+  .hinweistext { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+
+  /* Ergebnis */
+  .sternreihe { display: flex; justify-content: center; gap: 10px; margin: 14px 0 4px; font-size: 44px; line-height: 1; }
+  .sternreihe span { color: rgba(255, 244, 220, 0.18); transform: scale(0.6); transition: transform 0.25s cubic-bezier(.3, 1.6, .5, 1), color 0.2s; }
+  .sternreihe span.an { color: var(--gelb); transform: scale(1); text-shadow: 2px 2px 0 var(--koralle); }
+  .zahlen { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; }
+  .zahlen div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .zahlen dt { color: var(--muted); }
+  .zahlen dd { margin: 0; font: 13px/1.4 var(--retro); }
+  .zahlen .gross dd { color: var(--gelb); font-size: 18px; }
+  .hervor { margin: 12px 0 0; padding: 8px 10px; color: var(--auf-gelb); background: var(--gelb); border-radius: 8px; font: 11px/1.6 var(--retro); text-align: center; }
+  #erfolgKrabbe, #nachtKrabbe { display: block; width: 110px; height: 90px; margin: 4px auto 0; }
+
+  @media (orientation: landscape) and (max-height: 560px) {
+    .tafel { width: min(640px, 100%); padding: 14px 18px; }
+    .marke { display: none; }
+    #startKrabbe { width: 110px; height: 90px; }
+    .knoepfe { grid-template-columns: 1fr 1fr; margin-top: 12px; }
+    #erfolgKrabbe, #nachtKrabbe { width: 80px; height: 66px; }
+    .sternreihe { font-size: 34px; margin-top: 6px; }
+    .rund { width: 40px; height: 40px; }
+  }
+  @media (max-width: 420px) {
+    .rund { width: 40px; height: 40px; }
+    .tafel { padding: 18px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn:active { transform: none; }
+    .sternreihe span { transition: none; }
+  }
+
+  /* ---------- Anzeige im Spiel ---------- */
+  #hud {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .hudblock {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 520px;
+    display: grid;
+    gap: 6px;
+    padding: 7px 10px 8px;
+    background: rgba(16, 36, 58, 0.8);
+    border: 2px solid rgba(255, 244, 220, 0.3);
+    border-radius: 12px;
+  }
+  .hudzeile { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; }
+  .hudzeile .ico { width: 22px; height: 22px; display: grid; place-items: center; }
+  .hudzeile b { font: 11px/1 var(--retro); color: var(--gelb); min-width: 44px; text-align: right; font-weight: 400; }
+  .balken { position: relative; height: 12px; border-radius: 6px; background: rgba(255, 244, 220, 0.16); overflow: visible; }
+  .balken > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+  #tagFuellung { width: 100%; background: linear-gradient(90deg, #ff6a4a, #ffb259 45%, #ffe27a); }
+  #wegFuellung { width: 0; background: var(--tuerkis); }
+  #wegKrabbe { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #e8503a; border: 2px solid #3a1418; }
+  #wegZiel { position: absolute; right: -4px; top: -6px; width: 10px; height: 22px; }
+  #hudTag.knapp b { color: #ff9a7a; }
+  #hudTag.knapp #tagFuellung { animation: puls 0.8s ease-in-out infinite; }
+  @keyframes puls { 50% { filter: brightness(1.5); } }
+  #hudName { font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hudName span { color: var(--gelb); font: 10px/1 var(--retro); margin-right: 6px; }
+  .hudrechts { display: flex; gap: 6px; margin-left: auto; }
+  .rund {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; padding: 0;
+    color: var(--text); cursor: pointer;
+    background: rgba(16, 36, 58, 0.82);
+    border: 2px solid rgba(255, 244, 220, 0.35);
+    border-radius: 12px;
+    pointer-events: auto; touch-action: manipulation;
+  }
+  .rund:hover { background: rgba(31, 64, 102, 0.95); }
+  .rund svg { width: 18px; height: 18px; }
+  :root:not([data-zustand="bereit"]):not([data-zustand="lauf"]):not([data-zustand="ende"]) #hud { visibility: hidden; }
+
+  /* Kette perfekter Landungen */
+  #kette { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 4px 10px; color: var(--auf-gelb); background: var(--gelb); border-radius: 8px; font: 10px/1.6 var(--retro); pointer-events: none; }
+
+  /* Erklärung vor dem Start, direkt im Spiel */
+  #erklaerung {
+    position: absolute; left: 50%; top: 54%;
+    z-index: 2;
+    width: min(440px, calc(100% - 24px));
+    transform: translate(-50%, -50%);
+    padding: 14px 16px;
+    background: rgba(16, 36, 58, 0.88);
+    border: 3px solid var(--gelb);
+    border-radius: 14px;
+    pointer-events: none;
+    text-align: center;
+  }
+  #erklaerung h2 { font: 12px/1.6 var(--retro); color: var(--gelb); }
+  #erklaerung ul { list-style: none; margin: 10px 0 8px; padding: 0; display: grid; gap: 6px; text-align: left; }
+  #erklaerung li { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 8px; font-size: 15px; line-height: 1.3; }
+  #erklaerung li i { display: grid; place-items: center; width: 34px; height: 30px; border-radius: 8px; background: var(--surface-2); font-style: normal; font: 9px/1 var(--retro); color: var(--gelb); }
+  #erklaerung .los { margin: 8px 0 0; font: 11px/1.6 var(--retro); color: var(--text); animation: puls 1.2s ease-in-out infinite; }
+  :root:not([data-zustand="bereit"]) #erklaerung { display: none; }
+
+  #hinweis {
+    position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 2;
+    transform: translateX(-50%);
+    width: max-content; max-width: calc(100% - 24px);
+    padding: 8px 14px;
+    color: var(--text);
+    background: rgba(16, 36, 58, 0.86);
+    border: 2px solid var(--tuerkis);
+    border-radius: 12px;
+    font: 600 16px/1.35 var(--body);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .nurTouch { display: none; }
+  .touch .nurTouch { display: inline; }
+  .touch .nurMaus { display: none; }
+
+  #startKrabbe { display: block; width: 176px; height: 144px; margin: 6px auto 0; }
+  .gebiet { --g: var(--tuerkis); }
+  @media (min-width: 561px) { .karten { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .karte .best { color: var(--muted); font: 600 12px/1.2 var(--body); }
+
+  @media (max-width: 520px) {
+    #hud { top: 6px; left: 6px; right: 6px; gap: 6px; }
+    .hudblock { padding: 6px 8px; gap: 5px; }
+    .hudzeile { grid-template-columns: 18px 1fr auto; gap: 6px; }
+    .hudzeile .ico { width: 18px; height: 18px; }
+    .hudzeile b { font-size: 9px; min-width: 36px; }
+    .rund { width: 40px; height: 40px; }
+    .hudrechts { flex-direction: column; gap: 4px; }
+    #kette { top: 84px; }
+    #erklaerung li { font-size: 14px; }
+    #hinweis { font-size: 15px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #startKrabbe { width: 92px; height: 75px; margin-top: 0; }
+    .unterzeile { margin-top: 4px; font-size: 15px; }
+    h1 { font-size: 18px; }
+    .hudblock { max-width: 380px; padding: 5px 8px; gap: 4px; }
+    #hudName { font-size: 12px; }
+    #erklaerung { top: 58%; padding: 10px 14px; }
+    #erklaerung ul { margin: 6px 0 4px; gap: 4px; }
+    #erklaerung li { font-size: 14px; }
+    #kette { top: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 11 11"><path fill="currentColor" d="M5 0h1v2H5zM3 2h5v1H3zM5 3h1v5H5zM1 6h1v1H1zM9 6h1v1H9zM1 7h2v1H1zM8 7h2v1H8zM2 8h3v1H2zM6 8h3v1H6zM3 9h5v1H3z"/></symbol>
+  <symbol id="schloss" viewBox="0 0 16 16"><path fill="currentColor" d="M5 2h6v1H5zM4 3h1v4H4zM11 3h1v4h-1zM3 7h10v7H3zM7 9h2v3H7z"/></symbol>
+  <symbol id="sonne" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5.5" fill="#ffd35a" stroke="#c9962a" stroke-width="1.2"/><g stroke="#ffd35a" stroke-width="2" stroke-linecap="round"><path d="M11 1.5v2.5M11 18v2.5M1.5 11H4M18 11h2.5M4.3 4.3l1.8 1.8M15.9 15.9l1.8 1.8M4.3 17.7l1.8-1.8M15.9 6.1l1.8-1.8"/></g></symbol>
+  <symbol id="flagge" viewBox="0 0 22 22"><path d="M5 2v19" stroke="#fff4dc" stroke-width="2" stroke-linecap="round"/><path d="M6 3h12l-3 4 3 4H6z" fill="#ff805b" stroke="#10243a" stroke-width="1"/></symbol>
+</svg>
+
+<div id="app">
+  <main id="buehne">
+    <canvas id="bild" tabindex="0" role="img" aria-label="Spielfeld von Sonnenrutsch: Kalle die Krabbe rutscht über weiche Hügel an der Küste. Gedrückt halten macht Kalle schwer, loslassen lässt ihn über die Kuppen fliegen. Leertaste, Maus oder Finger."></canvas>
+
+    <div id="hud">
+      <div class="hudblock">
+        <div id="hudName"><span id="hudNr">1</span><em id="hudTitel" style="font-style:normal"></em></div>
+        <div class="hudzeile" id="hudTag" title="Tageslicht">
+          <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#sonne"/></svg></span>
+          <div class="balken" role="meter" aria-label="Tageslicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="tagBalken"><i id="tagFuellung"></i></div>
+          <b id="tagText">0:00</b>
+        </div>
+        <div class="hudzeile" id="hudWeg" title="Strecke bis zum Ziel">
+          <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#flagge"/></svg></span>
+          <div class="balken" role="meter" aria-label="Strecke" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wegBalken"><i id="wegFuellung"></i><span id="wegKrabbe"></span></div>
+          <b id="wegText">0 %</b>
+        </div>
+      </div>
+      <div class="hudrechts">
+        <button class="rund" id="neuKnopfHud" type="button" aria-label="Strecke neu starten (R)">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2h6v1H5zM3 3h2v1H3zM11 3h2v1h-2zM2 4h1v2H2zM13 4h1v1h-1zM2 6h1v4H2zM2 10h1v2H2zM3 12h2v1H3zM5 13h6v1H5zM11 12h2v1h-2zM13 10h1v2h-1zM10 5h4v1h-4zM13 2h1v3h-1z"/></svg>
+        </button>
+        <button class="rund" id="pauseKnopf" type="button" aria-label="Pause (P)">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="kette" hidden></div>
+
+    <div id="erklaerung" aria-live="polite">
+      <h2 id="erklTitel">LERNSTRECKE</h2>
+      <ul id="erklListe">
+        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
+        <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
+        <li><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
+      </ul>
+      <p class="los"><span class="nurMaus">Leertaste oder Maus halten</span><span class="nurTouch">Bildschirm gedrückt halten</span> zum Losrutschen</p>
+    </div>
+
+    <p id="hinweis" role="status" aria-live="polite" hidden></p>
+  </main>
+</div>
+<p id="ansage" class="sr" aria-live="polite"></p>
+
+<div id="fenster">
+  <div class="tafel" role="dialog" aria-modal="true" aria-labelledby="fensterTitel">
+
+    <section id="fStart">
+      <p class="marke"><svg aria-hidden="true"><use href="#logo"/></svg>PIXELHAFEN</p>
+      <h1 data-titel>SONNEN-<br>RUTSCH</h1>
+      <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
+      <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
+      <div class="knoepfe">
+        <button class="btn main" id="spielenKnopf" type="button">Spielen</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="krabbeWahlKnopf" type="button">Krabbe wählen</button>
+          <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
+        </div>
+        <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
+      </div>
+    </section>
+
+    <section id="fKrabben" hidden>
+      <h2 data-titel>Krabbe wählen</h2>
+      <p class="hinweistext">Alle Krabben rutschen und fliegen gleich. Sie sehen nur anders aus.</p>
+      <div class="krabbenliste" id="krabbenListe"></div>
+      <div class="knoepfe"><button class="btn main" id="krabbenFertig" type="button">Fertig</button></div>
+    </section>
+
+    <section id="fLevel" hidden>
+      <div class="zeile zurueck">
+        <h2 data-titel>Strecke wählen</h2>
+        <button class="btn klein" id="levelZurueck" type="button">Zurück</button>
+      </div>
+      <div id="gebietListe"></div>
+    </section>
+
+    <section id="fPause" hidden>
+      <h2 data-titel>Kurze Pause</h2>
+      <p class="hinweistext">Die Sonne wartet, bis du weiterspielst.</p>
+      <div class="knoepfe">
+        <button class="btn main" id="weiterKnopf" type="button">Weiter</button>
+        <button class="btn klein" id="neuKnopf" type="button">Neu starten</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="pauseLevelKnopf" type="button">Streckenwahl</button>
+          <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="fErfolg" hidden>
+      <h2 data-titel id="erfolgTitel">Geschafft!</h2>
+      <canvas id="erfolgKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="erfolgSpruch"></p>
+      <div class="sternreihe" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
+      <p class="sr" id="sterneText"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Zeit</dt><dd id="eZeit">0</dd></div>
+        <div><dt>Tageslicht übrig</dt><dd id="eRest">0</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="ePerfekt">0</dd></div>
+        <div><dt>Weitester Flug</dt><dd id="eWeit">0</dd></div>
+        <div><dt>Bestzeit</dt><dd id="eBest">0</dd></div>
+      </dl>
+      <p class="hervor" id="neuBest" hidden>NEUE BESTZEIT!</p>
+      <p class="hinweistext" id="sternInfo"></p>
+      <div class="knoepfe">
+        <button class="btn main" id="weiterLevelKnopf" type="button">Nächste Strecke</button>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="nochmalErfolgKnopf" type="button">Noch einmal</button>
+          <button class="btn klein" id="erfolgLevelKnopf" type="button">Streckenwahl</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="fNacht" hidden>
+      <h2 data-titel>Die Sonne ist weg!</h2>
+      <canvas id="nachtKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="nachtSpruch"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Geschafft</dt><dd id="nAnteil">0 %</dd></div>
+        <div><dt>Fehlten noch</dt><dd id="nRest">0 m</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="nPerfekt">0</dd></div>
+        <div><dt>Bisher am weitesten</dt><dd id="nBest">0 %</dd></div>
+      </dl>
+      <p class="hinweistext" id="nachtTipp"></p>
+      <div class="knoepfe">
+        <button class="btn main" id="nochmalKnopf" type="button">Sofort nochmal</button>
+        <button class="btn klein" id="nachtLevelKnopf" type="button">Streckenwahl</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// 1 · EINSTELLUNGEN
+// Alle Werte für Physik und Spielgefühl an einer Stelle.
+// Welt in Metern, y zeigt nach OBEN. Zeit in Sekunden.
+// ===================================================================
+
+const K = {
+  SCHRITT: 1 / 240,         // feste Physik-Schrittweite (unabhängig von der Bildrate)
+  MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
+
+  G: 24,                    // Grundschwerkraft
+  SCHWER_BODEN: 2.3,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
+  SCHWER_LUFT: 2.7,         // gedrückt in der Luft: Sinkflug
+  LEICHT_LUFT: 0.68,        // losgelassen in der Luft: sanfter, weiter Flug
+
+  REIBUNG: 0.6,             // gleichmäßige Bremsung am Boden (m/s²)
+  LUFTWIDERSTAND: 0.0016,   // Bremsung ~ v² am Boden
+  LUFTWIDERSTAND_FLUG: 0.0011, // Bremsung ~ v² in der Luft
+  V_MIN: 6,                 // so schnell krabbelt Kalle mindestens (nie Feststecken)
+  V_MAX: 70,                // Höchstgeschwindigkeit
+  V_START: 6,
+
+  // Landungen
+  PERFEKT_WINKEL: 9,        // Grad zwischen Flugrichtung und Hang: darunter „perfekt“
+  GUT_WINKEL: 24,           // darunter verliert Kalle nur den Anteil quer zum Hang
+  PERFEKT_MIN_GEFAELLE: 0.18, // perfekt nur auf einem echt abfallenden Hang
+  PERFEKT_MIN_FLUGZEIT: 0.32, // kleine Hüpfer an der Kuppe zählen nicht
+  PERFEKT_BONUS: 0.05,      // +5 % Tempo …
+  KETTEN_BONUS: 0.012,      // … plus 1,2 % je perfekter Landung in Folge
+  KETTE_MAX: 5,
+  HART_FAKTOR: 0.78,        // harte Landung am Gegenhang: zusätzlicher Tempoverlust
+
+  ABHEBEN_SCHWELLE: 1.0,    // v²·Krümmung > g·cos·Schwelle → Kalle hebt ab
+
+  // Kamera
+  KAM_VORAUS: 0.30,         // Kalle steht bei 30 % der Bildbreite
+  KAM_BREITE_MIN: 58,       // so viele Meter sieht man mindestens nach vorn/hinten (Querformat)
+  KAM_BREITE_MIN_HOCH: 54,  // … hochkant
+  KAM_VORSCHAU: 1.1,        // Sekunden Vorschau bei der Breite (schneller = weiter sehen)
+  KAM_RAND_OBEN: 7,         // Meter Luft über Kalle
+  KAM_RAND_UNTEN: 4,
+  KAM_GLAETTE_ZOOM: 2.2,    // je größer, desto schneller folgt der Zoom
+  KAM_GLAETTE_Y: 4,
+
+  KRABBE_BREITE: 3.0,       // so breit wird Kalle gezeichnet (Meter)
+  KRABBE_MIN_PIXEL: 54,     // aber nie schmaler als so viele CSS-Pixel
+};
+
+// Mitwachsende Zufallszahlen (gleiche Saat → gleiche Strecke)
+function zufall(saat) {
+  let s = saat >>> 0;
+  return () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ===================================================================
+// 2 · STRECKEN
+// Das Gelände ist eine Kette aus Hoch- und Tiefpunkten. Dazwischen liegt
+// jeweils eine halbe Kosinuswelle: Das ergibt weiche, zusammenhängende
+// Hügel ohne Knick (Höhe und Steigung sind überall stetig). Weil das
+// Gelände eine Höhenfunktion y(x) ist, kann Kalle nie hindurchfallen:
+// Liegt er unter y(x), steht er auf dem Boden.
+// ===================================================================
+
+class Gelaende {
+  constructor(punkte) {
+    this.p = punkte;                 // [[x, y], …] streng aufsteigend in x
+    this.n = punkte.length;
+    this.i = 0;                      // zuletzt benutztes Teilstück (meist dasselbe)
+    let min = Infinity, max = -Infinity;
+    for (const [, y] of punkte) { min = Math.min(min, y); max = Math.max(max, y); }
+    this.min = min; this.max = max;
+    this.ende = punkte[punkte.length - 1][0];
+    this.anfang = punkte[0][0];
+  }
+  stueck(x) {
+    const p = this.p;
+    let i = this.i;
+    if (x < p[0][0]) return 0;
+    if (x >= p[this.n - 1][0]) return this.n - 2;
+    if (x >= p[i][0] && x < p[i + 1][0]) return i;
+    // Binärsuche
+    let lo = 0, hi = this.n - 2;
+    while (lo < hi) {
+      const m = (lo + hi + 1) >> 1;
+      if (p[m][0] <= x) lo = m; else hi = m - 1;
+    }
+    this.i = lo;
+    return lo;
+  }
+  // Höhe, Steigung dy/dx und zweite Ableitung an der Stelle x
+  hoehe(x) {
+    const i = this.stueck(x), a = this.p[i], b = this.p[i + 1];
+    const t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+    return a[1] + (b[1] - a[1]) * (1 - Math.cos(Math.PI * t)) / 2;
+  }
+  steigung(x) {
+    const i = this.stueck(x), a = this.p[i], b = this.p[i + 1];
+    const L = b[0] - a[0];
+    const t = (x - a[0]) / L;
+    if (t <= 0 || t >= 1) return 0;
+    return (b[1] - a[1]) * Math.PI / (2 * L) * Math.sin(Math.PI * t);
+  }
+  kruemmung2(x) {
+    const i = this.stueck(x), a = this.p[i], b = this.p[i + 1];
+    const L = b[0] - a[0];
+    const t = Math.max(0, Math.min(1, (x - a[0]) / L));
+    if (x < this.anfang || x > this.ende) return 0;
+    return (b[1] - a[1]) * Math.PI * Math.PI / (2 * L * L) * Math.cos(Math.PI * t);
+  }
+  // Tiefster und höchster Punkt im Bereich [x0, x1] (für die Kamera)
+  bereich(x0, x1) {
+    let lo = this.hoehe(x0), hi = lo;
+    const e = this.hoehe(x1); lo = Math.min(lo, e); hi = Math.max(hi, e);
+    for (const [x, y] of this.p) {
+      if (x < x0) continue;
+      if (x > x1) break;
+      lo = Math.min(lo, y); hi = Math.max(hi, y);
+    }
+    return [lo, hi];
+  }
+}
+
+// --- Gebiete: Aussehen kommt aus 7-grafik.js (THEMEN), hier nur Name und Text ---
+const GEBIETE = [
+  { name: 'Sanddünen', text: 'Weiche, lange Dünen. Hier lernt Kalle das Rutschen.', farbe: '#FFD35A' },
+  { name: 'Tropeninsel', text: 'Palmen, Lagune und steilere Hügel.', farbe: '#24D6CD' },
+  { name: 'Felsküste', text: 'Raue Klippen, große Abstände, unruhiger Rhythmus.', farbe: '#B5CBE0' },
+  { name: 'Korallenkap', text: 'Hohe Kämme bis zum Leuchtturm. Nur mit gutem Timing.', farbe: '#FF805B' },
+];
+
+// --- Streckenbauplan ---
+// laenge: Meter bis zum Ziel
+// L: halbe Hügelbreite (Abhang) am Anfang/Ende der Strecke, A: Höhenunterschied am Anfang/Ende
+// steil: Verhältnis Anstieg/Abhang (kleiner = kürzere, steilere Rampen)
+// wechsel: wie stark Breite und Höhe von Hügel zu Hügel schwanken (0..1)
+// buckel: Anteil kleiner Zwischenbuckel, über die man fliegen sollte
+// zeit: Tageslicht in Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
+//   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
+const STRECKEN = [
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 620, L: [26, 30], A: [7, 9], steil: [0.95, 0.85], wechsel: 0.1, buckel: 0, saat: 11, zeit: 40, sterne: [29.5, 19.5], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1000, L: [26, 34], A: [8, 12], steil: [0.9, 0.75], wechsel: 0.2, buckel: 0, saat: 21, zeit: 40, sterne: [33.7, 27.4] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1300, L: [28, 40], A: [9, 15], steil: [0.85, 0.7], wechsel: 0.3, buckel: 0.1, saat: 33, zeit: 54, sterne: [46.1, 38.2] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 1450, L: [30, 42], A: [10, 16], steil: [0.8, 0.65], wechsel: 0.3, buckel: 0.12, saat: 47, zeit: 55, sterne: [47.4, 39.7] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 1650, L: [28, 46], A: [10, 19], steil: [0.75, 0.6], wechsel: 0.35, buckel: 0.15, saat: 58, zeit: 71, sterne: [62.6, 54.2] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 1750, L: [32, 52], A: [11, 21], steil: [0.72, 0.55], wechsel: 0.4, buckel: 0.2, saat: 64, zeit: 72, sterne: [63.9, 55.7] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 1850, L: [30, 54], A: [12, 22], steil: [0.7, 0.55], wechsel: 0.45, buckel: 0.2, saat: 71, zeit: 73, sterne: [65.5, 58] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 1950, L: [34, 58], A: [12, 24], steil: [0.66, 0.5], wechsel: 0.5, buckel: 0.25, saat: 86, zeit: 76, sterne: [68.7, 61.5] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2050, L: [36, 62], A: [13, 26], steil: [0.62, 0.48], wechsel: 0.5, buckel: 0.28, saat: 93, zeit: 86, sterne: [77.3, 68.6] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2150, L: [36, 64], A: [14, 26], steil: [0.6, 0.46], wechsel: 0.55, buckel: 0.3, saat: 105, zeit: 84, sterne: [75.4, 66.8] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2250, L: [38, 68], A: [14, 28], steil: [0.58, 0.45], wechsel: 0.55, buckel: 0.32, saat: 117, zeit: 91, sterne: [82.6, 74.2] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 2450, L: [40, 72], A: [15, 30], steil: [0.55, 0.42], wechsel: 0.6, buckel: 0.35, saat: 125, zeit: 104, sterne: [95.1, 86.2] },
+];
+
+
+const mischen = (a, b, t) => a + (b - a) * t;
+
+// Baut aus dem Bauplan die Punktkette. Rückgabe: { gelaende, ziel, start, hinweise }
+function baueStrecke(def) {
+  const r = zufall(def.saat * 7919 + 13);
+  const pkt = [];
+  const START_Y = 22;
+  // Startplateau: Kalle sitzt oben auf der ersten Düne
+  pkt.push([-120, START_Y], [0, START_Y]);
+  let x = 0, y = START_Y;
+  let hoch = true;   // wir stehen gerade auf einem Hochpunkt
+  const grund = (xx) => 6 + 3 * Math.sin(xx / 260 + def.saat);   // grobe Talhöhe, wandert langsam
+
+  while (x < def.laenge - 60) {
+    const p = Math.min(1, x / def.laenge);
+    const w = () => 1 + def.wechsel * (r() * 2 - 1) * 0.5;
+    if (hoch) {
+      // Abhang hinunter ins Tal
+      const L = mischen(def.L[0], def.L[1], p) * w();
+      let A = mischen(def.A[0], def.A[1], p) * w();
+      A = Math.min(A, L * 0.9);   // nie steiler als etwa 55°
+      let ty = y - A;
+      ty = Math.max(grund(x) - 2, Math.min(ty, grund(x) + 4));
+      if (y - ty < 4) ty = y - 4;
+      x += L; y = ty;
+      pkt.push([x, y]);
+      hoch = false;
+    } else {
+      // Kleiner Zwischenbuckel: kurz, flach – wer gut fliegt, springt drüber
+      if (def.buckel && r() < def.buckel && x > 120) {
+        const L = mischen(def.L[0], def.L[1], p) * 0.38;
+        const hb = 2.5 + r() * 2;
+        x += L; pkt.push([x, y + hb]);
+        x += L; pkt.push([x, y + 0.2]);
+        y = y + 0.2;
+      }
+      // Rampe hinauf zur nächsten Kuppe (kürzer als der Abhang → Absprung)
+      const Ld = mischen(def.L[0], def.L[1], p) * w();
+      const L = Ld * mischen(def.steil[0], def.steil[1], p);
+      const A = Math.min(mischen(def.A[0], def.A[1], p) * w() * (0.8 + r() * 0.25), L * 0.9);
+      x += L; y = y + A;
+      pkt.push([x, y]);
+      hoch = true;
+    }
+  }
+  // Ins Ziel: ein letzter langer Abhang auf den flachen Strand
+  if (hoch) { x += 48; y = Math.min(y - 6, grund(x)); pkt.push([x, y]); }
+  const ziel = x + 30;
+  pkt.push([x + 600, y]);
+
+  // Hinweise der Lernstrecke an festen Stellen
+  const hinweise = [];
+  if (def.lern) {
+    const tal = pkt.filter((q, i) => i > 1 && i % 2 === 0);   // Täler
+    const kuppe = pkt.filter((q, i) => i > 1 && i % 2 === 1); // Kuppen
+    hinweise.push({ x: -10, bis: 6, text: 'Halten: Kalle macht sich schwer und rutscht bergab.', art: 'halten' });
+    if (tal[0]) hinweise.push({ x: tal[0][0] - 6, bis: tal[0][0] + 14, text: 'Vor dem Anstieg loslassen!', art: 'los' });
+    if (kuppe[0]) hinweise.push({ x: kuppe[0][0] + 2, bis: kuppe[0][0] + 40, text: 'In der Luft halten: Sinkflug auf den nächsten Abhang.', art: 'luft' });
+    if (kuppe[2]) hinweise.push({ x: kuppe[2][0] - 30, bis: kuppe[2][0] + 30, text: 'Lande flach auf dem Abhang: das gibt Schwung.', art: 'perfekt' });
+  }
+  return { gelaende: new Gelaende(pkt), ziel, start: { x: -6, y: START_Y }, hinweise };
+}
+
+// ===================================================================
+// 3 · PHYSIK
+// Ein Lauf über eine Strecke. Kalle ist entweder am Boden (bewegt sich
+// entlang des Hangs, Tempo v) oder in der Luft (freier Flug, vx/vy).
+//
+// Boden:  Beschleunigung entlang des Hangs = −g·sin(Neigung) − Reibung.
+//         Halten macht g größer: bergab schneller, bergauf langsamer.
+//         Abheben, sobald die Kuppe stärker abfällt, als die Schwerkraft
+//         Kalle herunterziehen kann: v²·Krümmung > g·cos(Neigung).
+//         Wer schwer bleibt, klebt also an der Kuppe; wer loslässt, fliegt.
+// Luft:   Schwerkraft leicht (losgelassen) oder stark (gehalten = Sinkflug).
+// Landen: Das Tempo längs des Hangs bleibt, der Anteil quer dazu geht
+//         verloren. Flache Landung auf einem Abhang = perfekt (+Bonus),
+//         Aufprall gegen einen Anstieg bremst zusätzlich.
+// Alles läuft in festen Schritten von 1/240 s. So verhält sich das Spiel
+// bei 30, 60 oder 144 Bildern pro Sekunde gleich.
+// ===================================================================
+
+class Lauf {
+  constructor(def) {
+    this.def = def;
+    const s = baueStrecke(def);
+    this.g = s.gelaende;
+    this.ziel = s.ziel;
+    this.hinweise = s.hinweise;
+    this.x = s.start.x;
+    this.y = this.g.hoehe(this.x);
+    this.v = 0;
+    this.vx = 0; this.vy = 0;
+    this.boden = true;
+    this.gestartet = false;
+    this.zeit = 0;                 // verstrichene Spielzeit
+    this.tag = def.zeit;           // Tageslicht gesamt
+    this.ergebnis = null;          // 'ziel' | 'nacht'
+    this.flugzeit = 0;
+    this.echterFlug = false;
+    this.abflugX = 0; this.abflugY = 0; this.abflugV = 0;
+    this.kette = 0;                // perfekte Landungen in Folge
+    this.halten = false;
+    this.ereignisse = [];          // für Grafik und Ton: { art, ... }
+    this.statistik = { perfekt: 0, gut: 0, hart: 0, fluege: 0, hoechster: 0, weitester: 0, vmax: 0, kette: 0 };
+    this.abflugX = 0;
+    this.hoechstImFlug = 0;
+    this.nachZiel = 0;             // Zeit seit Zieldurchlauf
+  }
+
+  get rest() { return Math.max(0, this.tag - this.zeit); }
+  get fortschritt() { return Math.max(0, Math.min(1, this.x / this.ziel)); }
+  get tempo() { return this.boden ? this.v : Math.hypot(this.vx, this.vy); }
+  // Richtung der Bewegung (Bogenmaß, 0 = nach rechts) – für die Grafik
+  get winkel() {
+    if (this.boden) return Math.atan(this.g.steigung(this.x));
+    return Math.atan2(this.vy, Math.max(0.1, this.vx));
+  }
+  hoeheUeberBoden() { return this.y - this.g.hoehe(this.x); }
+
+  starten() {
+    if (this.gestartet) return;
+    this.gestartet = true;
+    this.v = K.V_START;
+  }
+
+  // Ein fester Physikschritt
+  schritt(halten) {
+    const dt = K.SCHRITT;
+    this.halten = !!halten;
+    if (!this.gestartet) return;
+    if (!this.ergebnis) {
+      this.zeit += dt;
+      if (this.x >= this.ziel) { this.ergebnis = 'ziel'; this.ereignisse.push({ art: 'ziel' }); }
+      else if (this.zeit >= this.tag) { this.zeit = this.tag; this.ergebnis = 'nacht'; this.ereignisse.push({ art: 'nacht' }); }
+    }
+    // Nach dem Ziel ausrollen, bei Nacht langsam stehen bleiben
+    const auslauf = !!this.ergebnis;
+    if (auslauf) { this.nachZiel += dt; this.halten = false; }
+    if (this.boden) this.bodenSchritt(dt, auslauf);
+    else this.luftSchritt(dt);
+    this.statistik.vmax = Math.max(this.statistik.vmax, this.tempo);
+  }
+
+  bodenSchritt(dt, auslauf) {
+    const s = this.g.steigung(this.x);
+    const n = Math.sqrt(1 + s * s);
+    const cos = 1 / n, sin = s / n;
+    const g = K.G * (this.halten ? K.SCHWER_BODEN : 1);
+    let a = -g * sin - K.REIBUNG - K.LUFTWIDERSTAND * this.v * this.v;
+    this.v += a * dt;
+    if (auslauf) {
+      this.v = Math.max(0, this.v - (this.ergebnis === 'nacht' ? 14 : 9) * dt);
+    } else {
+      this.v = Math.max(K.V_MIN, Math.min(K.V_MAX, this.v));
+    }
+    // Abheben an der Kuppe?
+    const y2 = this.g.kruemmung2(this.x);
+    const kruemmung = -y2 / (n * n * n);   // > 0 an Kuppen
+    if (kruemmung > 0 && this.v * this.v * kruemmung > g * cos * K.ABHEBEN_SCHWELLE && this.v > K.V_MIN + 0.5) {
+      this.boden = false;
+      this.vx = this.v * cos;
+      this.vy = this.v * sin;
+      this.flugzeit = 0;
+      this.echterFlug = false;   // erst ab spürbarer Höhe zählt es als Flug
+      this.abflugX = this.x;
+      this.abflugY = this.y;
+      this.abflugV = this.v;
+      this.hoechstImFlug = this.y;
+      this.luftSchritt(dt);
+      return;
+    }
+    this.x += this.v * cos * dt;
+    this.y = this.g.hoehe(this.x);
+  }
+
+  luftSchritt(dt) {
+    const g = K.G * (this.halten ? K.SCHWER_LUFT : K.LEICHT_LUFT);
+    const v = Math.hypot(this.vx, this.vy);
+    const w = K.LUFTWIDERSTAND_FLUG * v;
+    this.vx -= w * this.vx * dt;
+    this.vy -= (g + w * this.vy) * dt;
+    if (this.ergebnis) this.vx = Math.max(0, this.vx - 4 * dt);
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.flugzeit += dt;
+    this.hoechstImFlug = Math.max(this.hoechstImFlug, this.y);
+    const h = this.g.hoehe(this.x);
+    if (!this.echterFlug && (this.y - h > 0.35 || this.flugzeit > 0.2)) {
+      this.echterFlug = true;
+      this.statistik.fluege++;
+      this.ereignisse.push({ art: 'abflug', v: this.abflugV, x: this.abflugX, y: this.abflugY });
+    }
+    if (this.y <= h) this.landen(h);
+  }
+
+  // Landung: Geschwindigkeit in Hangrichtung zerlegen
+  landen(h) {
+    const s = this.g.steigung(this.x);
+    const n = Math.sqrt(1 + s * s);
+    const tx = 1 / n, ty = s / n;
+    const v = Math.hypot(this.vx, this.vy) || 1;
+    const vt = this.vx * tx + this.vy * ty;
+    const winkel = Math.acos(Math.max(-1, Math.min(1, vt / v))) * 180 / Math.PI;
+    let art, neu = Math.max(0, vt);
+    const st = this.statistik;
+    if (!this.echterFlug) {
+      // Nur kurz von der Kuppe abgehoben: still weiterrutschen, kein Ereignis
+      this.boden = true;
+      this.y = h;
+      this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+      return;
+    }
+    const weit = this.x - this.abflugX;
+    const hoch = this.hoechstImFlug - this.g.hoehe(this.abflugX);
+    if (winkel < K.PERFEKT_WINKEL && s < -K.PERFEKT_MIN_GEFAELLE && this.flugzeit > K.PERFEKT_MIN_FLUGZEIT) {
+      art = 'perfekt';
+      this.kette = Math.min(K.KETTE_MAX, this.kette + 1);
+      neu *= 1 + K.PERFEKT_BONUS + K.KETTEN_BONUS * (this.kette - 1);
+      st.perfekt++;
+      st.kette = Math.max(st.kette, this.kette);
+    } else if (winkel < K.GUT_WINKEL) {
+      art = 'gut';
+      if (this.flugzeit >= K.PERFEKT_MIN_FLUGZEIT) this.kette = 0;
+      st.gut++;
+    } else {
+      art = 'hart';
+      this.kette = 0;
+      // Je steiler gegen den Hang, desto mehr Bremsung – aber nie ganz stehen bleiben
+      const stoss = Math.min(1, (winkel - K.GUT_WINKEL) / 50);
+      neu *= K.HART_FAKTOR - 0.18 * stoss;
+      st.hart++;
+    }
+    if (this.flugzeit > 0.3) {
+      st.weitester = Math.max(st.weitester, weit);
+      st.hoechster = Math.max(st.hoechster, hoch);
+    }
+    this.boden = true;
+    this.y = h;
+    this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+    this.ereignisse.push({ art: 'landung', guete: art, winkel, v: this.v, verlust: v - this.v, x: this.x, y: h, kette: this.kette, flugzeit: this.flugzeit, weit, hoch });
+  }
+}
+
+// ===================================================================
+// BOT · spielt eine Strecke mit derselben Ein-Tasten-Eingabe wie ein Mensch.
+// Wird von den Tests benutzt (Schaffbarkeit, Zeitlimits) und im Spiel für
+// die Vorführung im Startbildschirm.
+// art: 'gut'   – schaut voraus, wo er landet, und entscheidet dann
+//      'mittel'– wie 'gut', aber mit Reaktionszeit und kleinen Fehlern
+//      'schnell' – sparsamer Rechner für die Vorführung im Menü
+//      'nie' / 'immer' – drückt nie bzw. immer
+// ===================================================================
+const Bot = (() => {
+  // Kopie des Laufs für die Vorschau (Gelände wird geteilt)
+  function kopie(l) {
+    const k = Object.create(Lauf.prototype);
+    Object.assign(k, l);
+    k.ereignisse = [];
+    k.statistik = Object.assign({}, l.statistik);
+    return k;
+  }
+  // Fliegt mit fester Haltung bis zur Landung; Ergebnis: Tempo danach
+  function landeTempo(l, halten, maxT = 6) {
+    const k = kopie(l);
+    let t = 0;
+    while (!k.boden && t < maxT) { k.schritt(halten); t += K.SCHRITT; }
+    // Kurz weiterrutschen, damit „schnell aber gegen den Hang“ nicht gewinnt
+    for (let i = 0; i < 24 && k.boden; i++) k.schritt(false);
+    return k.tempo + (k.x - l.x) * 0.002;
+  }
+  // Bodenregel des Bots: bergab halten, kurz vor dem Anstieg loslassen
+  function bodenRegel(l, vorlauf) {
+    const s = l.g.steigung(l.x);
+    const voraus = l.g.steigung(l.x + l.v * (0.08 + vorlauf));
+    return s < -0.02 && voraus < 0.05;
+  }
+  // Wie weit kommt Kalle in fester Zeit, wenn er jetzt hält / loslässt?
+  // (danach: in der Luft nicht halten, am Boden die Bodenregel)
+  function reichweite(l, halten, dauer = 2.2) {
+    const k = kopie(l);
+    let t = 0;
+    while (t < dauer) {
+      const h = !k.boden ? halten : bodenRegel(k, 0);
+      if (k.boden) halten = false;
+      k.schritt(h); t += K.SCHRITT;
+    }
+    return k.x + k.tempo * 0.6;
+  }
+  function neu(art, saat = 1) {
+    const r = zufall(saat);
+    const verzoegerung = art === 'mittel' ? Math.round(0.11 / K.SCHRITT) : 0;
+    const schlange = [];
+    let entscheidung = false, naechste = 0, schritte = 0;
+    const vorlauf = art === 'mittel' ? 0.05 : 0.0;
+    return {
+      art,
+      letzte: false,
+      // Liefert „gedrückt?“ für den nächsten Physikschritt
+      halten(l) {
+        schritte++;
+        if (art === 'nie') return false;
+        if (art === 'immer') return true;
+        if (schritte >= naechste) {
+          naechste = schritte + 6;   // alle 1/40 s neu nachdenken
+          if (l.boden) entscheidung = bodenRegel(l, vorlauf);
+          else if (art === 'schnell') entscheidung = landeTempo(l, true) > landeTempo(l, false) + 0.05;
+          else entscheidung = reichweite(l, true) > reichweite(l, false) + 0.05;
+          if (art === 'mittel' && r() < 0.06) entscheidung = !entscheidung;
+        }
+        let aus = entscheidung;
+        if (verzoegerung) { schlange.push(entscheidung); aus = schlange.length > verzoegerung ? schlange.shift() : false; }
+        this.letzte = aus;
+        return aus;
+      },
+    };
+  }
+  // Ganze Strecke spielen; liefert Zeit (oder null) und Statistik
+  function spiele(def, art, saat = 1, { maxZeit = 400, beiSchritt } = {}) {
+    const l = new Lauf(def);
+    const b = neu(art, saat);
+    l.starten();
+    const tagAlt = l.tag;
+    l.tag = maxZeit;   // ohne Zeitlimit messen
+    while (!l.ergebnis) { l.schritt(b.halten(l)); if (beiSchritt) beiSchritt(l); l.ereignisse.length = 0; }
+    const zeit = l.ergebnis === 'ziel' ? l.zeit : null;
+    l.tag = tagAlt;
+    return { zeit, lauf: l, stat: l.statistik };
+  }
+  return { neu, spiele, kopie };
+})();
+
+// ===================================================================
+// 4 · KRABBE
+// Die Hauptfigur ist Kalle aus „Krabbenalarm“ (~/krabbenalarm-app/index.html,
+// Funktion malKrabbe und FIGUREN.kalle). Zeichenhelfer und malKrabbe sind von
+// dort wörtlich übernommen. Neu sind nur Zusatz-Optionen für die Varianten
+// (Augen, Brauen, Scheren, Mund) und Flug-Mimik. Ohne diese Optionen zeichnet
+// der Code Kalle exakt wie im Original (geprüft per Pixelvergleich).
+//
+// Alle Varianten sind rein kosmetisch: Der Physikkörper ist immer
+// KRABBE_PHYSIK aus 1-einstellungen.js, egal welche Krabbe gewählt ist.
+// ===================================================================
+
+const begrenzt = (wert, min, max) => Math.max(min, Math.min(max, wert));
+
+// --- Zeichenhelfer, unverändert aus Krabbenalarm ---
+function oval(c, x, y, rx, ry, farbe, rand, dicke = 0.8) {
+  c.beginPath();
+  c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  if (farbe) { c.fillStyle = farbe; c.fill(); }
+  if (rand) { c.strokeStyle = rand; c.lineWidth = dicke; c.stroke(); }
+}
+
+function eckig(c, x, y, b, h, r, farbe, rand, dicke = 0.8) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + b, y, x + b, y + h, r);
+  c.arcTo(x + b, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + b, y, r);
+  c.closePath();
+  if (farbe) { c.fillStyle = farbe; c.fill(); }
+  if (rand) { c.strokeStyle = rand; c.lineWidth = dicke; c.stroke(); }
+}
+
+function strich(c, farbe, dicke, ...punkte) {
+  c.beginPath();
+  c.moveTo(punkte[0], punkte[1]);
+  for (let i = 2; i < punkte.length; i += 2) c.lineTo(punkte[i], punkte[i + 1]);
+  c.strokeStyle = farbe;
+  c.lineWidth = dicke;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.stroke();
+}
+
+function bogen(c, farbe, dicke, x0, y0, sx, sy, x1, y1) {
+  c.beginPath();
+  c.moveTo(x0, y0);
+  c.quadraticCurveTo(sx, sy, x1, y1);
+  c.strokeStyle = farbe;
+  c.lineWidth = dicke;
+  c.lineCap = 'round';
+  c.stroke();
+}
+
+function flaeche(c, farbe, rand, ...punkte) {
+  c.beginPath();
+  c.moveTo(punkte[0], punkte[1]);
+  for (let i = 2; i < punkte.length; i += 2) c.lineTo(punkte[i], punkte[i + 1]);
+  c.closePath();
+  if (farbe) { c.fillStyle = farbe; c.fill(); }
+  if (rand) { c.strokeStyle = rand; c.lineWidth = 0.8; c.lineJoin = 'round'; c.stroke(); }
+}
+
+function balken(c, farbe, ...liste) {
+  c.fillStyle = farbe;
+  for (const [x, y, b, h] of liste) c.fillRect(x, y, b, h);
+}
+
+// --- Die fünf Krabben. farbe = [Hauptfarbe, dunkel, hell] wie in Krabbenalarm ---
+// Kalle hat exakt die Farben aus Krabbenalarm (FIGUREN.kalle).
+const KRABBEN = {
+  kalle: { name: 'Kalle', text: 'Das Original aus Krabbenalarm.', farbe: ['#e8503a', '#a82c24', '#ff9478'] },
+  tilda: { name: 'Tilda', text: 'Türkis, mit frechem Blick.', farbe: ['#1fb5ab', '#0f6e6a', '#86ece2'], augen: 'frech', mund: 'grinsen' },
+  koko: { name: 'Koko', text: 'Koralle, mit runden Kuschelscheren.', farbe: ['#ff7a52', '#c2462a', '#ffbfa0'], scheren: 'rund' },
+  viola: { name: 'Viola', text: 'Violett, mit Brauen und Mandelaugen.', farbe: ['#9a5ee0', '#5a3298', '#d4b6ff'], augen: 'oval', brauen: true },
+  goldi: { name: 'Goldi', text: 'Goldgelb, eine Schere mit Zacken.', farbe: ['#efb02a', '#a26b14', '#ffe28a'], scheren: 'zacken' },
+};
+const KRABBEN_REIHE = ['kalle', 'tilda', 'koko', 'viola', 'goldi'];
+
+// Zeichnet die Krabbe im Bereich 44 x 36, die Füße stehen unten in der Mitte
+// Zusätzliche Optionen (alle freiwillig):
+//   klammer: 0..1  – Scheren greifen nach den Katapult-Seilen
+//   mund: 'entschlossen' | 'verdutzt' (neben lachen, oh, jubel, tot aus dem Original)
+//   schielen: true – die Pupillen schauen verdutzt in verschiedene Richtungen
+function malKrabbe(c, o) {
+  const fig = KRABBEN[o.figur] || KRABBEN.kalle;
+  const [haupt, dunkel, hell] = fig.farbe;
+  const mx = 22;
+  const lauf = o.lauf || 0;
+  const rand = '#3a1418';
+
+  // Beine
+  for (const seite of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const heben = Math.max(0, Math.sin(lauf * Math.PI * 2 + i * 2.1 + (seite > 0 ? 1.5 : 0))) * 2;
+      const hx = mx + seite * (6.5 + i * 1.7), hy = 28 + i * 0.3;
+      const kx = mx + seite * (12 + i * 2.6), ky = 25.5 + i * 1.3 - heben;
+      const fx = mx + seite * (13.5 + i * 3.1), fy = 35 - heben;
+      bogen(c, rand, 2, hx, hy, kx, ky - 1, fx, fy);
+      bogen(c, dunkel, 1.1, hx, hy, kx, ky - 1, fx, fy);
+    }
+  }
+
+  // Scheren
+  const auf = o.schereAuf ? 0.85 : 0.42;
+  for (const seite of [-1, 1]) {
+    let hoch = Math.sin((o.wedel || 0) * 5 + (seite > 0 ? 1.4 : 0)) * (o.tanzt ? 2.4 : 0.6) - (o.schereHoch ? 3 : 0);
+    let cx = mx + seite * 16, cy = 14.5 + hoch;
+    if (o.klammer) { cx += seite * 3 * o.klammer; cy -= 7 * o.klammer; }
+    // Scherengröße je Variante (Koko rund und groß, Goldi rechts größer mit Zacken)
+    let gross = 4.7, offen = auf;
+    if (fig.scheren === 'rund') { gross = 5.9; offen = auf * 0.62; }
+    if (fig.scheren === 'zacken' && seite > 0) gross = 5.6;
+    bogen(c, rand, 3.4, mx + seite * 9, 25.5, mx + seite * 16.5, 26, cx, cy + 3);
+    bogen(c, haupt, 2, mx + seite * 9, 25.5, mx + seite * 16.5, 26, cx, cy + 3);
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(seite * 0.22);
+    c.beginPath();
+    c.arc(0, 0, gross, -Math.PI / 2 + offen, -Math.PI / 2 - offen + Math.PI * 2);
+    c.lineTo(0, 0.6);
+    c.closePath();
+    c.fillStyle = haupt;
+    c.fill();
+    c.strokeStyle = rand;
+    c.lineWidth = 0.9;
+    c.lineJoin = 'round';
+    c.stroke();
+    if (fig.scheren === 'zacken' && seite > 0) {
+      // kleine Zacken an der Innenkante der großen Schere
+      for (let z = 0; z < 3; z++) {
+        const w = -Math.PI / 2 + offen + 0.25 + z * 0.32;
+        const ax = Math.cos(w) * gross * 0.92, ay = Math.sin(w) * gross * 0.92;
+        flaeche(c, hell, rand, ax, ay, ax * 0.72 + 0.6, ay * 0.72, Math.cos(w + 0.18) * gross * 0.92, Math.sin(w + 0.18) * gross * 0.92);
+      }
+      oval(c, 2.2, 2.4, 0.8, 0.8, dunkel);
+    }
+    oval(c, -1.5, 1.3, fig.scheren === 'rund' ? 2 : 1.4, fig.scheren === 'rund' ? 1.4 : 1, hell);
+    c.restore();
+  }
+
+  // Augenstiele hinter dem Körper
+  const blick = begrenzt(o.blick || 0, -1, 1);
+  const blickY = o.blickHoch ? -0.9 : 0.2;
+  for (const seite of [-1, 1]) {
+    const ex = mx + seite * 5.2;
+    strich(c, rand, 2.6, mx + seite * 4, 22, ex, 13);
+    strich(c, haupt, 1.4, mx + seite * 4, 22, ex, 13);
+  }
+
+  // Körper
+  const verl = c.createLinearGradient(0, 18, 0, 32);
+  verl.addColorStop(0, hell);
+  verl.addColorStop(0.32, haupt);
+  verl.addColorStop(1, dunkel);
+  oval(c, mx, 25, 11.4, 6.9, verl, rand, 0.95);
+  oval(c, mx - 4, 21.2, 4.2, 1.2, 'rgba(255, 255, 255, 0.55)');
+  oval(c, mx + 6.5, 23, 0.9, 0.7, dunkel);
+  oval(c, mx + 4.5, 21.2, 0.7, 0.5, dunkel);
+  oval(c, mx - 7.4, 25, 1.7, 1, 'rgba(255, 150, 150, 0.6)');
+  oval(c, mx + 7.4, 25, 1.7, 1, 'rgba(255, 150, 150, 0.6)');
+
+  // Augen
+  const mund = o.mund || fig.mund || 'lachen';
+  for (const seite of [-1, 1]) {
+    const ex = mx + seite * 5.2, ey = 10.8;
+    if (fig.augen === 'oval') oval(c, ex, ey - 0.3, 2.9, 4.2, '#ffffff', '#1a1820', 0.8);
+    else oval(c, ex, ey, 3.7, 3.7, '#ffffff', '#1a1820', 0.8);
+    if (o.mund === 'tot') {
+      strich(c, '#1a1820', 0.8, ex - 1.5, ey - 1.5, ex + 1.5, ey + 1.5);
+      strich(c, '#1a1820', 0.8, ex + 1.5, ey - 1.5, ex - 1.5, ey + 1.5);
+    } else {
+      let bx = blick * 1.3, by = blickY;
+      if (o.schielen) { bx = seite * -1.1; by = seite * 0.9; }
+      const pg = fig.augen === 'oval' ? 1.5 : 1.7;
+      oval(c, ex + bx, ey + by, pg, fig.augen === 'oval' ? 2 : pg, '#1a1820');
+      oval(c, ex + bx - 0.5, ey + by - 0.6, 0.55, 0.55, '#ffffff');
+    }
+    // Tildas freche Lider: oben halb zu, links etwas tiefer
+    if (fig.augen === 'frech' && o.mund !== 'tot' && mund !== 'oh' && mund !== 'verdutzt') {
+      const tief = seite < 0 ? 1.2 : 0.4;
+      c.save();
+      c.beginPath();
+      c.ellipse(ex, ey, 3.7, 3.7, 0, 0, Math.PI * 2);
+      c.clip();
+      c.beginPath();
+      c.moveTo(ex - 4, ey - 4.5);
+      c.lineTo(ex + 4, ey - 4.5);
+      c.lineTo(ex + 4, ey - 0.2 + tief - seite * 0.5);
+      c.lineTo(ex - 4, ey - 0.2 + tief + seite * 0.5);
+      c.closePath();
+      c.fillStyle = haupt;
+      c.fill();
+      c.restore();
+      strich(c, '#1a1820', 0.8, ex - 3.4, ey - 0.2 + tief + seite * 0.45, ex + 3.4, ey - 0.2 + tief - seite * 0.45);
+    }
+  }
+
+  // Augenbrauen: Viola immer, alle anderen nur, wenn sie entschlossen schauen
+  if (fig.brauen || mund === 'entschlossen') {
+    const dick = fig.brauen ? 1.5 : 0.95;
+    for (const seite of [-1, 1]) {
+      const ex = mx + seite * 5.2, ey = fig.augen === 'oval' ? 4.8 : 6.1;
+      let innen = 0, aussen = 0;
+      if (mund === 'entschlossen') { innen = 1.5; aussen = -0.6; }
+      else if (mund === 'oh' || mund === 'verdutzt' || mund === 'jubel') { innen = -1; aussen = -0.4; }
+      else if (fig.brauen) { innen = 0.3; aussen = -0.6; }
+      strich(c, '#1a1820', dick, ex - seite * 2.6, ey + innen, ex + seite * 2.4, ey + aussen);
+    }
+  }
+
+  // Mund
+  if (mund === 'lachen') {
+    c.beginPath();
+    c.arc(mx, 24.3, 3.3, 0.25, Math.PI - 0.25);
+    c.strokeStyle = '#1a1820';
+    c.lineWidth = 0.8;
+    c.lineCap = 'round';
+    c.stroke();
+  } else if (mund === 'oh' || mund === 'tot') {
+    oval(c, mx, 26.4, 1.9, 2.1, '#1a1820');
+    oval(c, mx, 27.3, 1.1, 1, '#ff8a8a');
+  } else if (mund === 'jubel') {
+    c.beginPath();
+    c.arc(mx, 24.8, 3.8, 0, Math.PI);
+    c.closePath();
+    c.fillStyle = '#1a1820';
+    c.fill();
+    oval(c, mx, 27.4, 1.9, 1, '#ff8a8a');
+  } else if (mund === 'grinsen') {
+    // schiefes, freches Grinsen
+    bogen(c, '#1a1820', 0.85, mx - 3.4, 25.2, mx + 0.5, 28.2, mx + 3.8, 24.2);
+    strich(c, '#1a1820', 0.7, mx + 3.3, 23.6, mx + 4.2, 24.6);
+  } else if (mund === 'entschlossen') {
+    // zusammengebissen: gerader Strich mit Zähnchen
+    eckig(c, mx - 3, 25.2, 6, 2, 0.8, '#ffffff', '#1a1820', 0.75);
+    strich(c, '#1a1820', 0.5, mx, 25.4, mx, 27);
+  } else if (mund === 'verdutzt') {
+    oval(c, mx + 0.6, 26.3, 1.2, 1, '#1a1820');
+  }
+}
+
+// Zeichnet die Krabbe scharf in eine eigene Leinwand (Menüs, Anzeige)
+function krabbeInLeinwand(leinwand, o) {
+  const c = leinwand.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, leinwand.width, leinwand.height);
+  const e = Math.min(leinwand.width / 44, leinwand.height / 36);
+  c.setTransform(e, 0, 0, e, (leinwand.width - 44 * e) / 2, (leinwand.height - 36 * e) / 2);
+  malKrabbe(c, o);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// ===================================================================
+// 5 · SPEICHER
+// Freigeschaltete Strecken, Sterne, Bestzeiten, Ton und Krabbenwahl lokal
+// im Browser. Fehlt localStorage oder ist der Inhalt kaputt, läuft das
+// Spiel trotzdem – es merkt sich dann alles nur bis zum Neuladen.
+// ===================================================================
+
+const Speicher = (() => {
+  const SCHLUESSEL = 'pixelhafen.sonnenrutsch';
+  const VERSION = 1;
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false });
+  let daten = leer();
+
+  function lager() { try { return window.localStorage || null; } catch (e) { return null; } }
+
+  function pruefe(roh) {
+    const d = leer();
+    if (!roh || typeof roh !== 'object' || roh.version !== VERSION) return d;
+    if (typeof roh.ton === 'boolean') d.ton = roh.ton;
+    if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
+    if (roh.lernGesehen === true) d.lernGesehen = true;
+    const f = Math.floor(Number(roh.frei));
+    if (f >= 1) d.frei = Math.min(f, STRECKEN.length);
+    if (roh.level && typeof roh.level === 'object') {
+      for (const s of STRECKEN) {
+        const e = roh.level[s.id];
+        if (!e || typeof e !== 'object') continue;
+        const sterne = Math.floor(Number(e.sterne));
+        const zeit = Number(e.zeit);
+        const weit = Number(e.weit);
+        const eintrag = {};
+        if (sterne >= 1 && sterne <= 3 && zeit > 0 && zeit < 1000) { eintrag.sterne = sterne; eintrag.zeit = Math.round(zeit * 100) / 100; }
+        if (weit > 0 && weit <= 1) eintrag.weit = weit;
+        if (Object.keys(eintrag).length) d.level[s.id] = eintrag;
+      }
+    }
+    return d;
+  }
+  function laden() {
+    try { const l = lager(); const t = l ? l.getItem(SCHLUESSEL) : null; daten = t ? pruefe(JSON.parse(t)) : leer(); }
+    catch (e) { daten = leer(); }
+  }
+  function sichern() { try { const l = lager(); if (l) l.setItem(SCHLUESSEL, JSON.stringify(daten)); } catch (e) { /* gesperrt oder voll */ } }
+  laden();
+
+  return {
+    tonAn: () => daten.ton,
+    setzeTon(an) { daten.ton = !!an; sichern(); },
+    krabbe: () => daten.krabbe,
+    setzeKrabbe(n) { if (KRABBEN[n]) { daten.krabbe = n; sichern(); } },
+    lernGesehen: () => daten.lernGesehen,
+    setzeLernGesehen() { daten.lernGesehen = true; sichern(); },
+    level: (id) => daten.level[id] || null,
+    sterne: (id) => (daten.level[id] && daten.level[id].sterne) || 0,
+    sterneGesamt: () => Object.values(daten.level).reduce((s, e) => s + (e.sterne || 0), 0),
+    frei: (id) => id <= daten.frei,
+    hoechsteFreie: () => daten.frei,
+    // Ziel erreicht: Sterne und Bestzeit nur verbessern, nächste Strecke frei
+    ziel(id, zeit, sterne) {
+      const alt = daten.level[id] || {};
+      const besser = { zeit: !alt.zeit || zeit < alt.zeit, sterne: sterne > (alt.sterne || 0), neuFrei: false };
+      daten.level[id] = Object.assign({}, alt, { sterne: Math.max(alt.sterne || 0, sterne), zeit: alt.zeit ? Math.min(alt.zeit, zeit) : zeit, weit: 1 });
+      if (id + 1 > daten.frei && id < STRECKEN.length) { daten.frei = id + 1; besser.neuFrei = true; }
+      sichern();
+      return besser;
+    },
+    // Nicht geschafft: weiteste Strecke merken
+    weit(id, anteil) {
+      const alt = daten.level[id] || {};
+      const besser = !alt.weit || anteil > alt.weit + 0.001;
+      if (besser) { daten.level[id] = Object.assign({}, alt, { weit: Math.min(1, anteil) }); sichern(); }
+      return besser;
+    },
+  };
+})();
+
+// ===================================================================
+// 6 · TON
+// Eigene kurze Geräusche mit Web Audio, keine Dateien. Startet erst nach
+// einer Nutzeraktion und ist abschaltbar. Dazu ein leises Rutsch- und
+// Windgeräusch, das mit dem Tempo mitgeht.
+// ===================================================================
+
+const Ton = (() => {
+  let ctx = null, haupt = null, rauschen = null;
+  let an = true;
+  let rutsch = null;   // { quelle, filter, gain } dauerhaftes Rauschen
+
+  function wecke() {
+    if (!an) return;
+    try {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ctx = new AC();
+        const komp = ctx.createDynamicsCompressor();
+        komp.threshold.value = -16; komp.knee.value = 10; komp.ratio.value = 6;
+        haupt = ctx.createGain();
+        haupt.gain.value = 0.5;
+        haupt.connect(komp).connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch (e) { ctx = null; }
+  }
+  const bereit = () => an && ctx && ctx.state === 'running';
+
+  function rauschBuffer() {
+    if (!rauschen) {
+      rauschen = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 1.5), ctx.sampleRate);
+      const d = rauschen.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return rauschen;
+  }
+  function huelle(g, t, laut, dauer, anstieg = 0.005) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, laut), t + anstieg);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+  }
+  function ton(f1, f2, dauer, { typ = 'square', laut = 0.3, start = 0, anstieg } = {}) {
+    const t = ctx.currentTime + start;
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = typ;
+    osc.frequency.setValueAtTime(f1, t);
+    if (f2 !== f1) osc.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dauer);
+    huelle(g, t, laut, dauer, anstieg);
+    osc.connect(g).connect(haupt);
+    osc.start(t); osc.stop(t + dauer + 0.03);
+  }
+  function rausch(dauer, { laut = 0.3, start = 0, typ = 'bandpass', f1 = 1800, f2 = 600, q = 0.9 } = {}) {
+    const t = ctx.currentTime + start;
+    const src = ctx.createBufferSource(); src.buffer = rauschBuffer();
+    const fil = ctx.createBiquadFilter(); fil.type = typ; fil.Q.value = q;
+    fil.frequency.setValueAtTime(f1, t);
+    fil.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t + dauer);
+    const g = ctx.createGain(); huelle(g, t, laut, dauer, 0.003);
+    src.connect(fil).connect(g).connect(haupt);
+    src.start(t, Math.random() * 0.5); src.stop(t + dauer + 0.03);
+  }
+  const v = () => 1 + (Math.random() * 2 - 1) * 0.05;
+
+  // Dauerrauschen für Rutschen und Fahrtwind
+  function rutschStarten() {
+    if (rutsch || !ctx) return;
+    const src = ctx.createBufferSource(); src.buffer = rauschBuffer(); src.loop = true;
+    const fil = ctx.createBiquadFilter(); fil.type = 'bandpass'; fil.Q.value = 0.8; fil.frequency.value = 600;
+    const g = ctx.createGain(); g.gain.value = 0.0001;
+    src.connect(fil).connect(g).connect(haupt);
+    src.start();
+    rutsch = { src, fil, g };
+  }
+
+  return {
+    wecke,
+    istAn: () => an,
+    setze(wert) {
+      an = !!wert;
+      if (an) wecke();
+      else if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+    },
+    // Jedes Bild: Lautstärke und Klangfarbe des Rutschens an Tempo anpassen
+    fahrt(tempo, boden, schwer, aktiv) {
+      if (!bereit()) return;
+      rutschStarten();
+      const t = ctx.currentTime;
+      const s = Math.min(1, tempo / 55);
+      const laut = aktiv ? (boden ? 0.025 + s * 0.07 + (schwer ? 0.02 : 0) : 0.012 + s * 0.035) : 0.0001;
+      rutsch.g.gain.setTargetAtTime(Math.max(0.0001, laut), t, 0.06);
+      rutsch.fil.frequency.setTargetAtTime(boden ? 300 + s * 900 : 900 + s * 1600, t, 0.08);
+      rutsch.fil.Q.setTargetAtTime(boden ? 0.9 : 0.5, t, 0.1);
+    },
+    still() { if (rutsch && ctx) rutsch.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); },
+    // Absprung: aufsteigendes „Hui“, höher bei mehr Tempo
+    abflug(tempo) {
+      if (!bereit()) return;
+      const s = Math.min(1, tempo / 55);
+      ton(320 + s * 200, 700 + s * 500, 0.22, { typ: 'sine', laut: 0.12 });
+      rausch(0.25, { laut: 0.06, f1: 600, f2: 2400, q: 0.7 });
+    },
+    // Landungen
+    landung(guete, kette) {
+      if (!bereit()) return;
+      if (guete === 'perfekt') {
+        const basis = [523, 587, 659, 698, 784][Math.min(4, Math.max(0, kette - 1))];
+        ton(basis, basis, 0.09, { typ: 'triangle', laut: 0.2 });
+        ton(basis * 1.5, basis * 1.5, 0.16, { typ: 'triangle', laut: 0.18, start: 0.06 });
+        ton(basis * 2, basis * 2, 0.2, { typ: 'sine', laut: 0.06, start: 0.12 });
+        rausch(0.12, { laut: 0.06, f1: 1200, f2: 500 });
+      } else if (guete === 'hart') {
+        ton(150 * v(), 70, 0.16, { typ: 'triangle', laut: 0.3 });
+        rausch(0.18, { laut: 0.16, typ: 'lowpass', f1: 900, f2: 200, q: 0.8 });
+        ton(420, 300, 0.12, { typ: 'sine', laut: 0.06, start: 0.06 });
+      } else {
+        ton(200 * v(), 120, 0.09, { typ: 'sine', laut: 0.16 });
+        rausch(0.09, { laut: 0.08, f1: 900, f2: 300 });
+      }
+    },
+    // Letzte Sekunden Tageslicht: leise Glocke
+    glocke(hoch) {
+      if (!bereit()) return;
+      const f = hoch ? 988 : 784;
+      ton(f, f, 0.35, { typ: 'sine', laut: 0.08 });
+      ton(f * 2.01, f * 2, 0.2, { typ: 'sine', laut: 0.02 });
+    },
+    klick() { if (bereit()) ton(660, 660, 0.04, { typ: 'square', laut: 0.04 }); },
+    start() { if (bereit()) { ton(392, 392, 0.08, { typ: 'triangle', laut: 0.16 }); ton(523, 523, 0.12, { typ: 'triangle', laut: 0.16, start: 0.08 }); } },
+    // Ziel: kleine Dur-Fanfare
+    sieg() {
+      if (!bereit()) return;
+      const noten = [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.32], [880, 0.46], [1047, 0.56], [1319, 0.68]];
+      noten.forEach(([f, st], i) => {
+        const lang = i === noten.length - 1 ? 0.5 : 0.11;
+        ton(f, f, lang, { typ: 'triangle', laut: 0.22, start: st });
+        ton(f / 2, f / 2, lang, { typ: 'square', laut: 0.03, start: st });
+      });
+    },
+    // Sonne weg: freundliches, müdes „Wah-wah“
+    nacht() {
+      if (!bereit()) return;
+      ton(392, 370, 0.3, { typ: 'triangle', laut: 0.2 });
+      ton(330, 247, 0.6, { typ: 'triangle', laut: 0.2, start: 0.3 });
+    },
+  };
+})();
+
+// ===================================================================
+// 7 · GRAFIK
+// Alles wird scharf in voller Bildschirmauflösung gezeichnet (kein Pixel-
+// Look). Ebenen von hinten nach vorn:
+//   Himmel (Farbe wandert mit dem Tageslicht) → Sonne → Wolken → Meer
+//   → ferne Küste (langsame Parallaxe) → nahe Küste → Gelände → Kalle
+//   → Effekte → leichter Abendschimmer über allem
+// Die Hügelkontur hat immer eine dunkle Kante und eine helle Oberkante,
+// damit sie auch im Abendrot gut zu erkennen ist.
+// ===================================================================
+
+const mischFarbe = (a, b, t) => {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const r = Math.round(((pa >> 16) & 255) * (1 - t) + ((pb >> 16) & 255) * t);
+  const g = Math.round(((pa >> 8) & 255) * (1 - t) + ((pb >> 8) & 255) * t);
+  const bl = Math.round((pa & 255) * (1 - t) + (pb & 255) * t);
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1);
+};
+// Farbe aus einer Stützstellen-Liste [[t, '#farbe'], …]
+function verlauf(liste, t) {
+  if (t <= liste[0][0]) return liste[0][1];
+  for (let i = 1; i < liste.length; i++) {
+    if (t <= liste[i][0]) {
+      const [t0, f0] = liste[i - 1], [t1, f1] = liste[i];
+      return mischFarbe(f0, f1, (t - t0) / (t1 - t0));
+    }
+  }
+  return liste[liste.length - 1][1];
+}
+const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+// Tageslicht 0 (Mittag) … 1 (Sonne weg)
+const HIMMEL_OBEN = [[0, '#3f9be0'], [0.5, '#4f8fd2'], [0.75, '#5a6fb8'], [0.9, '#43478f'], [1, '#232659']];
+const HIMMEL_UNTEN = [[0, '#c4ebfa'], [0.45, '#f4e7b8'], [0.72, '#ffc27a'], [0.88, '#ff8a5c'], [1, '#c9556e']];
+const SONNE_FARBE = [[0, '#fff7d6'], [0.6, '#ffe08a'], [0.85, '#ff9a4a'], [1, '#ff5a3c']];
+const LICHT = [[0, '#ffffff'], [0.55, '#fff3df'], [0.8, '#ffd6b0'], [0.93, '#f0b3b0'], [1, '#b49ac8']];
+
+// Aussehen der vier Gebiete
+const THEMEN = [
+  { // Sanddünen
+    boden: ['#f6cf7c', '#e2a656', '#b97a3a'], kante: '#fff0b8', rand: '#6e4320', muster: 'rillen',
+    musterFarbe: 'rgba(150, 92, 38, 0.22)', fern: '#e9c88e', fern2: '#d9ad6c', nah: '#e3b46d', meer: '#46b4d6', deko: 'duene',
+  },
+  { // Tropeninsel
+    boden: ['#f4d48e', '#e2b066', '#bf8644'], kante: '#bff07a', rand: '#2f5a24', muster: 'gras', grasFarbe: '#5cbf4a', grasDunkel: '#3c8f35',
+    musterFarbe: 'rgba(160, 110, 50, 0.2)', fern: '#3f9a86', fern2: '#2f7f73', nah: '#4caf7d', meer: '#2ccfc4', deko: 'palme',
+  },
+  { // Felsküste
+    boden: ['#a39d93', '#7f786f', '#5a544d'], kante: '#d9e6b8', rand: '#2e2a27', muster: 'schichten', grasFarbe: '#86ad55', grasDunkel: '#5e8a3a',
+    musterFarbe: 'rgba(40, 34, 30, 0.22)', fern: '#7b8ba0', fern2: '#62738a', nah: '#8a8f94', meer: '#2f78b0', deko: 'fels',
+  },
+  { // Korallenkap
+    boden: ['#ffc0ae', '#f0948a', '#c76a6e'], kante: '#fff0e6', rand: '#6a2d3c', muster: 'muscheln',
+    musterFarbe: 'rgba(130, 50, 70, 0.2)', fern: '#d68fa4', fern2: '#b87390', nah: '#e8a39a', meer: '#38c2c9', deko: 'koralle',
+  },
+];
+
+const Grafik = (() => {
+  let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
+  const kam = { x: 0, b: 0, z: 10, bereit: false };   // x = linker Rand, b = unterer Rand (Welt), z = Pixel je Meter
+  let zeit = 0;
+  const teilchen = [];
+  const texte = [];
+  let blitz = 0;           // kurzer Lichtschein bei perfekter Landung
+  let spur = [];           // Flugspur
+  let ruhig = false;       // prefers-reduced-motion
+
+  function init(el) {
+    leinwand = el;
+    c = el.getContext('2d', { alpha: false });
+    try { ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { ruhig = false; }
+    groesse();
+  }
+  function groesse() {
+    const r = leinwand.getBoundingClientRect();
+    cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.round(cssW * dpr); H = Math.round(cssH * dpr);
+    if (leinwand.width !== W || leinwand.height !== H) { leinwand.width = W; leinwand.height = H; }
+  }
+  const hochkant = () => cssH > cssW * 1.05;
+  const sx = (x) => (x - kam.x) * kam.z;
+  const sy = (y) => H - (y - kam.b) * kam.z;
+
+  // ---------------------------------------------------------- Kamera
+  // Ziel: Kalle bei 30 % der Breite, vorn genug Gelände, oben Platz für
+  // den Flug, unten der tiefste Punkt des sichtbaren Geländes.
+  function kameraZiel(l) {
+    const v = l.tempo;
+    const minB = hochkant() ? K.KAM_BREITE_MIN_HOCH : K.KAM_BREITE_MIN;
+    let breite = minB + v * K.KAM_VORSCHAU;
+    const links = l.x - breite * K.KAM_VORAUS;
+    const [lo, hi] = l.g.bereich(links, links + breite * 1.15);
+    const oben = Math.max(l.y + K.KAM_RAND_OBEN, hi + 3);
+    const unten = lo - K.KAM_RAND_UNTEN;
+    const hoeheNoetig = oben - unten;
+    let z = Math.min(W / breite, H / hoeheNoetig);
+    // Nie so nah, dass Kalle riesig wirkt, nie so weit, dass er verschwindet
+    z = Math.min(z, W / (minB * 0.8));
+    // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
+    const frei = H / z - hoeheNoetig;
+    const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.42 : 0.3), hoeheNoetig * (hochkant() ? 1.2 : 0.6)) : 0;
+    return { z, unten: unten - tiefer, x: l.x };
+  }
+  function kamera(l, dt, sofort) {
+    const ziel = kameraZiel(l);
+    if (sofort || !kam.bereit) { kam.z = ziel.z; kam.b = ziel.unten; kam.bereit = true; }
+    else {
+      const kz = 1 - Math.exp(-K.KAM_GLAETTE_ZOOM * dt);
+      // Herauszoomen schneller als hineinzoomen: Landeflächen sind früh im Bild
+      const kzr = ziel.z < kam.z ? Math.min(1, kz * 1.8) : kz;
+      kam.z += (ziel.z - kam.z) * kzr;
+      const ky = 1 - Math.exp(-K.KAM_GLAETTE_Y * dt);
+      kam.b += (ziel.unten - kam.b) * ky;
+    }
+    // Kalle muss immer ganz im Bild sein
+    const obenWelt = kam.b + H / kam.z;
+    if (l.y + 3 > obenWelt) kam.b += l.y + 3 - obenWelt;
+    kam.x = l.x - (W / kam.z) * K.KAM_VORAUS;
+  }
+
+  // ---------------------------------------------------------- Himmel
+  function himmel(f, thema) {
+    const horizont = H * (hochkant() ? 0.62 : 0.58);
+    const v = c.createLinearGradient(0, 0, 0, horizont);
+    v.addColorStop(0, verlauf(HIMMEL_OBEN, f));
+    v.addColorStop(1, verlauf(HIMMEL_UNTEN, f));
+    c.fillStyle = v;
+    c.fillRect(0, 0, W, horizont + 2);
+    // Sterne in der Dämmerung
+    if (f > 0.82) {
+      c.fillStyle = `rgba(255, 250, 230, ${Math.min(1, (f - 0.82) * 5) * 0.8})`;
+      for (let i = 0; i < 40; i++) {
+        const x = hash(i) * W, y = hash(i + 50) * horizont * 0.55;
+        const r = (hash(i + 99) > 0.8 ? 1.6 : 1) * dpr;
+        c.fillRect(x, y, r, r);
+      }
+    }
+    // Sonne: wandert vor Kalle zum Horizont hinunter
+    const sxp = W * (hochkant() ? 0.7 : 0.76);
+    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(f, 1.25) + f * f * H * 0.04;
+    const r = Math.min(W, H) * (0.055 + f * 0.03);
+    const sf = verlauf(SONNE_FARBE, f);
+    const glanz = c.createRadialGradient(sxp, syp, r * 0.6, sxp, syp, r * 4.5);
+    glanz.addColorStop(0, sf + 'aa');
+    glanz.addColorStop(1, sf + '00');
+    c.fillStyle = glanz;
+    c.fillRect(sxp - r * 5, syp - r * 5, r * 10, r * 10);
+    c.beginPath(); c.arc(sxp, syp, r, 0, Math.PI * 2); c.fillStyle = sf; c.fill();
+    // Wolken
+    for (let i = 0; i < 6; i++) {
+      const tempo = 0.012 + hash(i + 7) * 0.02;
+      const wx = ((hash(i) * 1.6 - (kam.x * tempo * kam.z) / W - zeit * 0.004 * (1 + i % 3)) % 1.6 + 1.6) % 1.6 - 0.3;
+      const wy = horizont * (0.12 + hash(i + 3) * 0.5);
+      wolke(wx * W, wy, Math.min(W, H) * (0.06 + hash(i + 11) * 0.05), f);
+    }
+    // Meer
+    const meerOben = horizont;
+    const m = c.createLinearGradient(0, meerOben, 0, H);
+    m.addColorStop(0, mischFarbe(thema.meer, verlauf(HIMMEL_UNTEN, f), 0.35 + f * 0.25));
+    m.addColorStop(1, mischFarbe(thema.meer, '#1a2a50', 0.3 + f * 0.4));
+    c.fillStyle = m;
+    c.fillRect(0, meerOben, W, H - meerOben);
+    // Glitzern und Sonnenspiegelung
+    c.fillStyle = sf;
+    for (let i = 0; i < 26; i++) {
+      const y = meerOben + 4 * dpr + hash(i + 200) * (H - meerOben) * 0.5;
+      const breite = (8 + hash(i + 300) * 26) * dpr * (1 + (y - meerOben) / H);
+      const nahSonne = Math.abs(hash(i + 400) - 0.5) < 0.18;
+      const x = nahSonne ? sxp + (hash(i + 500) - 0.5) * r * 3 : ((hash(i + 600) * W - kam.x * kam.z * 0.05 + zeit * 6 * dpr) % W + W) % W;
+      c.globalAlpha = (nahSonne ? 0.55 : 0.22) * (0.6 + 0.4 * Math.sin(zeit * 2 + i));
+      c.fillRect(x - breite / 2, y, breite, 1.5 * dpr);
+    }
+    c.globalAlpha = 1;
+    return horizont;
+  }
+  function wolke(x, y, s, f) {
+    const hell = mischFarbe('#ffffff', '#ffc9a8', Math.min(1, f * 1.1));
+    const schatten = mischFarbe('#dbeaf5', '#c98a9a', Math.min(1, f * 1.1));
+    c.fillStyle = schatten;
+    c.beginPath();
+    c.ellipse(x, y + s * 0.18, s * 1.25, s * 0.38, 0, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = hell;
+    c.beginPath();
+    c.ellipse(x - s * 0.5, y, s * 0.55, s * 0.4, 0, 0, Math.PI * 2);
+    c.ellipse(x + s * 0.1, y - s * 0.2, s * 0.65, s * 0.55, 0, 0, Math.PI * 2);
+    c.ellipse(x + s * 0.7, y + s * 0.02, s * 0.48, s * 0.36, 0, 0, Math.PI * 2);
+    c.fill();
+  }
+
+  // ---------------------------------------------------------- Ferne Küste (Parallaxe)
+  // Höhenlinie aus Sinuswellen, verschiebt sich langsamer als die Kamera
+  function silhouette(horizont, faktor, hoehe, farbe, saat, glatt, inseln) {
+    const versatz = kam.x * kam.z * faktor;
+    c.beginPath();
+    c.moveTo(0, horizont + 1);
+    const schritt = 8 * dpr;
+    for (let px = 0; px <= W + schritt; px += schritt) {
+      const u = (px + versatz) / (H * 0.9);
+      let h = Math.sin(u * 1.3 + saat) * 0.5 + Math.sin(u * 2.9 + saat * 2) * 0.28 + Math.sin(u * 0.47 + saat * 3) * 0.6;
+      if (!glatt) h += Math.abs(Math.sin(u * 7.1 + saat)) * 0.18;
+      let y = (0.55 + h * 0.45) * hoehe;
+      if (inseln) y = Math.max(0, y - hoehe * 0.55) * 1.8;   // Lücken: dort sieht man das Meer
+      c.lineTo(px, horizont - y);
+    }
+    c.lineTo(W, horizont + 1);
+    c.closePath();
+    c.fillStyle = farbe;
+    c.fill();
+  }
+  function ferneKueste(horizont, f, thema, nr) {
+    const dunst = verlauf(HIMMEL_UNTEN, f);
+    const hoehe = H * 0.12;
+    silhouette(horizont, 0.06, hoehe, mischFarbe(thema.fern, dunst, 0.45 + f * 0.15), 1 + nr, nr === 0);
+    // Wahrzeichen in der Ferne
+    const versatz = kam.x * kam.z * 0.06;
+    const abstand = W * 1.3;
+    const i0 = Math.floor(versatz / abstand);
+    for (let i = i0; i <= i0 + 1; i++) {
+      const x = i * abstand - versatz + abstand * (0.3 + hash(i) * 0.4);
+      const fy = horizont - hoehe * 0.35;
+      wahrzeichen(nr, x, fy, H * 0.12, mischFarbe(thema.fern2, dunst, 0.4 + f * 0.15), f, i);
+    }
+    // Nähere Küstenstücke mit Meer dazwischen, darunter ein heller Brandungsstreifen
+    const y2 = horizont + H * 0.05;
+    silhouette(y2, 0.14, hoehe * 0.8, mischFarbe(thema.fern2, dunst, 0.22 + f * 0.15), 7 + nr * 3, nr === 0, true);
+    c.fillStyle = `rgba(255, 255, 255, ${0.25 - f * 0.12})`;
+    for (let i = 0; i < 3; i++) {
+      const wy = y2 + (4 + i * 9) * dpr, ph = zeit * (0.6 + i * 0.2) + i;
+      c.fillRect(0, wy + Math.sin(ph) * 1.5 * dpr, W, 1.2 * dpr);
+    }
+  }
+  function wahrzeichen(nr, x, y, s, farbe, f, i) {
+    c.fillStyle = farbe;
+    if (nr === 0) {
+      // Strandhütte auf Stelzen
+      c.fillRect(x - s * 0.18, y - s * 0.32, s * 0.36, s * 0.22);
+      c.beginPath(); c.moveTo(x - s * 0.26, y - s * 0.3); c.lineTo(x, y - s * 0.5); c.lineTo(x + s * 0.26, y - s * 0.3); c.fill();
+      c.fillRect(x - s * 0.15, y - s * 0.1, s * 0.03, s * 0.14); c.fillRect(x + s * 0.12, y - s * 0.1, s * 0.03, s * 0.14);
+    } else if (nr === 1) {
+      // Insel mit Palmen
+      c.beginPath(); c.ellipse(x, y + s * 0.05, s * 0.6, s * 0.12, 0, Math.PI, 0); c.fill();
+      for (let k = -1; k <= 1; k += 2) palmeForm(x + k * s * 0.2, y, s * (0.55 + 0.1 * k), farbe, 0.15 * k);
+    } else {
+      // Leuchtturm mit drehendem Licht
+      const b = s * 0.12, h = s * 0.85;
+      c.beginPath();
+      c.moveTo(x - b, y); c.lineTo(x - b * 0.65, y - h); c.lineTo(x + b * 0.65, y - h); c.lineTo(x + b, y); c.fill();
+      c.fillRect(x - b * 0.9, y - h - s * 0.12, b * 1.8, s * 0.12);
+      if (f > 0.55) {
+        const a = Math.min(1, (f - 0.55) * 3);
+        const w = zeit * 1.4 + i;
+        const lx = x, ly = y - h - s * 0.06;
+        const breit = Math.cos(w) * s * 1.6;
+        c.fillStyle = `rgba(255, 236, 160, ${0.22 * a})`;
+        c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + breit, ly - s * 0.1); c.lineTo(lx + breit, ly + s * 0.1); c.fill();
+        c.fillStyle = `rgba(255, 244, 200, ${a})`;
+        c.beginPath(); c.arc(lx, ly, s * 0.035, 0, Math.PI * 2); c.fill();
+      }
+    }
+  }
+  function palmeForm(x, y, s, farbe, neigung) {
+    c.save();
+    c.fillStyle = farbe; c.strokeStyle = farbe;
+    c.lineWidth = s * 0.06; c.lineCap = 'round';
+    const kx = x + neigung * s, ky = y - s;
+    c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + neigung * s * 0.2, y - s * 0.6, kx, ky); c.stroke();
+    for (let k = 0; k < 5; k++) {
+      const w = -Math.PI / 2 + (k - 2) * 0.62;
+      c.beginPath();
+      c.moveTo(kx, ky);
+      c.quadraticCurveTo(kx + Math.cos(w) * s * 0.35, ky + Math.sin(w) * s * 0.35 - s * 0.1, kx + Math.cos(w) * s * 0.5, ky + Math.sin(w) * s * 0.3 + s * 0.14);
+      c.lineWidth = s * 0.07;
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  // ---------------------------------------------------------- Gelände
+  function gelaendePfad(l, x0, x1) {
+    const g = l.g;
+    const schritt = Math.max(0.25, 5 * dpr / kam.z);
+    c.beginPath();
+    c.moveTo(sx(x0), H + 4);
+    for (let x = x0; x <= x1 + schritt; x += schritt) c.lineTo(sx(x), sy(g.hoehe(x)));
+    c.lineTo(sx(x1 + schritt), H + 4);
+    c.closePath();
+  }
+  function gelaende(l, thema, f, nr) {
+    const x0 = kam.x - 2, x1 = kam.x + W / kam.z + 2;
+    const g = l.g;
+    const licht = verlauf(LICHT, f);
+    const [lo, hi] = g.bereich(x0, x1);
+    // Deko hinter der Kante (Palmen, Gras, Felsen) – steht auf dem Gelände
+    dekoHinten(l, thema, nr, x0, x1, licht);
+    // Füllung
+    gelaendePfad(l, x0, x1);
+    const v = c.createLinearGradient(0, sy(hi), 0, Math.max(sy(lo - 14), sy(hi) + 10));
+    v.addColorStop(0, mischFarbe(thema.boden[0], licht, 0.2));
+    v.addColorStop(0.5, mischFarbe(thema.boden[1], licht, 0.2));
+    v.addColorStop(1, mischFarbe(thema.boden[2], licht, 0.25));
+    c.fillStyle = v;
+    c.fill();
+    // Muster im Boden, parallel zur Oberfläche
+    c.save();
+    c.clip();
+    muster(l, thema, x0, x1);
+    c.restore();
+    // Kante: dunkler Rand, darunter helle Oberkante (Lesbarkeit)
+    const schritt = Math.max(0.25, 5 * dpr / kam.z);
+    c.beginPath();
+    for (let x = x0; x <= x1 + schritt; x += schritt) {
+      const px = sx(x), py = sy(g.hoehe(x));
+      if (x === x0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    if (thema.grasFarbe && thema.muster !== 'schichten') {
+      c.strokeStyle = thema.grasDunkel; c.lineWidth = Math.max(7 * dpr, 0.9 * kam.z); c.stroke();
+      c.strokeStyle = thema.grasFarbe; c.lineWidth = Math.max(4.5 * dpr, 0.55 * kam.z); c.stroke();
+    } else if (thema.muster === 'schichten') {
+      c.strokeStyle = thema.grasDunkel; c.lineWidth = Math.max(6 * dpr, 0.6 * kam.z); c.stroke();
+      c.strokeStyle = thema.grasFarbe; c.lineWidth = Math.max(3.5 * dpr, 0.35 * kam.z); c.stroke();
+    } else {
+      c.strokeStyle = mischFarbe(thema.kante, licht, 0.25); c.lineWidth = Math.max(5 * dpr, 0.5 * kam.z); c.stroke();
+    }
+    c.strokeStyle = thema.rand; c.lineWidth = 2.2 * dpr;
+    c.save(); c.translate(0, -Math.max(2 * dpr, 0.25 * kam.z)); c.stroke(); c.restore();
+  }
+  function muster(l, thema, x0, x1) {
+    const g = l.g;
+    const schritt = Math.max(0.5, 8 * dpr / kam.z);
+    c.strokeStyle = thema.musterFarbe;
+    c.lineWidth = Math.max(1.5 * dpr, 0.16 * kam.z);
+    if (thema.muster === 'rillen' || thema.muster === 'gras' || thema.muster === 'schichten') {
+      // Linien in festen Tiefen unter der Oberfläche, leicht gewellt
+      const tiefen = thema.muster === 'schichten' ? [2.2, 4.6, 7.5, 11] : [1.8, 3.6, 6, 9.5];
+      for (const t of tiefen) {
+        c.beginPath();
+        let erst = true;
+        for (let x = x0; x <= x1 + schritt; x += schritt) {
+          const w = thema.muster === 'schichten' ? Math.sin(x * 0.11 + t) * 0.6 : Math.sin(x * 0.35 + t * 3) * 0.25;
+          const px = sx(x), py = sy(g.hoehe(x) - t - w);
+          if (erst) { c.moveTo(px, py); erst = false; } else c.lineTo(px, py);
+        }
+        c.stroke();
+      }
+    }
+    if (thema.muster === 'muscheln' || thema.muster === 'gras' || thema.muster === 'rillen') {
+      // kleine Kiesel / Muscheln, an Weltpositionen festgemacht
+      const abstand = 4.5;
+      const i0 = Math.floor(x0 / abstand), i1 = Math.ceil(x1 / abstand);
+      for (let i = i0; i <= i1; i++) {
+        const x = i * abstand + hash(i) * abstand;
+        const t = 1.5 + hash(i + 3) * 9;
+        const px = sx(x), py = sy(g.hoehe(x) - t);
+        const r = (0.18 + hash(i + 5) * 0.2) * kam.z;
+        c.fillStyle = thema.muster === 'muscheln' ? (hash(i + 9) > 0.5 ? 'rgba(255,255,255,0.45)' : 'rgba(150,60,80,0.3)') : thema.musterFarbe;
+        c.beginPath(); c.ellipse(px, py, r * 1.3, r, 0, 0, Math.PI * 2); c.fill();
+      }
+    }
+  }
+  // Deko an festen Weltpositionen, die auf dem Gelände steht
+  function dekoHinten(l, thema, nr, x0, x1, licht) {
+    const g = l.g;
+    const abstand = 11;
+    const i0 = Math.floor((x0 - 10) / abstand), i1 = Math.ceil((x1 + 10) / abstand);
+    for (let i = i0; i <= i1; i++) {
+      if (hash(i * 3 + nr) < 0.45) continue;
+      const x = i * abstand + hash(i) * abstand * 0.6;
+      if (x < -20 || x > l.ziel + 200) continue;
+      if (Math.abs(x - l.ziel) < 18) continue;
+      const y = g.hoehe(x) - 0.3;
+      const px = sx(x), py = sy(y);
+      const s = kam.z;
+      const art = hash(i + 17);
+      if (nr === 0) {
+        if (art < 0.6) grasBusch(px, py, s * (0.8 + hash(i + 2) * 0.6), '#9fae55', '#6f7f35');
+        else zaun(px, py, s, g, x);
+      } else if (nr === 1) {
+        if (art < 0.42) palme(px, py, s * (4 + hash(i + 2) * 2.5), (hash(i + 4) - 0.5) * 0.5);
+        else grasBusch(px, py, s * 1.1, '#5cbf4a', '#2f7f2f');
+      } else if (nr === 2) {
+        if (art < 0.5) stein(px, py, s * (0.8 + hash(i + 2)), '#8a847c', '#4a4540');
+        else grasBusch(px, py, s * 0.8, '#86ad55', '#4e7a2e');
+      } else {
+        if (art < 0.5) koralle(px, py, s * (1.2 + hash(i + 2) * 1.2), hash(i + 6));
+        else stein(px, py, s * 0.7, '#f5d8c8', '#a06a6a');
+      }
+    }
+  }
+  function grasBusch(px, py, s, hell, dunkel) {
+    c.lineCap = 'round';
+    for (let k = -3; k <= 3; k++) {
+      c.strokeStyle = k % 2 ? dunkel : hell;
+      c.lineWidth = Math.max(1.5 * dpr, s * 0.12);
+      c.beginPath();
+      c.moveTo(px + k * s * 0.12, py);
+      c.quadraticCurveTo(px + k * s * 0.2, py - s * 0.6, px + k * s * 0.38 + Math.sin(zeit * 1.5 + px * 0.01) * s * 0.08, py - s * (0.9 + (3 - Math.abs(k)) * 0.12));
+      c.stroke();
+    }
+  }
+  function zaun(px, py, s, g, x) {
+    c.strokeStyle = '#8a6a44'; c.lineWidth = Math.max(2 * dpr, s * 0.18); c.lineCap = 'round';
+    for (let k = 0; k < 4; k++) {
+      const xx = sx(x + k * 1.1), yy = sy(g.hoehe(x + k * 1.1) - 0.2);
+      c.beginPath(); c.moveTo(xx, yy); c.lineTo(xx + s * 0.05, yy - s * 1.6); c.stroke();
+    }
+    c.lineWidth = Math.max(1.2 * dpr, s * 0.08); c.strokeStyle = '#a9875b';
+    c.beginPath();
+    for (let k = 0; k < 4; k++) { const xx = sx(x + k * 1.1), yy = sy(g.hoehe(x + k * 1.1)) - s * 1.1; if (k) c.lineTo(xx, yy); else c.moveTo(xx, yy); }
+    c.stroke();
+  }
+  function palme(px, py, s, neigung) {
+    c.save();
+    c.lineCap = 'round';
+    const kx = px + neigung * s, ky = py - s;
+    c.strokeStyle = '#6b4a2a'; c.lineWidth = s * 0.09;
+    c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + neigung * s * 0.2, py - s * 0.6, kx, ky); c.stroke();
+    c.strokeStyle = '#a77b4a'; c.lineWidth = s * 0.04;
+    c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + neigung * s * 0.2, py - s * 0.6, kx, ky); c.stroke();
+    const wipp = ruhig ? 0 : Math.sin(zeit * 1.3 + px * 0.01) * 0.06;
+    for (let k = 0; k < 6; k++) {
+      const w = -Math.PI / 2 + (k - 2.5) * 0.55 + wipp;
+      const ex = kx + Math.cos(w) * s * 0.55, ey = ky + Math.sin(w) * s * 0.28 + s * 0.2;
+      c.strokeStyle = '#2f7f3a'; c.lineWidth = s * 0.1;
+      c.beginPath(); c.moveTo(kx, ky); c.quadraticCurveTo(kx + Math.cos(w) * s * 0.35, ky + Math.sin(w) * s * 0.4 - s * 0.1, ex, ey); c.stroke();
+      c.strokeStyle = '#4fbf5a'; c.lineWidth = s * 0.05;
+      c.stroke();
+    }
+    c.fillStyle = '#7a5a2a';
+    c.beginPath(); c.arc(kx - s * 0.04, ky + s * 0.05, s * 0.05, 0, Math.PI * 2); c.arc(kx + s * 0.05, ky + s * 0.06, s * 0.05, 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+  function stein(px, py, s, hell, dunkel) {
+    c.fillStyle = hell; c.strokeStyle = dunkel; c.lineWidth = Math.max(1.5 * dpr, s * 0.1);
+    c.beginPath(); c.ellipse(px, py, s * 1.1, s * 0.75, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+  }
+  function koralle(px, py, s, art) {
+    c.strokeStyle = art > 0.5 ? '#ff6f7f' : '#ffa45c'; c.lineCap = 'round'; c.lineWidth = s * 0.16;
+    const ast = (x, y, l, w, tiefe) => {
+      const ex = x + Math.cos(w) * l, ey = y + Math.sin(w) * l;
+      c.beginPath(); c.moveTo(x, y); c.lineTo(ex, ey); c.stroke();
+      if (tiefe > 0) { ast(ex, ey, l * 0.7, w - 0.5, tiefe - 1); ast(ex, ey, l * 0.7, w + 0.5, tiefe - 1); }
+    };
+    ast(px, py, s * 0.5, -Math.PI / 2, 2);
+  }
+
+  // ---------------------------------------------------------- Start und Ziel
+  function startZiel(l, f) {
+    const g = l.g;
+    // Ziel: Bogen aus Treibholz mit Wimpeln und Muschelflagge
+    const zx = l.ziel, zy = g.hoehe(zx);
+    const px = sx(zx), py = sy(zy), s = kam.z;
+    if (px > -s * 10 && px < W + s * 10) {
+      c.lineCap = 'round';
+      c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.55;
+      c.beginPath(); c.moveTo(px - s * 3, py); c.lineTo(px - s * 3, py - s * 7); c.moveTo(px + s * 3, py); c.lineTo(px + s * 3, py - s * 7); c.stroke();
+      c.strokeStyle = '#a8794a'; c.lineWidth = s * 0.32; c.stroke();
+      // Banner
+      eckigWelt(px - s * 3.6, py - s * 8.6, s * 7.2, s * 2.2, s * 0.4, '#ffd35a', '#4a2f1a');
+      c.fillStyle = '#10243a';
+      c.font = `${Math.round(s * 1.15)}px 'Press Start 2P', monospace`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('ZIEL', px, py - s * 7.45);
+      // Wimpelkette
+      for (let k = 0; k < 7; k++) {
+        const t = k / 6;
+        const wx = px - s * 3 + t * s * 6, wy = py - s * 5.6 + Math.sin(t * Math.PI) * s * 0.6;
+        c.fillStyle = ['#ff805b', '#24d6cd', '#ffd35a', '#b58cff'][k % 4];
+        c.beginPath(); c.moveTo(wx - s * 0.35, wy); c.lineTo(wx + s * 0.35, wy); c.lineTo(wx, wy + s * 0.8 + Math.sin(zeit * 4 + k) * s * 0.1); c.fill();
+      }
+      // Zielstreifen im Sand
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      for (let k = 0; k < 6; k++) c.fillRect(px - s * 0.3, py + k * s * 0.5, s * 0.6, s * 0.25);
+    }
+    // Start: Holzschild
+    const qx = sx(-14), qy = sy(g.hoehe(-14));
+    if (qx > -s * 6 && qx < W + s * 6) {
+      c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.4;
+      c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx, qy - s * 3.6); c.stroke();
+      eckigWelt(qx - s * 2.6, qy - s * 4.8, s * 5.2, s * 1.6, s * 0.3, '#f7e0b0', '#4a2f1a');
+      c.fillStyle = '#4a2f1a';
+      c.font = `${Math.round(s * 0.8)}px 'Press Start 2P', monospace`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('START', qx, qy - s * 3.95);
+    }
+  }
+  function eckigWelt(x, y, b, h, r, farbe, rand) {
+    c.beginPath();
+    c.moveTo(x + r, y); c.arcTo(x + b, y, x + b, y + h, r); c.arcTo(x + b, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + b, y, r); c.closePath();
+    c.fillStyle = farbe; c.fill();
+    c.strokeStyle = rand; c.lineWidth = Math.max(2 * dpr, r * 0.4); c.stroke();
+  }
+
+  // ---------------------------------------------------------- Kalle
+  // Pose aus dem Zustand ableiten: schwer machen, fliegen, jubeln, verdutzt
+  function krabbe(l, figur, pose) {
+    const breite = Math.max(K.KRABBE_BREITE * kam.z, K.KRABBE_MIN_PIXEL * dpr);
+    const e = breite / 44;
+    const px = sx(l.x), py = sy(l.y);
+    const winkel = l.winkel;
+    // Schatten auf dem Boden während des Flugs: zeigt, wo Kalle landet
+    if (!l.boden) {
+      const h = l.hoeheUeberBoden();
+      const gx = sx(l.x), gy = sy(l.g.hoehe(l.x));
+      const a = Math.max(0.12, 0.42 - h * 0.012);
+      const r = breite * (0.45 - Math.min(0.25, h * 0.006));
+      c.fillStyle = `rgba(40, 20, 30, ${a})`;
+      c.beginPath(); c.ellipse(gx, gy, r, r * 0.28, Math.atan(-l.g.steigung(l.x)), 0, Math.PI * 2); c.fill();
+    }
+    c.save();
+    c.translate(px, py);
+    c.rotate(-winkel);
+    // Quetschen: schwer = breit und flach, Aufprall = kurz platt
+    let qx = 1, qy = 1;
+    if (pose.schwer) { qx = 1.12; qy = 0.82; }
+    if (pose.platt > 0) { const p = pose.platt; qx *= 1 + 0.25 * p; qy *= 1 - 0.3 * p; }
+    if (!l.boden && !pose.schwer) { qx *= 0.96; qy *= 1.05; }
+    c.scale(e * qx, e * qy);
+    c.translate(-22, -35.5);
+    malKrabbe(c, {
+      figur,
+      lauf: pose.lauf,
+      wedel: zeit,
+      tanzt: pose.jubel,
+      schereHoch: pose.armeHoch,
+      schereAuf: pose.armeHoch || pose.jubel,
+      mund: pose.mund,
+      blick: pose.blick,
+      blickHoch: pose.blickHoch,
+      schielen: pose.schielen,
+    });
+    c.restore();
+    // Fahrtwind-Linien bei hohem Tempo
+    const v = l.tempo;
+    if (v > 26 && !ruhig) {
+      const a = Math.min(0.5, (v - 26) / 40);
+      c.strokeStyle = `rgba(255, 255, 255, ${a})`;
+      c.lineWidth = 2 * dpr; c.lineCap = 'round';
+      for (let k = 0; k < 4; k++) {
+        const ph = (zeit * 9 + k * 0.37) % 1;
+        const lx = px - breite * (0.6 + ph * 1.4), ly = py - breite * (0.15 + k * 0.17);
+        c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx - breite * (0.5 + a), ly + Math.tan(winkel) * breite * 0.5); c.stroke();
+      }
+    }
+  }
+
+  // ---------------------------------------------------------- Effekte
+  function staub(x, y, menge, farbe, kraft = 1) {
+    if (ruhig) menge = Math.ceil(menge / 3);
+    for (let i = 0; i < menge; i++) {
+      teilchen.push({ x, y, vx: (Math.random() * 2 - 1.3) * 6 * kraft, vy: Math.random() * 5 * kraft, leben: 0.5 + Math.random() * 0.4, alt: 0, r: 0.25 + Math.random() * 0.35, farbe, art: 'staub' });
+    }
+  }
+  function funken(x, y, menge) {
+    if (ruhig) menge = Math.ceil(menge / 3);
+    for (let i = 0; i < menge; i++) {
+      const w = Math.random() * Math.PI * 2, t = 4 + Math.random() * 8;
+      teilchen.push({ x, y: y + 1, vx: Math.cos(w) * t, vy: Math.sin(w) * t + 3, leben: 0.45 + Math.random() * 0.35, alt: 0, r: 0.25 + Math.random() * 0.2, farbe: Math.random() > 0.5 ? '#fff4b0' : '#ffd35a', art: 'funke' });
+    }
+  }
+  function text(x, y, inhalt, farbe, gross = 1) {
+    texte.push({ x, y, inhalt, farbe, alt: 0, leben: 1.0, gross });
+  }
+  function ereignis(e, l, thema) {
+    if (e.art === 'landung') {
+      if (e.guete === 'perfekt') {
+        funken(e.x, e.y, 18);
+        blitz = 1;
+        text(e.x, e.y + 4.5, e.kette > 1 ? `Perfekt ×${e.kette}` : 'Perfekt!', '#ffd35a', 1.1);
+      } else if (e.guete === 'hart') {
+        staub(e.x, e.y, 16, thema.boden[1], 1.2);
+        text(e.x, e.y + 4, 'Uff!', '#ffb0a0', 0.9);
+      } else {
+        staub(e.x, e.y, 6, thema.boden[0], 0.6);
+      }
+    } else if (e.art === 'abflug') {
+      staub(e.x, e.y, 5, thema.boden[0], 0.5);
+    }
+  }
+  function effekte(dt) {
+    for (let i = teilchen.length - 1; i >= 0; i--) {
+      const t = teilchen[i];
+      t.alt += dt;
+      if (t.alt >= t.leben) { teilchen.splice(i, 1); continue; }
+      t.vy -= (t.art === 'funke' ? 6 : 14) * dt;
+      t.x += t.vx * dt; t.y += t.vy * dt;
+      const a = 1 - t.alt / t.leben;
+      c.globalAlpha = a;
+      c.fillStyle = t.farbe;
+      c.beginPath();
+      if (t.art === 'funke') {
+        const r = t.r * kam.z * (0.6 + a * 0.6), x = sx(t.x), y = sy(t.y);
+        c.moveTo(x, y - r * 2); c.lineTo(x + r * 0.5, y - r * 0.5); c.lineTo(x + r * 2, y); c.lineTo(x + r * 0.5, y + r * 0.5);
+        c.lineTo(x, y + r * 2); c.lineTo(x - r * 0.5, y + r * 0.5); c.lineTo(x - r * 2, y); c.lineTo(x - r * 0.5, y - r * 0.5);
+        c.closePath();
+      } else c.arc(sx(t.x), sy(t.y), Math.max(1.5 * dpr, t.r * kam.z), 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+    for (let i = texte.length - 1; i >= 0; i--) {
+      const t = texte[i];
+      t.alt += dt;
+      if (t.alt >= t.leben) { texte.splice(i, 1); continue; }
+      const a = Math.min(1, (t.leben - t.alt) * 4);
+      const hoch = t.alt * 2.5;
+      const groesse = Math.round(Math.max(13 * dpr, 0.9 * kam.z) * t.gross * (1 + Math.max(0, 0.15 - t.alt) * 2));
+      c.globalAlpha = a;
+      c.font = `${groesse}px 'Press Start 2P', monospace`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      const x = Math.min(W - groesse * 4, Math.max(groesse * 4, sx(t.x))), y = Math.max(groesse * 3, sy(t.y + hoch));
+      c.lineWidth = groesse * 0.35; c.strokeStyle = '#10243a'; c.lineJoin = 'round';
+      c.strokeText(t.inhalt, x, y);
+      c.fillStyle = t.farbe;
+      c.fillText(t.inhalt, x, y);
+    }
+    c.globalAlpha = 1;
+  }
+  function flugSpur(l) {
+    if (!l.boden && l.gestartet) spur.push([l.x, l.y + 0.8]);
+    else if (spur.length) spur.shift();
+    if (spur.length > 50) spur.shift();
+    if (spur.length < 2 || ruhig) return;
+    c.lineCap = 'round';
+    for (let i = 1; i < spur.length; i++) {
+      c.strokeStyle = `rgba(255, 255, 255, ${(i / spur.length) * 0.4})`;
+      c.lineWidth = Math.max(2 * dpr, 0.3 * kam.z) * (i / spur.length);
+      c.beginPath(); c.moveTo(sx(spur[i - 1][0]), sy(spur[i - 1][1])); c.lineTo(sx(spur[i][0]), sy(spur[i][1])); c.stroke();
+    }
+  }
+
+  // ---------------------------------------------------------- Ein Bild
+  // f = Tageslicht-Fortschritt (0 = Mittag, 1 = Sonne weg)
+  function zeichne(l, { dt, f, figur, pose, gebiet }) {
+    zeit += dt;
+    f = Math.max(0, Math.min(1, f || 0));
+    const thema = THEMEN[gebiet] || THEMEN[0];
+    kamera(l, dt);
+    const horizont = himmel(f, thema);
+    ferneKueste(horizont, f, thema, gebiet);
+    startZiel(l, f);
+    gelaende(l, thema, f, gebiet);
+    flugSpur(l);
+    krabbe(l, figur, pose);
+    effekte(dt);
+    // Kurzer warmer Schein nach perfekter Landung
+    if (blitz > 0) {
+      c.fillStyle = `rgba(255, 236, 160, ${blitz * 0.18})`;
+      c.fillRect(0, 0, W, H);
+      blitz = Math.max(0, blitz - dt * 4);
+    }
+    // Abendlicht über allem (dezent, Kontraste bleiben)
+    if (f > 0.55) {
+      c.globalCompositeOperation = 'multiply';
+      c.fillStyle = verlauf(LICHT, f);
+      c.globalAlpha = Math.min(0.55, (f - 0.55) * 1.3);
+      c.fillRect(0, 0, W, H);
+      c.globalAlpha = 1;
+      c.globalCompositeOperation = 'source-over';
+    }
+    if (f >= 1) {
+      c.fillStyle = 'rgba(20, 20, 60, 0.25)';
+      c.fillRect(0, 0, W, H);
+    }
+  }
+  function neuerLauf() { teilchen.length = 0; texte.length = 0; spur = []; blitz = 0; kam.bereit = false; }
+
+  // Kleines Streckenprofil für die Levelkarten
+  function profil(leinw, def) {
+    const g2 = leinw.getContext('2d');
+    const s = baueStrecke(def);
+    const th = THEMEN[def.gebiet];
+    const b = leinw.width, h = leinw.height;
+    const v = g2.createLinearGradient(0, 0, 0, h);
+    v.addColorStop(0, '#5aa6e0'); v.addColorStop(1, '#ffd9a0');
+    g2.fillStyle = v; g2.fillRect(0, 0, b, h);
+    // Typischer Ausschnitt aus der Mitte der Strecke, kaum überhöht
+    const x0 = s.ziel * 0.5, x1 = x0 + 260;
+    const [lo, hi] = s.gelaende.bereich(x0, x1);
+    const mProPx = (x1 - x0) / b;
+    const unten = h * 0.92, mitte = (lo + hi) / 2;
+    const yv = (x) => unten - h * 0.35 - (s.gelaende.hoehe(x) - mitte) / mProPx * 1.4;
+    g2.beginPath(); g2.moveTo(0, h);
+    for (let px = 0; px <= b; px++) g2.lineTo(px, yv(x0 + px * mProPx));
+    g2.lineTo(b, h); g2.closePath();
+    g2.fillStyle = th.boden[1]; g2.fill();
+    g2.beginPath();
+    for (let px = 0; px <= b; px++) { const y = yv(x0 + px * mProPx); if (px) g2.lineTo(px, y); else g2.moveTo(px, y); }
+    if (th.grasFarbe) { g2.strokeStyle = th.grasFarbe; g2.lineWidth = 5; g2.stroke(); }
+    g2.strokeStyle = th.rand; g2.lineWidth = 2; g2.stroke();
+  }
+
+  return {
+    init, groesse, zeichne, ereignis, neuerLauf, profil, kamera, kameraZiel,
+    get kam() { return kam; }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
+    get cssW() { return cssW; }, get cssH() { return cssH; },
+    // Für Tests: Bildposition von Kalle in CSS-Pixeln
+    krabbeImBild(l) { return { x: sx(l.x) / dpr, y: sy(l.y) / dpr }; },
+    bodenImBild(l, x) { return { x: sx(x) / dpr, y: sy(l.g.hoehe(x)) / dpr }; },
+  };
+})();
+
+// ===================================================================
+// 8 · EINGABE – eine einzige Taste
+// Finger, Maus, Stift (Pointer Events) und Leertaste/Pfeil runter/Enter.
+// „Gedrückt“ ist, solange irgendein Finger, die Maus oder eine Taste
+// unten ist. Die Physik liest den Zustand im nächsten Schritt: keine
+// Verzögerung durch Klick-Erkennung oder Doppeltipp-Zoom.
+// ===================================================================
+
+const Eingabe = (() => {
+  const finger = new Set();
+  const tasten = new Set();
+  let app = null;
+  const SPIELTASTEN = [' ', 'ArrowDown', 'Enter', 'ArrowUp', 'w', 'W', 's', 'S'];
+
+  function init(flaeche, a) {
+    app = a;
+    flaeche.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button > 0) return;
+      Ton.wecke();
+      e.preventDefault();
+      finger.add(e.pointerId);
+      try { flaeche.setPointerCapture(e.pointerId); } catch (f) { /* ältere Browser */ }
+      app.gedrueckt();
+    });
+    const los = (e) => { if (finger.delete(e.pointerId)) app.losgelassen(); };
+    flaeche.addEventListener('pointerup', los);
+    flaeche.addEventListener('pointercancel', los);
+    flaeche.addEventListener('lostpointercapture', los);
+    flaeche.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('keydown', taste);
+    document.addEventListener('keyup', (e) => { if (tasten.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key)) app.losgelassen(); });
+    // Fenster verliert den Fokus: nichts darf „hängen bleiben“
+    window.addEventListener('blur', alleLos);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { alleLos(); app.versteckt(); } });
+  }
+  function alleLos() { const war = gedrueckt(); finger.clear(); tasten.clear(); if (war) app.losgelassen(); }
+  function gedrueckt() { return finger.size > 0 || tasten.size > 0; }
+
+  function taste(e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const k = e.key;
+    if ((k === 'p' || k === 'P' || k === 'Escape') && !e.repeat) { if (app.pauseTaste()) e.preventDefault(); return; }
+    if (app.fensterOffen()) return;
+    if ((k === 'r' || k === 'R') && !e.repeat) { app.neustart(); return; }
+    if ((k === 'm' || k === 'M') && !e.repeat) { app.tonUmschalten(); return; }
+    if (!SPIELTASTEN.includes(k)) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && a.id !== 'bild' && a.tagName === 'BUTTON') return;   // Knöpfe bedienen lassen
+    e.preventDefault();
+    Ton.wecke();
+    if (e.repeat) return;
+    tasten.add(k.length === 1 ? k.toLowerCase() : k);
+    app.gedrueckt();
+  }
+
+  return { init, gedrueckt, alleLos };
+})();
+
+// ===================================================================
+// 9 · APP
+// Zustände: menue → bereit (Erklärung, wartet auf Drücken) → lauf →
+// ende (Ausrollen) → Ergebnisfenster. pause liegt über bereit/lauf.
+// Es gibt genau EINEN Game Loop (requestAnimationFrame). Die Physik läuft
+// darin in festen Schritten von 1/240 s.
+// ===================================================================
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const wurzel = document.documentElement;
+  const leinwand = $('bild');
+  const fenster = $('fenster');
+  const SEKTIONEN = ['fStart', 'fKrabben', 'fLevel', 'fPause', 'fErfolg', 'fNacht'];
+
+  let zustand = 'menue';
+  let lauf = null;
+  let def = STRECKEN[0];
+  let vorher = 'menue';         // für „Zurück“ aus der Krabbenwahl
+  let endeZeit = 0;             // Sekunden seit Ende (für Ausrollen und Fenster)
+  let halten = false;
+  let rest = 0;                 // Physik-Zeitrest
+  let letzte = 0;
+  let glockeBei = 0;            // letzte Warnglocke (Sekunden Rest)
+  let gedruecktSeit = 0;        // Zeit der letzten Ergebnisanzeige (Tasten-Sperre)
+  const pose = { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0, schwer: false };
+
+  if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) wurzel.classList.add('touch');
+
+  // ---------------------------------------------------------- Fenster
+  function zeige(id) {
+    for (const s of SEKTIONEN) $(s).hidden = s !== id;
+    fenster.hidden = !id;
+    fenster.querySelector('.tafel').classList.toggle('breit', id === 'fLevel');
+    if (id) {
+      const t = $(id).querySelector('[data-titel]');
+      if (t) t.id = 'fensterTitel';
+      for (const s of SEKTIONEN) if (s !== id) { const a = $(s).querySelector('#fensterTitel'); if (a) a.removeAttribute('id'); }
+      const erst = $(id).querySelector('.btn.main') || $(id).querySelector('button');
+      if (erst) setTimeout(() => erst.focus({ preventScroll: true }), 30);
+    }
+  }
+  const fensterOffen = () => !fenster.hidden;
+  function setzeZustand(z) { zustand = z; wurzel.dataset.zustand = z; }
+
+  // ---------------------------------------------------------- Ton
+  function tonKnoepfe() {
+    for (const k of document.querySelectorAll('.js-ton')) {
+      k.textContent = 'Ton: ' + (Ton.istAn() ? 'an' : 'aus');
+      k.setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
+    }
+  }
+  function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) Ton.still(); }
+  Ton.setze(Speicher.tonAn());
+  tonKnoepfe();
+  for (const k of document.querySelectorAll('.js-ton')) k.addEventListener('click', () => { tonUmschalten(); Ton.klick(); });
+
+  // ---------------------------------------------------------- Strecke starten
+  function starteStrecke(id) {
+    def = STRECKEN.find(s => s.id === id) || STRECKEN[0];
+    lauf = new Lauf(def);
+    Grafik.neuerLauf();
+    rest = 0;
+    endeZeit = 0;
+    glockeBei = 99;
+    Object.assign(pose, { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0 });
+    $('hudNr').textContent = def.id;
+    $('hudTitel').textContent = def.name;
+    $('kette').hidden = true;
+    // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
+    const ausfuehrlich = def.lern || !Speicher.lernGesehen();
+    $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
+    $('erklListe').hidden = !ausfuehrlich;
+    hinweis(null);
+    setzeZustand('bereit');
+    zeige(null);
+    Eingabe.alleLos();
+    halten = false;
+    leinwand.focus({ preventScroll: true });
+    ansage(`Strecke ${def.id}, ${def.name}. Gedrückt halten zum Losrutschen.`);
+  }
+  function neustart() {
+    if (zustand === 'menue' && !lauf) return;
+    Ton.klick();
+    starteStrecke(def.id);
+  }
+
+  // ---------------------------------------------------------- Eingabe
+  const app = {
+    gedrueckt() {
+      halten = true;
+      if (zustand === 'bereit' && !fensterOffen()) {
+        lauf.starten();
+        setzeZustand('lauf');
+        Ton.start();
+        if (def.lern || !Speicher.lernGesehen()) Speicher.setzeLernGesehen();
+      }
+    },
+    losgelassen() { halten = Eingabe.gedrueckt(); },
+    versteckt() { if (zustand === 'lauf' || zustand === 'bereit') pause(); },
+    pauseTaste() {
+      if (zustand === 'lauf' || zustand === 'bereit') { pause(); return true; }
+      if (zustand === 'pause') { weiter(); return true; }
+      return false;
+    },
+    fensterOffen,
+    neustart() { if (['bereit', 'lauf', 'ende'].includes(zustand) || (zustand === 'ergebnis')) neustart(); },
+    tonUmschalten,
+  };
+  Eingabe.init($('buehne'), app);
+
+  // Knöpfe im HUD dürfen kein „Halten“ auslösen
+  for (const id of ['neuKnopfHud', 'pauseKnopf']) {
+    $(id).addEventListener('pointerdown', (e) => e.stopPropagation());
+  }
+  $('neuKnopfHud').addEventListener('click', () => neustart());
+  $('pauseKnopf').addEventListener('click', () => pause());
+
+  function pause() {
+    if (zustand !== 'lauf' && zustand !== 'bereit') return;
+    vorher = zustand;
+    setzeZustand('pause');
+    Ton.still();
+    zeige('fPause');
+  }
+  function weiter() {
+    if (zustand !== 'pause') return;
+    zeige(null);
+    setzeZustand(vorher);
+    Eingabe.alleLos();
+    halten = false;
+    letzte = performance.now();
+    leinwand.focus({ preventScroll: true });
+  }
+  $('weiterKnopf').addEventListener('click', weiter);
+  $('neuKnopf').addEventListener('click', () => starteStrecke(def.id));
+  $('pauseLevelKnopf').addEventListener('click', () => { setzeZustand('menue'); levelWahl(); });
+
+  // ---------------------------------------------------------- Menüs
+  $('spielenKnopf').addEventListener('click', () => {
+    Ton.wecke(); Ton.klick();
+    // Erstes Mal: direkt auf die Lernstrecke
+    if (!Speicher.level(1) && Speicher.hoechsteFreie() === 1) starteStrecke(1);
+    else levelWahl();
+  });
+  $('levelZurueck').addEventListener('click', () => { Ton.klick(); zeige('fStart'); setzeZustand('menue'); });
+  $('krabbeWahlKnopf').addEventListener('click', () => { Ton.klick(); krabbenWahl(); });
+  $('krabbenFertig').addEventListener('click', () => { Ton.klick(); zeige('fStart'); startKrabbe(); });
+
+  function startKrabbe() { krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true }); }
+
+  function krabbenWahl() {
+    const liste = $('krabbenListe');
+    liste.innerHTML = '';
+    for (const name of KRABBEN_REIHE) {
+      const k = KRABBEN[name];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'krabbenkarte';
+      b.setAttribute('aria-pressed', Speicher.krabbe() === name ? 'true' : 'false');
+      const cv = document.createElement('canvas');
+      cv.width = 176; cv.height = 144;
+      b.append(cv, Object.assign(document.createElement('span'), { textContent: k.name }), Object.assign(document.createElement('small'), { textContent: k.text }));
+      krabbeInLeinwand(cv, { figur: name, mund: name === 'kalle' ? 'lachen' : undefined });
+      b.addEventListener('click', () => {
+        Speicher.setzeKrabbe(name); Ton.klick();
+        for (const x of liste.children) x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+      });
+      liste.append(b);
+    }
+    zeige('fKrabben');
+  }
+
+  const zeitText = (s) => {
+    const m = Math.floor(s / 60), r = s - m * 60;
+    return m > 0 ? `${m}:${r.toFixed(1).padStart(4, '0')}` : `${r.toFixed(1)} s`;
+  };
+  const sterneHtml = (n) => '★'.repeat(n) + '<i>' + '★'.repeat(3 - n) + '</i>';
+
+  function levelWahl() {
+    setzeZustand('menue');
+    const box = $('gebietListe');
+    box.innerHTML = '';
+    GEBIETE.forEach((g, gi) => {
+      const sek = document.createElement('section');
+      sek.className = 'gebiet';
+      sek.style.setProperty('--g', g.farbe);
+      sek.innerHTML = `<h3>${g.name}</h3><p>${g.text}</p>`;
+      const karten = document.createElement('div');
+      karten.className = 'karten';
+      for (const s of STRECKEN.filter(s => s.gebiet === gi)) {
+        const frei = Speicher.frei(s.id);
+        const e = Speicher.level(s.id);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'karte';
+        b.disabled = !frei;
+        const cv = document.createElement('canvas');
+        cv.width = 240; cv.height = 135;
+        let best = 'Noch nicht gefahren';
+        if (e && e.zeit) best = 'Bestzeit ' + zeitText(e.zeit);
+        else if (e && e.weit) best = 'Weiteste: ' + Math.floor(e.weit * 100) + ' %';
+        b.innerHTML = `<span class="nr">${s.lern ? 'LERNEN' : 'STRECKE ' + s.id}</span><span>${s.name}</span><span class="sterne" aria-label="${Speicher.sterne(s.id)} von 3 Sternen">${sterneHtml(Speicher.sterne(s.id))}</span><span class="best">${frei ? best : 'Gesperrt'}</span>`;
+        b.prepend(cv);
+        if (!frei) b.insertAdjacentHTML('beforeend', '<span class="schloss" aria-hidden="true"><svg><use href="#schloss"/></svg></span>');
+        b.setAttribute('aria-label', `${s.name}, ${frei ? best : 'gesperrt – erst die Strecke davor schaffen'}`);
+        Grafik.profil(cv, s);
+        b.addEventListener('click', () => { Ton.wecke(); Ton.klick(); starteStrecke(s.id); });
+        karten.append(b);
+      }
+      sek.append(karten);
+      box.append(sek);
+    });
+    zeige('fLevel');
+  }
+
+  // ---------------------------------------------------------- Ergebnis
+  function sterneFuer(d, zeit) {
+    if (zeit <= d.sterne[1]) return 3;
+    if (zeit <= d.sterne[0]) return 2;
+    return 1;
+  }
+  function zeigeErfolg() {
+    const st = lauf.statistik;
+    const sterne = sterneFuer(def, lauf.zeit);
+    const besser = Speicher.ziel(def.id, lauf.zeit, sterne);
+    const e = Speicher.level(def.id);
+    $('erfolgTitel').textContent = def.lern ? 'Lernstrecke geschafft!' : 'Geschafft!';
+    const sprueche = ['Kalle gräbt sich zufrieden in den warmen Sand.', 'Pünktlich zum Sonnenuntergang am Strand!', 'Was für ein Ritt über die Hügel!', 'Die Möwen klatschen Beifall.'];
+    $('erfolgSpruch').textContent = sterne === 3 ? 'Sonnenschnell! ' + sprueche[def.id % sprueche.length] : sprueche[def.id % sprueche.length];
+    krabbeInLeinwand($('erfolgKrabbe'), { figur: Speicher.krabbe(), mund: 'jubel', schereAuf: true, schereHoch: true, tanzt: true });
+    const spans = document.querySelectorAll('#fErfolg .sternreihe span');
+    spans.forEach((s, i) => { s.classList.remove('an'); setTimeout(() => s.classList.toggle('an', i < sterne), 150 + i * 180); });
+    $('sterneText').textContent = `${sterne} von 3 Sternen`;
+    $('eZeit').textContent = zeitText(lauf.zeit);
+    $('eRest').textContent = zeitText(lauf.rest);
+    $('ePerfekt').textContent = st.perfekt + (st.kette > 1 ? ` (Kette ×${st.kette})` : '');
+    $('eWeit').textContent = Math.round(st.weitester) + ' m';
+    $('eBest').textContent = zeitText(e.zeit);
+    $('neuBest').hidden = !(besser.zeit && Speicher.level(def.id) && lauf.zeit <= e.zeit && (besser.sterne || besser.zeit) && !besser.neuFrei);
+    $('sternInfo').textContent = sterne < 3 ? `${sterne + 1} Sterne ab ${zeitText(def.sterne[sterne === 1 ? 0 : 1])}.` : 'Alle Sterne geholt!';
+    const naechste = STRECKEN.find(s => s.id === def.id + 1);
+    $('weiterLevelKnopf').hidden = !naechste;
+    if (!naechste) $('erfolgTitel').textContent = 'Alle Strecken geschafft!';
+    zeige('fErfolg');
+    if (!naechste) $('nochmalErfolgKnopf').focus({ preventScroll: true });
+    ansage(`Geschafft in ${zeitText(lauf.zeit)}. ${sterne} von 3 Sternen.${besser.neuFrei ? ' Nächste Strecke freigeschaltet.' : ''}`);
+  }
+  function zeigeNacht() {
+    const anteil = lauf.fortschritt;
+    const alt = Speicher.level(def.id);
+    const altWeit = alt && alt.weit ? alt.weit : 0;
+    Speicher.weit(def.id, anteil);
+    krabbeInLeinwand($('nachtKrabbe'), { figur: Speicher.krabbe(), mund: 'oh', blickHoch: true });
+    $('nachtSpruch').textContent = anteil > 0.85 ? 'So knapp! Der Strand war schon zu sehen.' : anteil > 0.5 ? 'Mehr als die Hälfte – das klappt beim nächsten Mal!' : 'Kalle braucht mehr Schwung.';
+    $('nAnteil').textContent = Math.floor(anteil * 100) + ' %';
+    $('nRest').textContent = Math.max(0, Math.round(lauf.ziel - lauf.x)) + ' m';
+    $('nPerfekt').textContent = lauf.statistik.perfekt;
+    $('nBest').textContent = Math.floor(Math.max(altWeit, anteil) * 100) + ' %' + (anteil > altWeit + 0.001 && altWeit > 0 ? ' (neu!)' : '');
+    const st = lauf.statistik;
+    let tipp = 'Tipp: Bergab halten, vor dem Anstieg loslassen.';
+    if (st.hart > st.perfekt) tipp = 'Tipp: In der Luft halten, damit Kalle flach auf einem Abhang landet – nicht gegen den nächsten Hügel.';
+    else if (st.fluege < 4) tipp = 'Tipp: Lass früher los, dann trägt der Schwung Kalle über die Kuppen.';
+    $('nachtTipp').textContent = tipp;
+    zeige('fNacht');
+    ansage(`Die Sonne ist untergegangen. ${Math.floor(anteil * 100)} Prozent geschafft.`);
+  }
+  $('nochmalKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
+  $('nachtLevelKnopf').addEventListener('click', () => { Ton.klick(); levelWahl(); });
+  $('nochmalErfolgKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
+  $('erfolgLevelKnopf').addEventListener('click', () => { Ton.klick(); levelWahl(); });
+  $('weiterLevelKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id + 1); });
+
+  // ---------------------------------------------------------- Anzeige
+  let hinweisText = null;
+  function hinweis(t) {
+    if (t === hinweisText) return;
+    hinweisText = t;
+    $('hinweis').hidden = !t;
+    if (t) $('hinweis').textContent = t;
+  }
+  function ansage(t) { $('ansage').textContent = t; }
+  let hudAlt = '';
+  function hud() {
+    const r = lauf.rest, f = lauf.fortschritt;
+    const tagAnteil = r / lauf.tag;
+    const schluessel = Math.ceil(r * 10) + '|' + Math.floor(f * 400);
+    if (schluessel === hudAlt) return;
+    hudAlt = schluessel;
+    $('tagFuellung').style.width = (tagAnteil * 100).toFixed(1) + '%';
+    $('tagText').textContent = Math.ceil(r) + ' s';
+    $('tagBalken').setAttribute('aria-valuenow', Math.round(tagAnteil * 100));
+    $('hudTag').classList.toggle('knapp', r < 10 && zustand === 'lauf');
+    $('wegFuellung').style.width = (f * 100).toFixed(1) + '%';
+    $('wegKrabbe').style.left = (f * 100).toFixed(1) + '%';
+    $('wegText').textContent = Math.floor(f * 100) + ' %';
+    $('wegBalken').setAttribute('aria-valuenow', Math.floor(f * 100));
+  }
+
+  // ---------------------------------------------------------- Pose von Kalle
+  function posenSchritt(dt) {
+    const l = lauf;
+    pose.platt = Math.max(0, pose.platt - dt * 5);
+    pose.jubelZeit = Math.max(0, pose.jubelZeit - dt);
+    pose.verdutztZeit = Math.max(0, pose.verdutztZeit - dt);
+    const schwer = halten && zustand === 'lauf';
+    // Beine laufen, solange Kalle langsam am Boden ist; schnell = Beine angelegt
+    if (l.boden && l.gestartet) pose.lauf += dt * Math.min(3.2, l.tempo * 0.35) * (l.tempo < 22 ? 1 : 0.25);
+    const p = {
+      lauf: pose.lauf,
+      platt: pose.platt,
+      schwer,
+      jubel: pose.jubelZeit > 0 || (zustand === 'ende' && l.ergebnis === 'ziel'),
+      armeHoch: !l.boden && l.vy > 2 && !schwer,
+      blick: 0.6,
+      blickHoch: false,
+      schielen: pose.verdutztZeit > 0.25,
+      mund: 'lachen',
+    };
+    if (schwer) p.mund = 'entschlossen';
+    else if (!l.boden) p.mund = l.vy > 0 ? 'jubel' : 'lachen';
+    if (pose.jubelZeit > 0) p.mund = 'jubel';
+    if (pose.verdutztZeit > 0) p.mund = 'verdutzt';
+    if (zustand === 'ende' && l.ergebnis === 'ziel') { p.mund = 'jubel'; p.armeHoch = true; }
+    if (l.ergebnis === 'nacht') { p.mund = 'oh'; p.blickHoch = true; }
+    if (!l.gestartet) { p.blick = 0.9; p.mund = 'lachen'; }
+    return p;
+  }
+
+  // ---------------------------------------------------------- Game Loop
+  function rahmen(t) {
+    requestAnimationFrame(rahmen);
+    const dt = Math.min(0.1, Math.max(0, (t - letzte) / 1000));
+    letzte = t;
+    if (!lauf) { zeichneMenueHintergrund(dt); return; }
+    const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
+    if (aktiv) {
+      rest += dt;
+      let n = 0;
+      while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
+        lauf.schritt(zustand === 'lauf' && halten);
+        rest -= K.SCHRITT; n++;
+        for (const e of lauf.ereignisse) verarbeite(e);
+        lauf.ereignisse.length = 0;
+      }
+      if (n >= K.MAX_SCHRITTE) rest = 0;
+    }
+    if (zustand === 'ende') {
+      endeZeit += dt;
+      if (endeZeit > (lauf.ergebnis === 'ziel' ? 1.6 : 1.5) && !fensterOffen()) {
+        setzeZustand('ergebnis');
+        Ton.still();
+        if (lauf.ergebnis === 'ziel') zeigeErfolg(); else zeigeNacht();
+      }
+    }
+    // Lernhinweise an festen Stellen der Strecke
+    if (zustand === 'lauf') {
+      const h = lauf.hinweise.find(h => lauf.x >= h.x && lauf.x <= h.bis);
+      hinweis(h ? h.text : null);
+      // Warnglocke in den letzten Sekunden
+      const r = Math.ceil(lauf.rest);
+      if (r <= 5 && r < glockeBei && r > 0) { glockeBei = r; Ton.glocke(r <= 3); }
+      else if (r === 10 && glockeBei > 10) { glockeBei = 10; Ton.glocke(false); }
+    } else if (zustand !== 'pause') hinweis(null);
+    if (zustand === 'pause' || zustand === 'menue') Ton.still();
+    else Ton.fahrt(lauf.tempo, lauf.boden, halten, zustand === 'lauf' || (zustand === 'ende' && lauf.tempo > 2));
+    posenFuerBild = posenSchritt(zustand === 'pause' ? 0 : dt);
+    const f = Math.min(1, lauf.zeit / lauf.tag);
+    Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
+    hud();
+  }
+  let posenFuerBild = null;
+
+  function verarbeite(e) {
+    Grafik.ereignis(e, lauf, THEMEN[def.gebiet]);
+    if (e.art === 'abflug') Ton.abflug(e.v);
+    else if (e.art === 'landung') {
+      Ton.landung(e.guete, e.kette);
+      pose.platt = e.guete === 'hart' ? 1 : e.guete === 'perfekt' ? 0.4 : 0.6;
+      if (e.guete === 'perfekt') pose.jubelZeit = 0.5;
+      if (e.guete === 'hart') pose.verdutztZeit = 0.7;
+      const k = $('kette');
+      if (e.kette > 1) { k.hidden = false; k.textContent = `PERFEKT ×${e.kette}`; }
+      else if (e.guete !== 'perfekt') k.hidden = true;
+    } else if (e.art === 'ziel') {
+      setzeZustand('ende'); endeZeit = 0; Ton.sieg(); hinweis(null);
+      $('kette').hidden = true;
+    } else if (e.art === 'nacht') {
+      setzeZustand('ende'); endeZeit = 0; Ton.nacht(); hinweis(null);
+      $('kette').hidden = true;
+    }
+  }
+
+  // Hinter dem Startmenü fährt ein Bot die Lernstrecke (lebendiger Hintergrund)
+  let vorfuehrung = null, vorfuehrBot = null;
+  function zeichneMenueHintergrund(dt) {
+    if (!vorfuehrung || vorfuehrung.ergebnis) {
+      vorfuehrung = new Lauf(STRECKEN[1]);
+      vorfuehrung.starten();
+      vorfuehrung.tag = 9999;
+      vorfuehrBot = Bot.neu('schnell');
+      Grafik.neuerLauf();
+    }
+    rest += dt;
+    let n = 0;
+    while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
+      vorfuehrung.schritt(vorfuehrBot.halten(vorfuehrung)); rest -= K.SCHRITT; n++;
+      for (const e of vorfuehrung.ereignisse) Grafik.ereignis(e, vorfuehrung, THEMEN[0]);
+      vorfuehrung.ereignisse.length = 0;
+    }
+    if (n >= K.MAX_SCHRITTE) rest = 0;
+    const f = Math.min(0.9, (vorfuehrung.x / vorfuehrung.ziel) * 0.9);
+    Grafik.zeichne(vorfuehrung, { dt, f, figur: Speicher.krabbe(), pose: { lauf: 0, platt: 0, schwer: vorfuehrBot.letzte, mund: vorfuehrBot.letzte ? 'entschlossen' : 'lachen', blick: 0.6 }, gebiet: 0 });
+  }
+
+  // ---------------------------------------------------------- Start
+  Grafik.init(leinwand);
+  window.addEventListener('resize', () => Grafik.groesse());
+  setzeZustand('menue');
+  startKrabbe();
+  zeige('fStart');
+  requestAnimationFrame((t) => { letzte = t; requestAnimationFrame(rahmen); });
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !/^(127\.|localhost)/.test(location.hostname)) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  // Schnittstelle für die automatischen Browser-Tests
+  window.__sonne = {
+    zustand: () => zustand,
+    lauf: () => lauf,
+    starte: (id) => starteStrecke(id),
+    def: () => def,
+    kamera: () => ({ x: Grafik.kam.x, b: Grafik.kam.b, z: Grafik.kam.z }),
+    krabbeImBild: () => Grafik.krabbeImBild(lauf),
+    bodenImBild: (x) => Grafik.bodenImBild(lauf, x),
+    speicher: Speicher,
+  };
+})();
+
+</script>
+</body>
+</html>
