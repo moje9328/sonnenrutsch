@@ -5,6 +5,7 @@ L.STRECKEN.forEach((d, i) => {
   const g = L.Bot.spiele(d, 'gut').zeit;
   const ms = [1, 2, 3, 4, 5].map(s => L.Bot.spiele(d, 'mittel', s).zeit || 999).sort((a, b) => a - b);
   const zeit = Math.ceil(Math.max(g * FAKTOR[i], ms[2] + 2));
-  const s3 = Math.round(g * 1.04 * 10) / 10, s2 = Math.round((g * 1.04 + zeit) / 2 * 10) / 10;
+  const bester = Math.min(g, ms[0]);   // der schnellste Botlauf ist die Messlatte für 3 Sterne
+  const s3 = Math.round(bester * 1.04 * 10) / 10, s2 = Math.round((bester * 1.04 + zeit) / 2 * 10) / 10;
   console.log(`{ id: ${d.id}, gut: ${g.toFixed(1)}, mittel: [${ms.map(x => x.toFixed(1))}], zeit: ${zeit}, sterne: [${s2}, ${s3}] }`);
 });

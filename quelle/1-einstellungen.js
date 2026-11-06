@@ -9,19 +9,20 @@ const K = {
   MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
 
   G: 24,                    // Grundschwerkraft
-  SCHWER_BODEN: 2.3,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
+  SCHWER_BODEN: 2.6,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
   SCHWER_LUFT: 2.7,         // gedrückt in der Luft: Sinkflug
-  LEICHT_LUFT: 0.68,        // losgelassen in der Luft: sanfter, weiter Flug
+  LEICHT_LUFT: 0.5,        // losgelassen in der Luft: sanfter, weiter Flug
 
   REIBUNG: 0.6,             // gleichmäßige Bremsung am Boden (m/s²)
-  LUFTWIDERSTAND: 0.0016,   // Bremsung ~ v² am Boden
-  LUFTWIDERSTAND_FLUG: 0.0011, // Bremsung ~ v² in der Luft
+  LUFTWIDERSTAND: 0.0005,   // Bremsung ~ v² am Boden
+  LUFTWIDERSTAND_FLUG: 0.0003, // Bremsung ~ v² in der Luft
   V_MIN: 6,                 // so schnell krabbelt Kalle mindestens (nie Feststecken)
-  V_MAX: 70,                // Höchstgeschwindigkeit
+  V_MAX: 110,                // Höchstgeschwindigkeit
   V_START: 6,
+  STEIL_MAX: 1.4,           // Höhe ≤ Breite × dies → steilste Stelle = atan(π/2 × dies)
 
   // Landungen
-  PERFEKT_WINKEL: 9,        // Grad zwischen Flugrichtung und Hang: darunter „perfekt“
+  PERFEKT_WINKEL: 12,        // Grad zwischen Flugrichtung und Hang: darunter „perfekt“
   GUT_WINKEL: 24,           // darunter verliert Kalle nur den Anteil quer zum Hang
   PERFEKT_MIN_GEFAELLE: 0.18, // perfekt nur auf einem echt abfallenden Hang
   PERFEKT_MIN_FLUGZEIT: 0.32, // kleine Hüpfer an der Kuppe zählen nicht

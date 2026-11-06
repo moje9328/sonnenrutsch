@@ -102,6 +102,7 @@ class Lauf {
       this.abflugX = this.x;
       this.abflugY = this.y;
       this.abflugV = this.v;
+      this.abflugSteig = sin;   // wie steil es nach oben geht (0..1)
       this.hoechstImFlug = this.y;
       this.luftSchritt(dt);
       return;
@@ -125,7 +126,7 @@ class Lauf {
     if (!this.echterFlug && (this.y - h > 0.35 || this.flugzeit > 0.2)) {
       this.echterFlug = true;
       this.statistik.fluege++;
-      this.ereignisse.push({ art: 'abflug', v: this.abflugV, x: this.abflugX, y: this.abflugY });
+      this.ereignisse.push({ art: 'abflug', v: this.abflugV, x: this.abflugX, y: this.abflugY, steigt: this.abflugSteig });
     }
     if (this.y <= h) this.landen(h);
   }

@@ -22,7 +22,7 @@ for (const d of STRECKEN) {
   }
   ok(!nan, `Strecke ${d.id}: Höhe/Steigung endlich und passend`);
   ok(maxSprung < 0.02, `Strecke ${d.id}: kein Knick (Steigungssprung ${maxSprung.toFixed(3)})`);
-  ok(maxSteig < 1.6, `Strecke ${d.id}: nicht zu steil (max ${maxSteig.toFixed(2)})`);
+  ok(maxSteig < Math.PI / 2 * K.STEIL_MAX + 0.01, `Strecke ${d.id}: nicht zu steil (max ${maxSteig.toFixed(2)})`);
   ok(l.ziel > d.laenge - 80 && l.ziel < d.laenge + 120, `Strecke ${d.id}: Ziel bei ${l.ziel.toFixed(0)} m passt zur Länge`);
   ok(Math.abs(g.steigung(l.ziel)) < 0.01 && Math.abs(g.steigung(l.ziel + 200)) < 0.01, `Strecke ${d.id}: flacher Strand hinter dem Ziel`);
   // gleiche Saat → gleiche Strecke
@@ -124,8 +124,10 @@ if (!schnell) {
       letzteX = l.x;
     } });
     ok(unter === 0 && steht === 0, `Strecke ${d.id}: nie im Boden, nie stecken`);
-    ok(g.zeit && g.zeit <= d.sterne[1] + 0.01, `Strecke ${d.id}: guter Bot schafft 3 Sterne (${g.zeit && g.zeit.toFixed(1)} s ≤ ${d.sterne[1]})`);
     const ms = [1, 2, 3, 4, 5].map(s => Bot.spiele(d, 'mittel', s).zeit || 999);
+    const bester = Math.min(g.zeit || 999, ...ms);
+    ok(bester <= d.sterne[1] + 0.01, `Strecke ${d.id}: 3 Sterne sind erreichbar (bester Botlauf ${bester.toFixed(1)} s ≤ ${d.sterne[1]})`);
+    ok(d.sterne[1] >= bester, `Strecke ${d.id}: 3 Sterne nicht schneller als jeder Bot (${d.sterne[1]})`);
     const geschafft = ms.filter(z => z <= d.zeit).length;
     ok(geschafft >= 3, `Strecke ${d.id}: mittlerer Bot (Reaktionszeit 0,11 s, Fehler) schafft es in ${geschafft} von 5 Läufen`);
     const nie = Bot.spiele(d, 'nie').zeit;

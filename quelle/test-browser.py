@@ -53,7 +53,8 @@ KAMERA_JS = '''() => { window.__kam = { proben: 0, raus: 0, bodenRaus: 0, voraus
     const k = s.krabbeImBild(); const b = s.bodenImBild(l.x); const v = s.bodenImBild(l.x + 25);
     const W = innerWidth, H = innerHeight, m = window.__kam; m.proben++;
     m.maxH = Math.max(m.maxH, l.hoeheUeberBoden());
-    if (k.x < 10 || k.x > W - 10 || k.y < 10 || k.y > H - 4) m.raus++;
+    const hudUnten = document.getElementById('hud').getBoundingClientRect().bottom;
+    if (k.x < 10 || k.x > W - 10 || k.y < hudUnten + 20 || k.y > H - 4) m.raus++;
     if (b.y > H + 1 || b.y < 0) m.bodenRaus++;
     if (v.x > W + 1) m.vorausFehlt++;
   }, 60); }'''
@@ -107,7 +108,7 @@ async def main():
                 await warte(pg, "window.__sonne.zustand() === 'ergebnis'", 30000)
             m = await pg.evaluate('window.__kam')
             ok(m['proben'] > 50, f'{name}: Kamera geprüft ({m["proben"]} Proben)')
-            ok(m['raus'] == 0, f'{name}: Kalle immer im Bild ({m["raus"]} Ausreißer)')
+            ok(m['raus'] == 0, f'{name}: Kalle immer im Bild und unter der Anzeige ({m["raus"]} Ausreißer)')
             ok(m['bodenRaus'] == 0, f'{name}: Boden unter Kalle immer sichtbar ({m["bodenRaus"]})')
             ok(m['vorausFehlt'] == 0, f'{name}: 25 m Gelände voraus immer sichtbar ({m["vorausFehlt"]})')
             ok(not pg.fehler, f'{name}: keine Fehler in der Konsole {pg.fehler[:2]}')
@@ -235,16 +236,27 @@ async def main():
         ok(sterne == 3, f'Guter Lauf gibt 3 Sterne ({sterne})')
         await pg.screenshot(path=str(BILDER / 'sieg.png'))
         ok(await pg.evaluate('window.__sonne.speicher.frei(2)'), 'Strecke 2 freigeschaltet')
+        # Zweiter Sieg direkt danach (Fehler vom 6.11.: Siegfenster stürzte beim 2. Mal ab)
+        await pg.click('#weiterLevelKnopf')
+        await pg.wait_for_timeout(300)
+        ok(await zustand(pg) in ('bereit', 'lauf') and await pg.evaluate('window.__sonne.def().id') == 2, '„Nächste Strecke“ startet Strecke 2')
+        ok(await warte(pg, "window.__sonne.zustand() === 'ergebnis'", 60000), 'Bot erreicht das Ziel von Strecke 2')
+        await pg.wait_for_timeout(600)
+        ok(await pg.evaluate("!document.getElementById('fErfolg').hidden && document.getElementById('erfolgTitel').textContent === 'Geschafft!'"), 'Zweites Siegfenster wird richtig gezeigt')
+        ok(await pg.evaluate('window.__sonne.speicher.frei(3)'), 'Strecke 3 freigeschaltet')
+        await pg.keyboard.press('Enter')
+        await pg.wait_for_timeout(300)
+        ok(await zustand(pg) in ('bereit', 'lauf') and await pg.evaluate('window.__sonne.def().id') == 3, 'Enter im Siegfenster startet Strecke 3')
         await pg.evaluate('window.__botAus = true')
         await pg.reload()
         await pg.wait_for_timeout(500)
-        ok(await pg.evaluate('window.__sonne.speicher.frei(2) && !window.__sonne.speicher.frei(3)'), 'Freischaltung bleibt nach Neuladen')
+        ok(await pg.evaluate('window.__sonne.speicher.frei(3) && !window.__sonne.speicher.frei(4)'), 'Freischaltung bleibt nach Neuladen')
         ok(await pg.evaluate('window.__sonne.speicher.level(1).zeit > 0'), 'Bestzeit bleibt nach Neuladen')
         await pg.click('#spielenKnopf')
         await pg.wait_for_timeout(400)
         ok(await pg.evaluate("!document.getElementById('fLevel').hidden"), 'Danach führt „Spielen“ zur Streckenwahl')
         karten = await pg.evaluate("[...document.querySelectorAll('.karte')].map(k => k.disabled)")
-        ok(len(karten) == 12 and karten[:2] == [False, False] and all(karten[2:]), f'Karten: 2 frei, 10 gesperrt')
+        ok(len(karten) == 12 and karten[:3] == [False, False, False] and all(karten[3:]), f'Karten: 3 frei, 9 gesperrt')
         await pg.screenshot(path=str(BILDER / 'streckenwahl.png'), full_page=True)
         await ctx.close()
 
@@ -258,6 +270,17 @@ async def main():
         await pg.evaluate('window.__sonne.starte(1)')
         await pg.wait_for_timeout(300)
         ok(await zustand(pg) == 'bereit' and not pg.fehler, f'Gesperrter Speicher: Spiel läuft trotzdem {pg.fehler[:1]}')
+        await ctx.close()
+
+        # Ton: Juhuu-Stimme und alle Geräusche laufen ohne Fehler
+        ctx, pg = await neue_seite(b, 800, 600)
+        await pg.click('#spielenKnopf')
+        await pg.wait_for_timeout(300)
+        lauf = await pg.evaluate('''async () => { Ton.wecke(); await new Promise(r => setTimeout(r, 300));
+          Ton.abflug(70, true); Ton.landung('perfekt', 3); Ton.landung('hart', 0); Ton.landung('gut', 0); Ton.glocke(true); Ton.sieg(); Ton.nacht();
+          for (let i = 0; i < 20; i++) Ton.fahrt(i * 5, i % 2 === 0, i % 3 === 0, true);
+          await new Promise(r => setTimeout(r, 800)); return true; }''')
+        ok(lauf and not pg.fehler, f'Geräusche und Juhuu-Stimme ohne Fehler {pg.fehler[:1]}')
         await ctx.close()
 
         # Weniger Bewegung

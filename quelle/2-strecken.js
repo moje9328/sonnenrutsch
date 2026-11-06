@@ -83,18 +83,18 @@ const GEBIETE = [
 // zeit: Tageslicht in Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 620, L: [26, 30], A: [7, 9], steil: [0.95, 0.85], wechsel: 0.1, buckel: 0, saat: 11, zeit: 40, sterne: [29.5, 19.5], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1000, L: [26, 34], A: [8, 12], steil: [0.9, 0.75], wechsel: 0.2, buckel: 0, saat: 21, zeit: 40, sterne: [33.7, 27.4] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1300, L: [28, 40], A: [9, 15], steil: [0.85, 0.7], wechsel: 0.3, buckel: 0.1, saat: 33, zeit: 54, sterne: [46.1, 38.2] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 1450, L: [30, 42], A: [10, 16], steil: [0.8, 0.65], wechsel: 0.3, buckel: 0.12, saat: 47, zeit: 55, sterne: [47.4, 39.7] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 1650, L: [28, 46], A: [10, 19], steil: [0.75, 0.6], wechsel: 0.35, buckel: 0.15, saat: 58, zeit: 71, sterne: [62.6, 54.2] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 1750, L: [32, 52], A: [11, 21], steil: [0.72, 0.55], wechsel: 0.4, buckel: 0.2, saat: 64, zeit: 72, sterne: [63.9, 55.7] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 1850, L: [30, 54], A: [12, 22], steil: [0.7, 0.55], wechsel: 0.45, buckel: 0.2, saat: 71, zeit: 73, sterne: [65.5, 58] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 1950, L: [34, 58], A: [12, 24], steil: [0.66, 0.5], wechsel: 0.5, buckel: 0.25, saat: 86, zeit: 76, sterne: [68.7, 61.5] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2050, L: [36, 62], A: [13, 26], steil: [0.62, 0.48], wechsel: 0.5, buckel: 0.28, saat: 93, zeit: 86, sterne: [77.3, 68.6] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2150, L: [36, 64], A: [14, 26], steil: [0.6, 0.46], wechsel: 0.55, buckel: 0.3, saat: 105, zeit: 84, sterne: [75.4, 66.8] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2250, L: [38, 68], A: [14, 28], steil: [0.58, 0.45], wechsel: 0.55, buckel: 0.32, saat: 117, zeit: 91, sterne: [82.6, 74.2] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 2450, L: [40, 72], A: [15, 30], steil: [0.55, 0.42], wechsel: 0.6, buckel: 0.35, saat: 125, zeit: 104, sterne: [95.1, 86.2] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 900, L: [40, 48], A: [18, 24], steil: [0.75, 0.65], wechsel: 0.1, buckel: 0, saat: 11, zeit: 39, sterne: [30, 21.1], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1400, L: [42, 54], A: [20, 30], steil: [0.7, 0.6], wechsel: 0.15, buckel: 0, saat: 21, zeit: 46, sterne: [38.8, 31.5] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1700, L: [44, 60], A: [22, 34], steil: [0.66, 0.55], wechsel: 0.2, buckel: 0, saat: 33, zeit: 54, sterne: [45.5, 37] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 1900, L: [46, 64], A: [24, 38], steil: [0.62, 0.52], wechsel: 0.2, buckel: 0.05, saat: 47, zeit: 65, sterne: [56.1, 47.3] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2000, L: [46, 70], A: [26, 42], steil: [0.6, 0.5], wechsel: 0.25, buckel: 0.06, saat: 58, zeit: 81, sterne: [71.4, 61.8] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2100, L: [50, 76], A: [28, 46], steil: [0.58, 0.48], wechsel: 0.25, buckel: 0.08, saat: 64, zeit: 64, sterne: [56, 48] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2200, L: [50, 80], A: [30, 50], steil: [0.56, 0.46], wechsel: 0.3, buckel: 0.08, saat: 71, zeit: 85, sterne: [76.5, 67.9] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2300, L: [54, 84], A: [30, 52], steil: [0.54, 0.45], wechsel: 0.35, buckel: 0.1, saat: 86, zeit: 84, sterne: [75.7, 67.5] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2400, L: [56, 88], A: [32, 56], steil: [0.52, 0.44], wechsel: 0.35, buckel: 0.1, saat: 93, zeit: 81, sterne: [73.5, 66.1] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2500, L: [56, 92], A: [34, 58], steil: [0.5, 0.43], wechsel: 0.4, buckel: 0.12, saat: 105, zeit: 89, sterne: [81.8, 74.6] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2600, L: [60, 96], A: [34, 62], steil: [0.5, 0.42], wechsel: 0.4, buckel: 0.12, saat: 117, zeit: 105, sterne: [96.4, 87.7] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 2800, L: [62, 100], A: [36, 66], steil: [0.48, 0.4], wechsel: 0.45, buckel: 0.14, saat: 125, zeit: 98, sterne: [91.1, 84.2] },
 ];
 
 
@@ -104,7 +104,7 @@ const mischen = (a, b, t) => a + (b - a) * t;
 function baueStrecke(def) {
   const r = zufall(def.saat * 7919 + 13);
   const pkt = [];
-  const START_Y = 22;
+  const START_Y = 8 + def.A[0];
   // Startplateau: Kalle sitzt oben auf der ersten Düne
   pkt.push([-120, START_Y], [0, START_Y]);
   let x = 0, y = START_Y;
@@ -118,7 +118,7 @@ function baueStrecke(def) {
       // Abhang hinunter ins Tal
       const L = mischen(def.L[0], def.L[1], p) * w();
       let A = mischen(def.A[0], def.A[1], p) * w();
-      A = Math.min(A, L * 0.9);   // nie steiler als etwa 55°
+      A = Math.min(A, L * K.STEIL_MAX);   // Grenze für die steilste Stelle
       let ty = y - A;
       ty = Math.max(grund(x) - 2, Math.min(ty, grund(x) + 4));
       if (y - ty < 4) ty = y - 4;
@@ -129,7 +129,7 @@ function baueStrecke(def) {
       // Kleiner Zwischenbuckel: kurz, flach – wer gut fliegt, springt drüber
       if (def.buckel && r() < def.buckel && x > 120) {
         const L = mischen(def.L[0], def.L[1], p) * 0.38;
-        const hb = 2.5 + r() * 2;
+        const hb = mischen(def.A[0], def.A[1], p) * (0.1 + r() * 0.06);
         x += L; pkt.push([x, y + hb]);
         x += L; pkt.push([x, y + 0.2]);
         y = y + 0.2;
@@ -137,14 +137,14 @@ function baueStrecke(def) {
       // Rampe hinauf zur nächsten Kuppe (kürzer als der Abhang → Absprung)
       const Ld = mischen(def.L[0], def.L[1], p) * w();
       const L = Ld * mischen(def.steil[0], def.steil[1], p);
-      const A = Math.min(mischen(def.A[0], def.A[1], p) * w() * (0.8 + r() * 0.25), L * 0.9);
+      const A = Math.min(mischen(def.A[0], def.A[1], p) * w() * (0.8 + r() * 0.25), L * K.STEIL_MAX);
       x += L; y = y + A;
       pkt.push([x, y]);
       hoch = true;
     }
   }
   // Ins Ziel: ein letzter langer Abhang auf den flachen Strand
-  if (hoch) { x += 48; y = Math.min(y - 6, grund(x)); pkt.push([x, y]); }
+  if (hoch) { const ty = Math.min(y - 6, grund(x)); x += Math.max(48, (y - ty) / K.STEIL_MAX); y = ty; pkt.push([x, y]); }
   const ziel = x + 30;
   pkt.push([x + 600, y]);
 

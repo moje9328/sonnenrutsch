@@ -33,9 +33,9 @@
     fenster.hidden = !id;
     fenster.querySelector('.tafel').classList.toggle('breit', id === 'fLevel');
     if (id) {
+      // Dialogtitel für Screenreader verknüpfen – vorhandene ids nie umbenennen
       const t = $(id).querySelector('[data-titel]');
-      if (t) t.id = 'fensterTitel';
-      for (const s of SEKTIONEN) if (s !== id) { const a = $(s).querySelector('#fensterTitel'); if (a) a.removeAttribute('id'); }
+      if (t) { if (!t.id) t.id = id + 'Titel'; fenster.querySelector('.tafel').setAttribute('aria-labelledby', t.id); }
       const erst = $(id).querySelector('.btn.main') || $(id).querySelector('button');
       if (erst) setTimeout(() => erst.focus({ preventScroll: true }), 30);
     }
@@ -373,7 +373,12 @@
 
   function verarbeite(e) {
     Grafik.ereignis(e, lauf, THEMEN[def.gebiet]);
-    if (e.art === 'abflug') Ton.abflug(e.v);
+    if (e.art === 'abflug') {
+      // „Juhuu!“ nur bei kräftigem Absprung steil nach oben, nicht bei jedem Hüpfer
+      const juhu = e.v > 30 && e.steigt > 0.35;
+      Ton.abflug(e.v, juhu);
+      if (juhu) { Grafik.juhu(e.x, e.y); pose.jubelZeit = 0.6; }
+    }
     else if (e.art === 'landung') {
       Ton.landung(e.guete, e.kette);
       pose.platt = e.guete === 'hart' ? 1 : e.guete === 'perfekt' ? 0.4 : 0.6;
@@ -415,7 +420,10 @@
 
   // ---------------------------------------------------------- Start
   Grafik.init(leinwand);
-  window.addEventListener('resize', () => Grafik.groesse());
+  // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
+  function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6); }
+  window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
+  randMessen();
   setzeZustand('menue');
   startKrabbe();
   zeige('fStart');

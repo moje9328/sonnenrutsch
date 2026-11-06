@@ -1,8 +1,17 @@
 # Sonnenrutsch – Übergabe
 
 Stand: 6. November 2026. Neues, eigenständiges Pixelhafen-Spiel mit **Kalle** aus
-Krabbenalarm als Hauptfigur. **Nur lokal**, noch nicht veröffentlicht (kein GitHub-Repo,
-keine Karte auf der Pixelhafen-Seite). Krabbenalarm und Krabben-Krawall wurden nicht verändert.
+Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch/
+(Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
+Krabbenalarm und Krabben-Krawall wurden nicht verändert.
+
+## Änderungen nach dem ersten Test
+
+- **Fehler behoben: „Nach Level 2 ging es nicht weiter.“** Das Siegfenster stürzte beim zweiten Sieg ab, weil `zeige()` die id des Fenstertitels (`erfolgTitel`) in `fensterTitel` umbenannte. Jetzt werden ids nie umbenannt, nur `aria-labelledby` wird gesetzt. Neuer Browser-Test: zwei Siege hintereinander, dann Strecke 3.
+- **Viel steilere, höhere Hügel:** Höhenunterschiede 18–66 m statt 7–30 m, steilste Stelle bis ~65° (`K.STEIL_MAX` 1,4), kürzere Rampen. Leichterer Flug (0,5 g), weniger Luftwiderstand, Höchsttempo 110 m/s. Folge (guter Bot): Flüge typisch 30–90 m hoch und 100–170 m weit (vorher 3–20 m hoch, 20–70 m weit). Weniger Zwischenbuckel, damit lange Flüge möglich bleiben.
+- **„Juhuu!“:** Bei kräftigem Absprung steil nach oben (Tempo > 30, Steigung > 0,35) ruft Kalle mit kleiner Comic-Stimme „Juhuu!“ (zwei Silben, Sägezahn + Vokalfilter + Vibrato in `6-ton.js`, `stimme()`), höchstens alle 2 s. Der Text fliegt mit Kalle mit.
+- **Kamera:** Kalle fliegt nie mehr hinter die Anzeige. Die Kamera kennt die Höhe des HUD (`Grafik.setzeRandOben`) und zoomt sofort heraus, wenn Kalle zu hoch steigt (statt das Bild nach oben zu schieben).
+- 3 Sterne richten sich jetzt nach dem schnellsten Botlauf (guter oder mittlerer Bot).
 
 Spielidee: Kalle rutscht über weiche Küstenhügel, sammelt bergab Schwung, fliegt
 über die Kuppen und muss das Ziel erreichen, bevor die Sonne untergeht.
@@ -39,12 +48,12 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 ## Wichtige Entscheidungen
 
 - **Eigenständiges Spiel** im Pixelhafen-Stil (eigener Ordner `~/sonnenrutsch-app`), wie alle bisherigen Spiele: ein HTML-File, kein Build-Tool, keine Bibliotheken. Eine Physik-Bibliothek ist unnötig: Das Gelände ist eine Höhenfunktion.
-- **Gelände:** Kette aus Hoch- und Tiefpunkten, dazwischen halbe Kosinuswellen → Höhe und Steigung überall stetig (kein Knick, getestet). Steigung höchstens ~55°.
+- **Gelände:** Kette aus Hoch- und Tiefpunkten, dazwischen halbe Kosinuswellen → Höhe und Steigung überall stetig (kein Knick, getestet). Steilste Stelle ~65° (`K.STEIL_MAX`).
 - **Kein Durchfallen:** Weil das Gelände y(x) ist, gilt „unter y(x) = gelandet“. Physik in festen 1/240-s-Schritten, unabhängig von der Bildrate (getestet: gleiches Ergebnis bei 30/60/240 Hz).
-- **Boden:** Beschleunigung längs des Hangs = −g·sin(Neigung) − Reibung. Halten = g × 2,3 (bergab schneller, bergauf langsamer). Mindesttempo 6 m/s → nie Feststecken.
+- **Boden:** Beschleunigung längs des Hangs = −g·sin(Neigung) − Reibung. Halten = g × 2,6 (bergab schneller, bergauf langsamer). Mindesttempo 6 m/s → nie Feststecken.
 - **Abheben nur aus Schwung:** Kalle hebt ab, wenn v²·Krümmung > g·cos(Neigung). Schwer = höhere g → klebt an der Kuppe; loslassen → fliegt. Es gibt keinen Sprung per Taste. Mini-Hüpfer unter 0,35 m Höhe zählen nicht als Flug (keine Ereignisse, kein Geräuschgewitter).
-- **Luft:** losgelassen 0,68 g (weiter, sanfter Flug), gehalten 2,7 g (Sinkflug).
-- **Landung:** Tempo längs des Hangs bleibt, Querteil geht verloren. Winkel < 9° auf echtem Abhang nach ≥ 0,32 s Flug = **perfekt**: +5 %, je weitere Perfekte in Folge +1,2 % (max. Kette 5). Winkel > 24° = **hart**: zusätzlich −22 … −40 %, Staub, „Uff!“, verdutztes Gesicht.
+- **Luft:** losgelassen 0,5 g (weiter, sanfter Flug), gehalten 2,7 g (Sinkflug).
+- **Landung:** Tempo längs des Hangs bleibt, Querteil geht verloren. Winkel < 12° auf echtem Abhang nach ≥ 0,32 s Flug = **perfekt**: +5 %, je weitere Perfekte in Folge +1,2 % (max. Kette 5). Winkel > 24° = **hart**: zusätzlich −22 … −40 %, Staub, „Uff!“, verdutztes Gesicht.
 - **Kamera:** Kalle bei 30 % der Breite; Sichtbreite wächst mit Tempo; Höhe so, dass Kalle, tiefster und höchster Punkt voraus im Bild sind; herauszoomen schneller als hinein. Im Flug zeigt ein Schatten auf dem Boden, wo Kalle landen wird. Hochkant ist die Mindestbreite 54 m, Kalle bleibt mindestens 54 px breit.
 - **Schwierigkeit gemessen statt geschätzt:** `kalibriere.js` fährt jede Strecke mit dem guten Bot (plant voraus) und 5× mit dem mittleren Bot (0,11 s Reaktionszeit, 6 % Fehlentscheidungen). Tageslicht = max(gut × Faktor, Median mittel + 2 s). Der Faktor sinkt von 1,9 (Lernstrecke) auf 1,2 (Finale). Strecke 10 bekam eine andere Saat (105), weil die erste unfair träge war.
 - **Sterne:** 3 Sterne ≈ Niveau des guten Bots (+4 %), 2 Sterne in der Mitte zum Tageslicht, 1 Stern = Ziel erreicht.
@@ -52,29 +61,29 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 
 ## Strecken
 
-| Nr | Gebiet | Name | Länge | Tageslicht | 2★ / 3★ bis | guter Bot |
-|---|---|---|---|---|---|---|
-| 1 | Sanddünen | Lernstrecke (mit Hinweisen unterwegs) | 620 m | 40 s | 29,5 / 19,5 s | 18,7 s |
-| 2 | Sanddünen | Dünenwellen | 1000 m | 40 s | 33,7 / 27,4 | 26,4 |
-| 3 | Sanddünen | Windkamm | 1300 m | 54 s | 46,1 / 38,2 | 36,7 |
-| 4 | Tropeninsel | Palmenbucht | 1450 m | 55 s | 47,4 / 39,7 | 38,2 |
-| 5 | Tropeninsel | Kokoshügel | 1650 m | 71 s | 62,6 / 54,2 | 52,1 |
-| 6 | Tropeninsel | Lagunensprung | 1750 m | 72 s | 63,9 / 55,7 | 53,6 |
-| 7 | Felsküste | Klippenpfad | 1850 m | 73 s | 65,5 / 58 | 55,7 |
-| 8 | Felsküste | Brandungsfels | 1950 m | 76 s | 68,7 / 61,5 | 59,1 |
-| 9 | Felsküste | Möwenkap | 2050 m | 86 s | 77,3 / 68,6 | 66,0 |
-| 10 | Korallenkap | Muschelbank | 2150 m | 84 s | 75,4 / 66,8 | 64,3 |
-| 11 | Korallenkap | Korallenkamm | 2250 m | 91 s | 82,6 / 74,2 | 71,4 |
-| 12 | Korallenkap | Leuchtturmlauf | 2450 m | 104 s | 95,1 / 86,2 | 82,8 |
+| Nr | Gebiet | Name | Länge | Höhe der Hügel | Tageslicht | 2★ / 3★ bis | guter Bot |
+|---|---|---|---|---|---|---|---|
+| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 900 m | 18–24 m | 39 s | 30 / 21,1 s | 20,3 s |
+| 2 | Sanddünen | Dünenwellen | 1400 m | 20–30 m | 46 s | 38,8 / 31,5 | 30,3 |
+| 3 | Sanddünen | Windkamm | 1700 m | 22–34 m | 54 s | 45,5 / 37 | 36,8 |
+| 4 | Tropeninsel | Palmenbucht | 1900 m | 24–38 m | 65 s | 56,1 / 47,3 | 45,8 |
+| 5 | Tropeninsel | Kokoshügel | 2000 m | 26–42 m | 81 s | 71,4 / 61,8 | 59,4 |
+| 6 | Tropeninsel | Lagunensprung | 2100 m | 28–46 m | 64 s | 56 / 48 | 46,2 |
+| 7 | Felsküste | Klippenpfad | 2200 m | 30–50 m | 85 s | 76,5 / 67,9 | 65,3 |
+| 8 | Felsküste | Brandungsfels | 2300 m | 30–52 m | 84 s | 75,7 / 67,5 | 64,9 |
+| 9 | Felsküste | Möwenkap | 2400 m | 32–56 m | 81 s | 73,5 / 66,1 | 63,5 |
+| 10 | Korallenkap | Muschelbank | 2500 m | 34–58 m | 89 s | 81,8 / 74,6 | 71,7 |
+| 11 | Korallenkap | Korallenkamm | 2600 m | 34–62 m | 105 s | 96,4 / 87,7 | 86,1 |
+| 12 | Korallenkap | Leuchtturmlauf | 2800 m | 36–66 m | 98 s | 91,1 / 84,2 | 81,0 |
 
-Schwerer wird es durch breitere/höhere Hügel, steilere Rampen, unregelmäßigeren Rhythmus,
-kleine Zwischenbuckel (über die man fliegen sollte) und weniger Zeitpuffer.
+Schwerer wird es durch höhere, breitere Hügel, steilere Rampen, unregelmäßigeren Rhythmus,
+ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 auf ×1,2).
 **Nach jeder Änderung an Physik oder Strecken:** `node quelle/kalibriere.js`, Werte in `STRECKEN` übernehmen, beide Tests laufen lassen.
 
 ## Geprüft (6.11.2026)
 
-- `test-logik.js`: 164 von 164 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
-- `test-browser.py`: 108 von 108 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; Sieg → 3 Sterne, Freischaltung bleibt nach Neuladen; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
+- `test-logik.js`: 176 von 176 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
+- `test-browser.py`: 114 von 114 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
 - Screenshots aller Gebiete, von Tageslicht bis Sonnenuntergang, Hoch- und Querformat angesehen.
 
 ## Nicht geprüft / offene Punkte
@@ -82,5 +91,6 @@ kleine Zwischenbuckel (über die man fliegen sollte) und weniger Zeitpuffer.
 - **Kein echtes Handy, kein echter Mensch:** Spielgefühl, Schwierigkeit für Menschen, Ton und Bildrate auf echten Geräten sind ungetestet. Die Zeiten beruhen auf Bots. Wenn Strecken zu schwer/leicht sind: `zeit`/`sterne` in `STRECKEN` anpassen oder `FAKTOR` in `kalibriere.js`.
 - Ton nur im Code geprüft (headless Browser spielen nichts hörbar ab).
 - Echte 120-Hz-Displays nicht getestet (Physik ist bildratenunabhängig, sollte also passen).
-- Nicht veröffentlicht: Repo `moje9328/sonnenrutsch` und Karte auf `~/spiele-seite` fehlen. Beim Hochladen: Repo anlegen, Pages von main /, Karte in `SPIELE` ergänzen – **ohne Hafenlotse** (dort nur gezielt stagen, nie `git add .`). `sw.js` CACHE (`sonnenrutsch-v1`) bei jedem Update hochzählen.
+- Wie die Juhuu-Stimme klingt, konnte ich nicht hören – bitte am Gerät beurteilen (Tonhöhe in `abflug()` in `6-ton.js`).
+- Bei Updates: `sw.js` CACHE (`sonnenrutsch-v1`) hochzählen, committen, pushen. In `~/spiele-seite` nur gezielt stagen – Hafenlotse und Bewertungen liegen dort uncommittet und dürfen nicht mit hoch.
 - Ideen für später: Freundes-Rangliste per Link wie bei Steinbrecher, leise Musik, Geist-Kalle der Bestzeit.

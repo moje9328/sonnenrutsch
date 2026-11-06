@@ -57,7 +57,8 @@ const THEMEN = [
 
 const Grafik = (() => {
   let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
-  const kam = { x: 0, b: 0, z: 10, bereit: false };   // x = linker Rand, b = unterer Rand (Welt), z = Pixel je Meter
+  const kam = { x: 0, b: 0, z: 10, bereit: false };
+  let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab   // x = linker Rand, b = unterer Rand (Welt), z = Pixel je Meter
   let zeit = 0;
   const teilchen = [];
   const texte = [];
@@ -94,7 +95,7 @@ const Grafik = (() => {
     const oben = Math.max(l.y + K.KAM_RAND_OBEN, hi + 3);
     const unten = lo - K.KAM_RAND_UNTEN;
     const hoeheNoetig = oben - unten;
-    let z = Math.min(W / breite, H / hoeheNoetig);
+    let z = Math.min(W / breite, (H - randOben * dpr) / hoeheNoetig);
     // Nie so nah, dass Kalle riesig wirkt, nie so weit, dass er verschwindet
     z = Math.min(z, W / (minB * 0.8));
     // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
@@ -113,9 +114,11 @@ const Grafik = (() => {
       const ky = 1 - Math.exp(-K.KAM_GLAETTE_Y * dt);
       kam.b += (ziel.unten - kam.b) * ky;
     }
-    // Kalle muss immer ganz im Bild sein
-    const obenWelt = kam.b + H / kam.z;
-    if (l.y + 3 > obenWelt) kam.b += l.y + 3 - obenWelt;
+    // Kalle muss immer ganz im Bild und unter der Anzeige sein: sonst sofort
+    // herauszoomen (nicht nach oben schieben, damit der Boden sichtbar bleibt)
+    const krabbePx = K.KRABBE_MIN_PIXEL * dpr * 1.1 + 10 * dpr;
+    const nutzbar = H - randOben * dpr - krabbePx;
+    if (l.y > kam.b && (l.y - kam.b) * kam.z > nutzbar) kam.z = nutzbar / (l.y - kam.b);
     kam.x = l.x - (W / kam.z) * K.KAM_VORAUS;
   }
 
@@ -580,7 +583,7 @@ const Grafik = (() => {
       staub(e.x, e.y, 5, thema.boden[0], 0.5);
     }
   }
-  function effekte(dt) {
+  function effekte(dt, l) {
     for (let i = teilchen.length - 1; i >= 0; i--) {
       const t = teilchen[i];
       t.alt += dt;
@@ -605,7 +608,8 @@ const Grafik = (() => {
       t.alt += dt;
       if (t.alt >= t.leben) { texte.splice(i, 1); continue; }
       const a = Math.min(1, (t.leben - t.alt) * 4);
-      const hoch = t.alt * 2.5;
+      if (t.folgt && l) { t.x = l.x; t.y = l.y + 3.5; }
+      const hoch = t.folgt ? t.alt * 1.2 : t.alt * 2.5;
       const groesse = Math.round(Math.max(13 * dpr, 0.9 * kam.z) * t.gross * (1 + Math.max(0, 0.15 - t.alt) * 2));
       c.globalAlpha = a;
       c.font = `${groesse}px 'Press Start 2P', monospace`;
@@ -644,7 +648,7 @@ const Grafik = (() => {
     gelaende(l, thema, f, gebiet);
     flugSpur(l);
     krabbe(l, figur, pose);
-    effekte(dt);
+    effekte(dt, l);
     // Kurzer warmer Schein nach perfekter Landung
     if (blitz > 0) {
       c.fillStyle = `rgba(255, 236, 160, ${blitz * 0.18})`;
@@ -693,7 +697,8 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, ereignis, neuerLauf, profil, kamera, kameraZiel,
+    init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
+    juhu(x, y) { text(x, y + 3.5, 'Juhuu!', '#ffffff', 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
     get kam() { return kam; }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
     get cssW() { return cssW; }, get cssH() { return cssH; },
     // Für Tests: Bildposition von Kalle in CSS-Pixeln
