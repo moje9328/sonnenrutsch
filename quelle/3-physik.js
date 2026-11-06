@@ -82,18 +82,22 @@ class Lauf {
     const s = this.g.steigung(this.x);
     const n = Math.sqrt(1 + s * s);
     const cos = 1 / n, sin = s / n;
-    const g = K.G * (this.halten ? K.SCHWER_BODEN : 1);
+    const g = K.G * (this.halten ? K.SCHWER_BODEN : K.LEICHT_BODEN);
     let a = -g * sin - K.REIBUNG - K.LUFTWIDERSTAND * this.v * this.v;
     this.v += a * dt;
     if (auslauf) {
       this.v = Math.max(0, this.v - (this.ergebnis === 'nacht' ? 14 : 9) * dt);
     } else {
-      this.v = Math.max(K.V_MIN, Math.min(K.V_MAX, this.v));
+      // Nie Feststecken: losgelassen krabbelt Kalle zügig zurück aufs Mindesttempo.
+      // Wer bergauf schwer bleibt, wird dagegen richtig langsam.
+      if (this.halten) this.v = Math.max(K.V_MIN_SCHWER, this.v);
+      else if (this.v < K.V_MIN) this.v = Math.min(K.V_MIN, Math.max(K.V_MIN_SCHWER, this.v) + K.KRABBELN * dt);
+      this.v = Math.min(K.V_MAX, this.v);
     }
     // Abheben an der Kuppe?
     const y2 = this.g.kruemmung2(this.x);
     const kruemmung = -y2 / (n * n * n);   // > 0 an Kuppen
-    if (kruemmung > 0 && this.v * this.v * kruemmung > g * cos * K.ABHEBEN_SCHWELLE && this.v > K.V_MIN + 0.5) {
+    if (kruemmung > 0 && this.v * this.v * kruemmung > g * cos * K.ABHEBEN_SCHWELLE && this.v > K.V_MIN + 2) {
       this.boden = false;
       this.vx = this.v * cos;
       this.vy = this.v * sin;
@@ -118,6 +122,8 @@ class Lauf {
     this.vx -= w * this.vx * dt;
     this.vy -= (g + w * this.vy) * dt;
     if (this.ergebnis) this.vx = Math.max(0, this.vx - 4 * dt);
+    const vl = Math.hypot(this.vx, this.vy);
+    if (vl > K.V_MAX_LUFT) { this.vx *= K.V_MAX_LUFT / vl; this.vy *= K.V_MAX_LUFT / vl; }
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     this.flugzeit += dt;
@@ -156,8 +162,10 @@ class Lauf {
       neu *= 1 + K.PERFEKT_BONUS + K.KETTEN_BONUS * (this.kette - 1);
       st.perfekt++;
       st.kette = Math.max(st.kette, this.kette);
-    } else if (winkel < K.GUT_WINKEL) {
+    } else if (winkel < K.GUT_WINKEL || (s < -0.1 && winkel < K.ABHANG_WINKEL)) {
       art = 'gut';
+      // Sauber in den Hang gelenkt: fast das ganze Tempo bleibt (nur auf einem Abhang)
+      if (s < 0) neu = Math.max(neu, v * (winkel < K.GUT_WINKEL ? K.GUT_ERHALT : K.ABHANG_ERHALT));
       if (this.flugzeit >= K.PERFEKT_MIN_FLUGZEIT) this.kette = 0;
       st.gut++;
     } else {

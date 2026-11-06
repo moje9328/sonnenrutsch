@@ -5,6 +5,32 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Zweite Runde Rückmeldungen (7.11.2026)
+
+Rückmeldung: Kalle zu langsam, „fühlt sich abgebremst an“, kein Tempo aufbaubar, Touch soll direkter reagieren, Hügel sollen unterschiedlich hoch und lang sein (mal eine perfekte Rampe).
+
+- **Ursache „abgebremst“:** Fast jede Landung nach hohem Flug war hart (−20…−40 % Tempo), auch gute Landungen kosteten Tempo, und auf den hohen Hügeln kroch man bergauf mit 6 m/s.
+- **Physik neu:**
+  - Losgelassen ist Kalle am Boden leicht (`LEICHT_BODEN` 0,65 g) und gleitet weit den Hang hinauf. Gehalten wirkt 3,0 g (bergab), in der Luft 3,4 g (Sinkflug).
+  - Reibung und Luftwiderstand sind kleiner. Höchsttempo: Boden 80, Luft 100 m/s. Mindesttempo 14 m/s.
+  - Wer bergauf schwer bleibt, wird bis 5 m/s langsam (`V_MIN_SCHWER`). Losgelassen krabbelt Kalle mit 22 m/s² zurück aufs Mindesttempo, ohne Ruck. Dadurch reicht „dauernd drücken“ nicht mehr.
+- **Landungen fairer:**
+  - Unter 36° zum Hang wird Kalle in den Hang umgelenkt und behält mindestens 95 % Tempo. Auf einem Abhang gilt das bis 55° mit mindestens 82 %.
+  - „Perfekt“ gilt bis 20° (+5 %).
+  - Hart ist eine Landung nur gegen einen Anstieg oder bei einem steilen Sturz auf flachen Boden.
+- **Hügelarten** (`HUEGELARTEN` in `2-strecken.js`, Anteile je Strecke in `muster`):
+  - normal
+  - klein: schnelle Buckel
+  - gross: Riesenhügel
+  - rampe: Sprungschanze mit langem, tiefem Anlauf, kurzer steiler Rampe und langer Landezone dahinter
+  - Dazu stärkere Zufallsschwankung (`wechsel` bis 0,6). Wird ein Abhang durch die Talgrenzen zu steil, wird er automatisch länger.
+- **Direktere Reaktion:**
+  - Die Leinwand nutzt höchstens 1,5 Bildpunkte je CSS-Pixel statt 2. Gemessen mit 4-fach gedrosseltem Prozessor im Handy-Format: 60 statt 44 fps.
+  - Jedes Drücken gibt sofort Rückmeldung: ein leises „Wupp“ (`Ton.druck`), Sand fliegt am Boden, Sturzstreifen in der Luft.
+- **Messung** (Bot-Durchschnittstempo, vorher → jetzt): gut 34–45 → 36–54 m/s. Gute und mittlere Bots haben kaum noch harte Landungen. Flüge gehen bis etwa 130–150 m hoch und 150–240 m weit.
+- **Neuer Bot `einfach`** (Anfänger: bergab halten, beim Fallen halten). Test: Er schafft die Strecken 1–3, deshalb haben Strecke 2 und 3 etwas mehr Tageslicht (50 und 58 s).
+- Tests: Logik 179/179, Browser 114/114 in Chromium und WebKit. `sw.js` CACHE `sonnenrutsch-v3`.
+
 ## Änderungen nach dem ersten Test
 
 - **Fehler behoben: „Nach Level 2 ging es nicht weiter.“** Das Siegfenster stürzte beim zweiten Sieg ab, weil `zeige()` die id des Fenstertitels (`erfolgTitel`) in `fensterTitel` umbenannte. Jetzt werden ids nie umbenannt, nur `aria-labelledby` wird gesetzt. Neuer Browser-Test: zwei Siege hintereinander, dann Strecke 3.
@@ -61,20 +87,20 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 
 ## Strecken
 
-| Nr | Gebiet | Name | Länge | Höhe der Hügel | Tageslicht | 2★ / 3★ bis | guter Bot |
-|---|---|---|---|---|---|---|---|
-| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 900 m | 18–24 m | 39 s | 30 / 21,1 s | 20,3 s |
-| 2 | Sanddünen | Dünenwellen | 1400 m | 20–30 m | 46 s | 38,8 / 31,5 | 30,3 |
-| 3 | Sanddünen | Windkamm | 1700 m | 22–34 m | 54 s | 45,5 / 37 | 36,8 |
-| 4 | Tropeninsel | Palmenbucht | 1900 m | 24–38 m | 65 s | 56,1 / 47,3 | 45,8 |
-| 5 | Tropeninsel | Kokoshügel | 2000 m | 26–42 m | 81 s | 71,4 / 61,8 | 59,4 |
-| 6 | Tropeninsel | Lagunensprung | 2100 m | 28–46 m | 64 s | 56 / 48 | 46,2 |
-| 7 | Felsküste | Klippenpfad | 2200 m | 30–50 m | 85 s | 76,5 / 67,9 | 65,3 |
-| 8 | Felsküste | Brandungsfels | 2300 m | 30–52 m | 84 s | 75,7 / 67,5 | 64,9 |
-| 9 | Felsküste | Möwenkap | 2400 m | 32–56 m | 81 s | 73,5 / 66,1 | 63,5 |
-| 10 | Korallenkap | Muschelbank | 2500 m | 34–58 m | 89 s | 81,8 / 74,6 | 71,7 |
-| 11 | Korallenkap | Korallenkamm | 2600 m | 34–62 m | 105 s | 96,4 / 87,7 | 86,1 |
-| 12 | Korallenkap | Leuchtturmlauf | 2800 m | 36–66 m | 98 s | 91,1 / 84,2 | 81,0 |
+| Nr | Gebiet | Name | Länge | Tageslicht | 2★ / 3★ bis | guter Bot |
+|---|---|---|---|---|---|---|
+| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 1000 m | 37 s | 28,4 / 19,8 s | 19,0 s |
+| 2 | Sanddünen | Dünenwellen | 1500 m | 50 s | 41 / 31,9 | 30,6 |
+| 3 | Sanddünen | Windkamm | 1800 m | 58 s | 46,7 / 35,3 | 34,0 |
+| 4 | Tropeninsel | Palmenbucht | 2000 m | 61 s | 53 / 44,9 | 43,2 |
+| 5 | Tropeninsel | Kokoshügel | 2200 m | 72 s | 62,9 / 53,9 | 52,5 |
+| 6 | Tropeninsel | Lagunensprung | 2300 m | 63 s | 55,9 / 48,9 | 47,0 |
+| 7 | Felsküste | Klippenpfad | 2400 m | 71 s | 63,5 / 56 | 53,9 |
+| 8 | Felsküste | Brandungsfels | 2500 m | 67 s | 60,6 / 54,1 | 52,1 |
+| 9 | Felsküste | Möwenkap | 2600 m | 65 s | 59,2 / 53,5 | 51,4 |
+| 10 | Korallenkap | Muschelbank | 2700 m | 70 s | 64,1 / 58,2 | 55,9 |
+| 11 | Korallenkap | Korallenkamm | 2800 m | 79 s | 73 / 66,9 | 64,4 |
+| 12 | Korallenkap | Leuchtturmlauf | 3000 m | 95 s | 87,5 / 80 | 78,9 |
 
 Schwerer wird es durch höhere, breitere Hügel, steilere Rampen, unregelmäßigeren Rhythmus,
 ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 auf ×1,2).
@@ -82,7 +108,7 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 
 ## Geprüft (6.11.2026)
 
-- `test-logik.js`: 176 von 176 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
+- `test-logik.js`: 179 von 179 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
 - `test-browser.py`: 114 von 114 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
 - Screenshots aller Gebiete, von Tageslicht bis Sonnenuntergang, Hoch- und Querformat angesehen.
 

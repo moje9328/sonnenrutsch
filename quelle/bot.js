@@ -5,6 +5,7 @@
 // art: 'gut'   – schaut voraus, wo er landet, und entscheidet dann
 //      'mittel'– wie 'gut', aber mit Reaktionszeit und kleinen Fehlern
 //      'schnell' – sparsamer Rechner für die Vorführung im Menü
+//      'einfach' – Anfänger: bergab und beim Fallen halten
 //      'nie' / 'immer' – drückt nie bzw. immer
 // ===================================================================
 const Bot = (() => {
@@ -57,6 +58,8 @@ const Bot = (() => {
         schritte++;
         if (art === 'nie') return false;
         if (art === 'immer') return true;
+        // 'einfach': so spielt ein Anfänger – bergab halten, beim Fallen halten
+        if (art === 'einfach') { const h = l.boden ? l.g.steigung(l.x) < 0 : l.vy < 0; this.letzte = h; return h; }
         if (schritte >= naechste) {
           naechste = schritte + 6;   // alle 1/40 s neu nachdenken
           if (l.boden) entscheidung = bodenRegel(l, vorlauf);

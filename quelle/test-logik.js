@@ -11,17 +11,18 @@ for (const d of STRECKEN) {
   const l = new Lauf(d);
   const g = l.g;
   let maxSprung = 0, maxSteig = 0, nan = false;
+  // An jedem Stützpunkt: Steigung links und rechts gleich (kein Knick)
+  for (const [px] of g.p) maxSprung = Math.max(maxSprung, Math.abs(g.steigung(px - 1e-7) - g.steigung(px + 1e-7)));
   for (let x = -100; x < l.ziel + 300; x += 0.05) {
     const a = g.hoehe(x), b = g.hoehe(x + 0.05);
     const s1 = g.steigung(x), s2 = g.steigung(x + 0.05);
     if (!Number.isFinite(a) || !Number.isFinite(s1)) nan = true;
-    maxSprung = Math.max(maxSprung, Math.abs(s2 - s1));
     maxSteig = Math.max(maxSteig, Math.abs(s1));
     // Steigung passt zur Höhe (numerische Ableitung)
     if (Math.abs((b - a) / 0.05 - (s1 + s2) / 2) > 0.02) { nan = true; }
   }
   ok(!nan, `Strecke ${d.id}: Höhe/Steigung endlich und passend`);
-  ok(maxSprung < 0.02, `Strecke ${d.id}: kein Knick (Steigungssprung ${maxSprung.toFixed(3)})`);
+  ok(maxSprung < 1e-4, `Strecke ${d.id}: kein Knick (Steigungssprung ${maxSprung.toExponential(1)})`);
   ok(maxSteig < Math.PI / 2 * K.STEIL_MAX + 0.01, `Strecke ${d.id}: nicht zu steil (max ${maxSteig.toFixed(2)})`);
   ok(l.ziel > d.laenge - 80 && l.ziel < d.laenge + 120, `Strecke ${d.id}: Ziel bei ${l.ziel.toFixed(0)} m passt zur Länge`);
   ok(Math.abs(g.steigung(l.ziel)) < 0.01 && Math.abs(g.steigung(l.ziel + 200)) < 0.01, `Strecke ${d.id}: flacher Strand hinter dem Ziel`);
@@ -51,12 +52,17 @@ console.log('## Landungen bei jedem Tempo und Winkel');
         if (!l.boden || !e) { schlecht++; continue; }
         if (!(l.y >= l.g.hoehe(l.x) - 1e-9) || !Number.isFinite(l.v) || l.v < K.V_MIN - 1e-9 || l.v > K.V_MAX + 1e-9) schlecht++;
         const vLand = Math.hypot(l.vx, l.vy) || vorher;
-        if (e.guete === 'perfekt') { perfektGesehen++; if (l.v > vLand * (1 + K.PERFEKT_BONUS + 0.001) + 0.5) bonusZuGross++; }
+        if (e.guete === 'perfekt') { perfektGesehen++; if (l.v > Math.max(K.V_MIN, vLand * (1 + K.PERFEKT_BONUS + 0.001)) + 0.5) bonusZuGross++; }
         if (e.guete === 'hart') { hartGesehen++; if (l.v > vLand * 0.85 && l.v > K.V_MIN + 0.01) hartNichtLangsamer++; }
         // Nach der Landung: 2 s weiterlaufen ohne Durchfallen/Steckenbleiben
+        // Losgelassen: kommt voran. Gehalten: darf bremsen, steht aber nie still.
+        const k2 = Bot.kopie(l);
         let xAlt = l.x;
-        for (let i = 0; i < 480; i++) { l.schritt(i % 50 < 25); if (l.y < l.g.hoehe(l.x) - 1e-6) { schlecht++; break; } }
+        for (let i = 0; i < 480; i++) { l.schritt(false); if (l.y < l.g.hoehe(l.x) - 1e-6) { schlecht++; break; } }
         if (l.x <= xAlt + 5) schlecht++;
+        let xk = k2.x, still = 0;
+        for (let i = 0; i < 480; i++) { k2.schritt(true); if (k2.y < k2.g.hoehe(k2.x) - 1e-6) { schlecht++; break; } if (k2.x <= xk + 1e-6) still++; xk = k2.x; }
+        if (still > 0) schlecht++;
       }
     }
   }
@@ -130,6 +136,7 @@ if (!schnell) {
     ok(d.sterne[1] >= bester, `Strecke ${d.id}: 3 Sterne nicht schneller als jeder Bot (${d.sterne[1]})`);
     const geschafft = ms.filter(z => z <= d.zeit).length;
     ok(geschafft >= 3, `Strecke ${d.id}: mittlerer Bot (Reaktionszeit 0,11 s, Fehler) schafft es in ${geschafft} von 5 Läufen`);
+    if (d.id <= 3) { const anf = Bot.spiele(d, 'einfach', 2).zeit; ok(anf && anf <= d.zeit, `Strecke ${d.id}: auch ein Anfänger (bergab halten, beim Fallen halten) schafft sie (${anf && anf.toFixed(1)} s)`); }
     const nie = Bot.spiele(d, 'nie').zeit;
     ok(!nie || nie > d.zeit, `Strecke ${d.id}: ohne Drücken nicht zu schaffen`);
     if (!d.lern) { const immer = Bot.spiele(d, 'immer').zeit; ok(!immer || immer > d.zeit, `Strecke ${d.id}: dauernd Drücken reicht nicht`); }

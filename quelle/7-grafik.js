@@ -75,7 +75,7 @@ const Grafik = (() => {
   function groesse() {
     const r = leinwand.getBoundingClientRect();
     cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);   // mehr sieht man kaum, kostet auf dem Handy aber viel Bildrate
     W = Math.round(cssW * dpr); H = Math.round(cssH * dpr);
     if (leinwand.width !== W || leinwand.height !== H) { leinwand.width = W; leinwand.height = H; }
   }
@@ -536,6 +536,21 @@ const Grafik = (() => {
       schielen: pose.schielen,
     });
     c.restore();
+    // Sofort sichtbar, dass Halten wirkt: Sand fliegt am Boden, Sturzstreifen in der Luft
+    if (pose.schwer && !ruhig) {
+      if (l.boden && l.tempo > 10 && teilchen.length < 160) {
+        const w = Math.atan(l.g.steigung(l.x));
+        for (let k = 0; k < 2; k++) teilchen.push({ x: l.x - Math.cos(w) * 1.2, y: l.y + 0.2, vx: -l.tempo * 0.12 * (0.5 + Math.random()), vy: 2 + Math.random() * 4, leben: 0.35 + Math.random() * 0.2, alt: 0, r: 0.18 + Math.random() * 0.22, farbe: pose.sandFarbe || '#f2d08a', art: 'staub' });
+      } else if (!l.boden) {
+        c.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+        c.lineWidth = 2.5 * dpr; c.lineCap = 'round';
+        for (let k = -1; k <= 1; k++) {
+          const ph = (zeit * 7 + k * 0.33 + 1) % 1;
+          const lx = px + k * breite * 0.28, ly = py - breite * (1.2 + ph * 0.8);
+          c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx, ly - breite * 0.5); c.stroke();
+        }
+      }
+    }
     // Fahrtwind-Linien bei hohem Tempo
     const v = l.tempo;
     if (v > 26 && !ruhig) {

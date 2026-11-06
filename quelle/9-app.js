@@ -88,6 +88,7 @@
   // ---------------------------------------------------------- Eingabe
   const app = {
     gedrueckt() {
+      if (!halten && zustand === 'lauf') Ton.druck(lauf.boden);
       halten = true;
       if (zustand === 'bereit' && !fensterOffen()) {
         lauf.starten();
@@ -316,6 +317,7 @@
       blickHoch: false,
       schielen: pose.verdutztZeit > 0.25,
       mund: 'lachen',
+      sandFarbe: THEMEN[def.gebiet].boden[0],
     };
     if (schwer) p.mund = 'entschlossen';
     else if (!l.boden) p.mund = l.vy > 0 ? 'jubel' : 'lachen';

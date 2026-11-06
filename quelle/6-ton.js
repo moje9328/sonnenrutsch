@@ -162,6 +162,11 @@ const Ton = (() => {
       ton(f, f, 0.35, { typ: 'sine', laut: 0.08 });
       ton(f * 2.01, f * 2, 0.2, { typ: 'sine', laut: 0.02 });
     },
+    // Drücken: leises, tiefes „Wupp“ – Kalle macht sich schwer
+    druck(boden) {
+      if (!bereit()) return;
+      ton(boden ? 200 : 260, boden ? 110 : 150, 0.07, { typ: 'sine', laut: 0.07 });
+    },
     klick() { if (bereit()) ton(660, 660, 0.04, { typ: 'square', laut: 0.04 }); },
     start() { if (bereit()) { ton(392, 392, 0.08, { typ: 'triangle', laut: 0.16 }); ton(523, 523, 0.12, { typ: 'triangle', laut: 0.16, start: 0.08 }); } },
     // Ziel: kleine Dur-Fanfare
