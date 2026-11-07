@@ -18,6 +18,13 @@ const K = {
   // und fällt zunehmend, aber nicht schlagartig
   G_LUFT: 44,               // Schwerkraft im Flug (losgelassen), m/s²
   SCHWER_LUFT: 3.4,         // gedrückt in der Luft: Sinkflug mit G_LUFT × dies …
+  // Hohe Flüge sollen zügig nach vorn gehen, nicht schweben:
+  FLUG_WINKEL_MAX: 36,      // steiler als so viele Grad steigt Kalle nach dem Absprung nicht lange …
+  LENKEN_STAERKE: 3,      // … sondern wird weich nach vorn gelenkt (Anteil des Überschuss-Winkels pro Sekunde) …
+  LENKEN_ANLAUF: 0.4,       // … das Lenken setzt über so viele Sekunden nach dem Absprung weich ein (kein Ruck) …
+  HOEHE_SCHWER_AB: 35,      // ab so viel Metern über dem Boden zieht die Schwerkraft zunehmend stärker …
+  HOEHE_SCHWER_BIS: 110,    // … bis sie ab dieser Höhe …
+  HOEHE_SCHWER_EXTRA: 0.6,  // … um so viel stärker ist (×1,6) – kein endloses Schweben am Gipfel
   SINKFLUG_ANLAUF: 0.1,     // … setzt in so vielen Sekunden weich ein und endet beim Loslassen sofort
 
   REIBUNG: 1.0,             // gleichmäßige Bremsung am Boden (m/s²)
@@ -53,9 +60,9 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    HOEHE: 100,             // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
-    WEITE: 300,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
-    YIPPIE_HOEHE: 140,      // „Yippie!“ statt „Juhu!“, wenn der Gipfel mindestens so hoch ist (m)
+    HOEHE: 90,              // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
+    WEITE: 290,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
+    YIPPIE_HOEHE: 105,      // „Yippie!“ statt „Juhu!“, wenn der Gipfel mindestens so hoch ist (m)
     ABSTAND: 15,            // Sekunden zwischen zwei Rufen mindestens (sonst entfällt der Ruf)
     BODEN_RUHE: 0.25,       // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
   },

@@ -210,25 +210,25 @@ console.log('## Flugrufe: Juhu und Yippie');
   fr = new Flugrufe();
   ok(flug(fr, 0, 160, 50).rufe.length === 0, 'sehr weit, aber flach → still');
   fr = new Flugrufe();
-  const gross = flug(fr, 0, 100, 100).rufe;
-  ok(gross.length === 1 && gross[0][0] === 'juhu', `richtig hoch (~114 m) und weit → genau ein Juhu (${gross.map(r => r[0])})`);
+  const gross = flug(fr, 0, 100, 90).rufe;
+  ok(gross.length === 1 && gross[0][0] === 'juhu', `richtig hoch (~92 m) und weit → genau ein Juhu (${gross.map(r => r[0])})`);
   fr = new Flugrufe();
   const riesig = flug(fr, 0, 100, 130).rufe;
   ok(riesig.length === 1 && riesig[0][0] === 'yippie', `riesiger Flug (~190 m) → genau ein Yippie, kein Juhu (${riesig.map(r => r[0])})`);
   // Schnelle Folge: zweiter großer Flug kurz nach dem ersten Ruf → kein zweiter Ruf
   fr = new Flugrufe();
-  const a1 = flug(fr, 0, 100, 100, { dauer: 3.5 });
+  const a1 = flug(fr, 0, 100, 90, { dauer: 3.5 });
   boden(fr, a1.l, R.BODEN_RUHE + 0.01);
-  const a2 = flug(fr, a1.l.zeit, 100, 100, { dauer: 3.5 });
+  const a2 = flug(fr, a1.l.zeit, 100, 90, { dauer: 3.5 });
   ok(a1.rufe.length === 1 && a2.rufe.length === 0, 'zweiter großer Flug innerhalb des Mindestabstands bleibt still (und wird nicht nachgeholt)');
   boden(fr, a2.l, R.ABSTAND);
-  const a3 = flug(fr, a2.l.zeit, 100, 100);
+  const a3 = flug(fr, a2.l.zeit, 100, 90);
   ok(a3.rufe.length === 1, 'nach genug Abstand und stabiler Landung ruft Kalle wieder');
   // Kurzer Aufsetzer: gilt als derselbe Flug → kein zweiter Ruf
   fr = new Flugrufe();
-  const b1 = flug(fr, 0, 100, 100, { dauer: 3.5 });
+  const b1 = flug(fr, 0, 100, 90, { dauer: 3.5 });
   boden(fr, b1.l, 0.1);
-  const b2 = flug(fr, b1.l.zeit + 30, 100, 100, { dauer: 3.5 });
+  const b2 = flug(fr, b1.l.zeit + 30, 100, 90, { dauer: 3.5 });
   ok(b1.rufe.length === 1 && b2.rufe.length === 0, 'kurzer Aufsetzer (unter BODEN_RUHE) startet keinen neuen Flug');
   // In allen echten Läufen: pro Flug höchstens 1 Ruf, Abstände eingehalten, kleine Flüge still, selten
   let fehlerPro = 0, fehlerAbstand = 0, kleineMitRuf = 0, juhuGesamt = 0, yippieGesamt = 0, fluege = 0, spielzeit = 0;
@@ -264,23 +264,26 @@ console.log('## Geschmeidige Flugphysik (Vergleichsversuche auf derselben Rampe)
   ok(r.every(x => x.abgehoben), 'alle Anfahrten heben an der Rampe ab');
   ok(r.every((x, i) => i === 0 || (x.weite > r[i - 1].weite && x.gipfel > r[i - 1].gipfel && x.flugzeit > r[i - 1].flugzeit)), 'schnellerer Absprung → höher, weiter und länger in der Luft');
   ok(r.every(x => Math.abs(x.winkelAb - r[0].winkelAb) < 6), 'vergleichbarer Absprungwinkel (Rampentangente bleibt erhalten)');
-  ok(r.every(x => x.ruckAmScheitel < 0.05), 'kein Ruck: Beschleunigung ändert sich im Flug (auch am Scheitel) kaum von Schritt zu Schritt');
+  ok(r.every(x => x.ruckAmScheitel < 1), `kein Ruck: Beschleunigung ändert sich im Flug höchstens ${Math.max(...r.map(x => x.ruckAmScheitel)).toFixed(2)} m/s² pro Schritt (< 2 % der Schwerkraft)`);
+  const hoch = r[r.length - 1];
+  ok(hoch.flugzeit < 4 && hoch.weite / hoch.flugzeit > 90, `hoher Flug schwebt nicht: ${hoch.flugzeit.toFixed(2)} s in der Luft, vorwärts ${(hoch.weite / hoch.flugzeit).toFixed(0)} m/s (vorher 4,73 s, 83 m/s)`);
   ok(r[0].flugzeit > 2 && r[0].gipfel > 20, `kein „Stein“: schon der langsamste Flug dauert ${r[0].flugzeit.toFixed(1)} s`);
   // Fallzeit aus 30 m (losgelassen): geschmeidig, aber nicht schwerelos
   const fall = Math.sqrt(2 * 30 / K.G_LUFT);
   ok(fall > 1 && fall < 1.6, `Fall aus 30 m dauert ${fall.toFixed(2)} s (vorher 0,79 s)`);
   // Sinkflug nur bei gehaltener Taste, endet sofort, Geschwindigkeit springt nie
   const l = new Lauf(STRECKEN[4]); l.starten(); l.tag = 999;
-  l.x = 500; l.boden = false; l.echterFlug = true; l.vx = 80; l.vy = 10; l.y = l.g.hoehe(500) + 300;
+  l.x = 500; l.boden = false; l.echterFlug = true; l.flugzeit = 2; l.vx = 80; l.vy = -10; l.y = l.g.hoehe(500) + 300;
+  const gHoch = K.G_LUFT * (1 + K.HOEHE_SCHWER_EXTRA);   // weit über dem Boden zieht die Schwerkraft stärker
   const ay = (halten) => { const v0 = l.vy; l.schritt(halten); return (l.vy - v0) / K.SCHRITT; };
   const frei = ay(false);
   let maxSprungV = 0, vAlt = Math.hypot(l.vx, l.vy), a = 0;
   for (let i = 0; i < 0.3 / K.SCHRITT; i++) { a = ay(true); const v = Math.hypot(l.vx, l.vy); maxSprungV = Math.max(maxSprungV, Math.abs(v - vAlt)); vAlt = v; }
   const losgelassen = ay(false);
-  ok(Math.abs(frei + K.G_LUFT) < 2, `losgelassen: normale Luftschwerkraft (${(-frei).toFixed(0)} m/s²)`);
-  ok(Math.abs(a + K.G_LUFT * K.SCHWER_LUFT) < 3, `gehalten: Sinkflug ${(-a).toFixed(0)} m/s²`);
+  ok(Math.abs(frei + gHoch) < 2, `losgelassen hoch oben: Luftschwerkraft ${(-frei).toFixed(0)} m/s²`);
+  ok(Math.abs(a + gHoch * K.SCHWER_LUFT) < 4, `gehalten: Sinkflug ${(-a).toFixed(0)} m/s²`);
   ok(Math.abs(losgelassen - frei) < 2, 'nach dem Loslassen endet die Zusatzkraft sofort');
-  ok(maxSprungV < K.G_LUFT * K.SCHWER_LUFT * K.SCHRITT * 1.2, 'Geschwindigkeit bleibt beim Sinkflug stetig (kein Sprung)');
+  ok(maxSprungV < gHoch * K.SCHWER_LUFT * K.SCHRITT * 1.2, 'Geschwindigkeit bleibt beim Sinkflug stetig (kein Sprung)');
   ok(K.V_MAX_LUFT * K.SCHRITT < 1, `Weg pro Physikschritt höchstens ${(K.V_MAX_LUFT * K.SCHRITT).toFixed(2)} m (jeder Schritt wird gegen den Boden geprüft)`);
 }
 

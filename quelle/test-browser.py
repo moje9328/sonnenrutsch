@@ -323,7 +323,7 @@ async def main():
         info = await pg.evaluate('(() => { const l = window.__sonne.lauf(); return [window.__sonne.zustand(), window.__sonne.def().id, Math.round(l.x), l.statistik.fluege, l.rufe.letzterRuf]; })()')
         print('  Lauf:', info)
         log = await pg.evaluate('window.__rufLog')
-        ok(len(log) >= 3, f'Im echten Lauf ruft Kalle mehrmals ({[x[0] for x in log]})')
+        ok(1 <= len(log) <= max(2, info[3] // 3), f'Im echten Lauf ruft Kalle – aber nur bei großen Flügen, nicht bei jedem ({[x[0] for x in log]} bei {info[3]} Flügen)')
         abst = [log[i][2] - log[i - 1][2] for i in range(1, len(log))]
         ok(all(a >= 700 for a in abst), f'Zwischen zwei Rufen liegen mindestens 0,7 s ({[round(a) for a in abst][:8]})')
         ok(not pg.fehler, f'Flugrufe: keine Konsolenfehler {pg.fehler[:2]}')

@@ -193,7 +193,22 @@ class Lauf {
     // Sinkflug nur bei gehaltener Taste: weicher Anlauf, beim Loslassen sofort aus.
     // Die Geschwindigkeit selbst ändert sich nie sprunghaft – nur die Kraft.
     this.sinkflug = this.halten ? Math.min(1, this.sinkflug + dt / K.SINKFLUG_ANLAUF) : 0;
-    const g = K.G_LUFT * (1 + (K.SCHWER_LUFT - 1) * this.sinkflug);
+    // Hoch über dem Boden zieht die Schwerkraft stetig stärker (weich, ohne Sprung)
+    const ueber = this.y - this.g.hoehe(this.x);
+    const hochT = Math.max(0, Math.min(1, (ueber - K.HOEHE_SCHWER_AB) / (K.HOEHE_SCHWER_BIS - K.HOEHE_SCHWER_AB)));
+    const hochAnteil = hochT * hochT * (3 - 2 * hochT);
+    const g = K.G_LUFT * (1 + K.HOEHE_SCHWER_EXTRA * hochAnteil) * (1 + (K.SCHWER_LUFT - 1) * this.sinkflug);
+    // Steiler Steigflug wird nach dem Absprung weich nach vorn gelenkt (gleiches Tempo,
+    // mehr davon nach vorn) – hohe Flüge kommen so zügig voran statt fast senkrecht zu schweben
+    if (this.vy > 0) {
+      const wMax = K.FLUG_WINKEL_MAX * Math.PI / 180, wJetzt = Math.atan2(this.vy, this.vx);
+      if (wJetzt > wMax) {
+        // Lenken proportional zum Überschuss-Winkel, setzt über LENKEN_ANLAUF s weich ein (kein Ruck)
+        const t = Math.min(1, this.flugzeit / K.LENKEN_ANLAUF), weich = t * t * (3 - 2 * t);
+        const neu = wJetzt - (wJetzt - wMax) * Math.min(1, K.LENKEN_STAERKE * weich * dt), vb = Math.hypot(this.vx, this.vy);
+        this.vx = vb * Math.cos(neu); this.vy = vb * Math.sin(neu);
+      }
+    }
     const v = Math.hypot(this.vx, this.vy);
     const w = K.LUFTWIDERSTAND_FLUG * v;
     this.vx -= w * this.vx * dt;

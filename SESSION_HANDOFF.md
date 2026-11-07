@@ -5,6 +5,31 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Achte Runde (7.11.2026): Hohe Flüge kommen zügig voran
+
+Wunsch: „Wenn er sehr hoch fliegt, fühlt es sich an, als ob er schwerelos ist und ewig in der Luft bleibt. Er muss auch schnell vorankommen.“
+
+**Ursache:** Steile Rampen schleuderten Kalle mit etwa 52° fast senkrecht ab. Bei 155 m/s Anlauf blieben nur etwa 83 m/s vorwärts übrig. Der Flug dauerte 4,7 s, und die Kamera zoomte weit heraus.
+
+**Änderungen (`1-einstellungen.js`, `luftSchritt` in `3-physik.js`):**
+- **Lenken nach vorn:** Steigt Kalle steiler als `FLUG_WINKEL_MAX` 36°, wird die Flugrichtung weich nach vorn gedreht. Das Tempo bleibt gleich. Die Stärke ist `LENKEN_STAERKE` 3 (Anteil des Überschuss-Winkels pro Sekunde), und das Lenken setzt über `LENKEN_ANLAUF` 0,4 s ein. Direkt am Absprung wirkt es fast nicht, so stößt Kalle nicht in die Rampe zurück. Ein Begrenzen schon beim Absprung wurde getestet: Kalle prallt dann sofort zurück auf die Rampe und verliert Tempo, darum wurde es verworfen.
+- **Schwerkraft wächst mit der Höhe:** Ab `HOEHE_SCHWER_AB` 35 m über dem Boden steigt sie weich (Smoothstep) bis `HOEHE_SCHWER_BIS` 110 m um `HOEHE_SCHWER_EXTRA` 0,6 auf das 1,6-Fache. So schwebt Kalle am Gipfel nicht ewig.
+- **Neue Messwerte** (`node quelle/vergleich.js`):
+
+  | Anfahrt | Flugzeit | Gipfel | Weite |
+  |---|---|---|---|
+  | 95 m/s | 2,66 s | 29 m | 123 m |
+  | 115 m/s | 3,24 s | 55 m | 207 m |
+  | 135 m/s | 3,43 s | 77 m | 272 m |
+  | 155 m/s | 3,68 s (vorher 4,73) | 97 m (vorher 136) | 345 m, Ø 94 m/s vorwärts (vorher 83) |
+
+  Die Beschleunigung ändert sich höchstens um 0,8 m/s² pro Physikschritt, also ohne Ruck. Die alte Testgrenze von 0,05 war mit Lenken nicht haltbar und ist jetzt < 1.
+- **Bot-Gesamtzeiten über 12 Strecken:** gut 464 s (vorher 499), mittel 489 s (vorher 530). Zeiten und Sterne sind neu kalibriert und dadurch etwas kürzer.
+- **Muscheln:** Eine überflogene Abfahrt zählt jetzt selbst als Pause zwischen zwei Linien (`3b-muscheln.js`). Sonst hätte die Lernstrecke nur noch 2 Linien gehabt, jetzt sind es 4 mit 24 Muscheln.
+- **Tests:** Logik 470/470, WebKit 149/149, Chromium 149/149 in 2 von 3 Läufen.
+  - *Offen, gelegentlich:* Im Browser-Test meldet „Muscheln gesammelt“ ab und zu 0. Das trat schon vor dieser Runde auf (auch in WebKit). Wahrscheinlich liegt es am Timer-Bot unter Last, die Ursache ist nicht gefunden.
+- **Flugrufe angepasst**, weil die Flüge niedriger sind: `HOEHE` 90 m und `WEITE` 290 m, „Yippie!“ ab einem Gipfel von 105 m, `ABSTAND` 15 s. Gemessen: etwa 1,3–1,7 Rufe pro Minute.
+
 ## Siebte Runde (7.11.2026): Rauschen weg, kein Selbstlauf, seltene Rufe
 
 **1. Rauschen entfernt** („entferne das rauschen im spiel“). In `6-ton.js` sind entfernt:

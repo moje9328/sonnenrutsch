@@ -89,7 +89,7 @@ function berechneMuscheln(def, lauf) {
     if (!kuppe || tal[0] > lauf.ziel - 20) continue;
     // Nur Abfahrten, auf denen bei gutem Spiel wirklich gelandet wird (überflogene bleiben leer)
     const land = landungen.find(x => x > kuppe[0] && x < tal[0]);
-    if (land === undefined) continue;
+    if (land === undefined) { letzteHatte = false; continue; }   // überflogene Abfahrt ist selbst schon eine Pause
     // Bewusste Pausen: nicht jede Abfahrt, nie zwei Linien direkt hintereinander
     if (letzteHatte || r() > ML.ANTEIL) { letzteHatte = false; continue; }
     // Start: kurz vor der typischen Landestelle
