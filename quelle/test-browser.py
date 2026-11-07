@@ -80,7 +80,7 @@ async def main():
 
         # ---------------------------------------------------------- Größen
         print('\n## Darstellung auf verschiedenen Bildschirmen')
-        for (w, h, touch) in [(360, 640, True), (390, 844, True), (844, 390, True), (768, 1024, True), (1440, 900, False)]:
+        for (w, h, touch) in [(640, 360, True), (667, 375, True), (844, 390, True), (1024, 768, True), (1440, 900, False)]:   # Handys nur quer (hochkant: Hinweis, siehe unten)
             ctx, pg = await neue_seite(b, w, h, touch)
             name = f'{w}x{h}'
             ok(await im_bild(pg, '#fStart .tafel, .tafel'), f'{name}: Startfenster im Bild')
@@ -104,7 +104,7 @@ async def main():
             await pg.evaluate(BOT_JS, 'gut')
             await pg.wait_for_timeout(9000)
             await pg.screenshot(path=str(BILDER / f'{name}-lauf.png'))
-            if w == 390:
+            if w == 844:
                 await warte(pg, "window.__sonne.zustand() === 'ergebnis'", 30000)
             m = await pg.evaluate('window.__kam')
             ok(m['proben'] > 50, f'{name}: Kamera geprüft ({m["proben"]} Proben)')
@@ -115,6 +115,36 @@ async def main():
             await ctx.close()
 
         # ---------------------------------------------------------- Eingabe
+        print('\n## Nur Querformat, Bild nie gestaucht')
+        ctx, pg = await neue_seite(b, 390, 844, True)
+        grob = await pg.evaluate("matchMedia('(pointer: coarse)').matches")
+        if not grob:
+            print(f'  Hinweis: {MOTOR} meldet im Test keinen Touch-Zeiger – Hochformat-Prüfungen übersprungen')
+        else:
+            ok(await pg.evaluate("getComputedStyle(document.getElementById('drehen')).display !== 'none'"), 'Handy hochkant: Hinweis „Bitte dreh dein Handy quer“ deckt alles ab')
+            await pg.evaluate('window.__sonne.starte(1)')
+            await pg.wait_for_timeout(200)
+            await pg.touchscreen.tap(195, 600)
+            await pg.wait_for_timeout(300)
+            ok(await zustand(pg) == 'bereit', 'hochkant startet das Spiel nicht')
+            await pg.set_viewport_size({'width': 844, 'height': 390})
+            await pg.wait_for_timeout(300)
+            ok(await pg.evaluate("getComputedStyle(document.getElementById('drehen')).display === 'none'"), 'quer gedreht: Hinweis verschwindet')
+            await pg.touchscreen.tap(422, 300)
+            await pg.wait_for_timeout(400)
+            ok(await zustand(pg) == 'lauf', 'quer gedreht: Spiel startet mit dem ersten Tippen')
+            await pg.set_viewport_size({'width': 390, 'height': 844})
+            await pg.wait_for_timeout(300)
+            ok(await zustand(pg) == 'pause', 'mitten im Lauf hochkant gedreht: Spiel pausiert')
+            await pg.screenshot(path=str(BILDER / 'hochkant-hinweis.png'))
+        # Nach jeder Größenänderung passt das Bildraster zur sichtbaren Fläche (kein Stauchen)
+        for (w, h) in [(844, 390), (390, 844), (915, 412), (667, 375)]:
+            await pg.set_viewport_size({'width': w, 'height': h})
+            await pg.wait_for_timeout(250)
+            v = await pg.evaluate("(() => { const c = document.getElementById('bild'); return [c.width / c.height, c.clientWidth / c.clientHeight]; })()")
+            ok(abs(v[0] / v[1] - 1) < 0.01, f'{w}x{h}: Bild hat das richtige Seitenverhältnis ({v[0]:.3f} zu {v[1]:.3f})')
+        await ctx.close()
+
         print('\n## Eingabe reagiert sofort')
         ctx, pg = await neue_seite(b, 1280, 720)
         await pg.evaluate('window.__sonne.starte(2)')
@@ -172,20 +202,20 @@ async def main():
         ok(not pg.fehler, f'Eingabe: keine Konsolenfehler {pg.fehler[:2]}')
         await ctx.close()
 
-        # Touch
-        ctx, pg = await neue_seite(b, 390, 844, touch=True)
+        # Touch (quer)
+        ctx, pg = await neue_seite(b, 844, 390, touch=True)
         await pg.evaluate('window.__sonne.starte(1)')
         await pg.wait_for_timeout(200)
         await pg.evaluate('''() => { const el = document.getElementById('buehne');
-          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, pointerType: 'touch', bubbles: true, clientX: 200, clientY: 500, isPrimary: true })); }''')
+          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, pointerType: 'touch', bubbles: true, clientX: 400, clientY: 300, isPrimary: true })); }''')
         await pg.wait_for_timeout(300)
         ok(await zustand(pg) == 'lauf' and await pg.evaluate('window.__sonne.lauf().halten'), 'Finger auf dem Bildschirm startet und hält')
         await pg.evaluate('''() => { const el = document.getElementById('buehne');
-          el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, pointerType: 'touch', bubbles: true, clientX: 200, clientY: 500 })); }''')
+          el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, pointerType: 'touch', bubbles: true, clientX: 400, clientY: 300 })); }''')
         await pg.wait_for_timeout(100)
         ok(not await pg.evaluate('window.__sonne.lauf().halten'), 'Finger weg = leicht')
         await pg.evaluate('''() => { const el = document.getElementById('buehne');
-          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 8, pointerType: 'touch', bubbles: true, clientX: 200, clientY: 500 }));
+          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 8, pointerType: 'touch', bubbles: true, clientX: 400, clientY: 300 }));
           el.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 8, pointerType: 'touch', bubbles: true })); }''')
         await pg.wait_for_timeout(100)
         ok(not await pg.evaluate('window.__sonne.lauf().halten'), 'Abgebrochene Berührung hängt nicht')
@@ -404,12 +434,12 @@ async def main():
         await ctx.close()
 
         # Endlos auf dem Handy: Touch, Anzeige im Bild, Bildrate
-        ctx, pg = await neue_seite(b, 390, 844, touch=True)
+        ctx, pg = await neue_seite(b, 844, 390, touch=True)
         await pg.evaluate('window.__endlosSaat = 4')
         await pg.tap('#endlosKnopf')
         await pg.wait_for_timeout(300)
         await pg.evaluate('''() => { const el = document.getElementById('buehne');
-          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 3, pointerType: 'touch', bubbles: true, clientX: 200, clientY: 600, isPrimary: true })); }''')
+          el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 3, pointerType: 'touch', bubbles: true, clientX: 400, clientY: 300, isPrimary: true })); }''')
         await pg.wait_for_timeout(1500)
         ok(await zustand(pg) == 'lauf' and await pg.evaluate('window.__sonne.lauf().strecke') > 20, 'Endlosflug per Finger gestartet und unterwegs')
         await pg.evaluate('''() => { document.getElementById('buehne').dispatchEvent(new PointerEvent('pointerup', { pointerId: 3, pointerType: 'touch', bubbles: true })); }''')

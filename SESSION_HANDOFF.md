@@ -5,6 +5,20 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Neunte Runde (7.11.2026): Nur Querformat, kein gestauchtes Bild
+
+Wunsch: „In der Handy-Version passt das Bildformat nicht, es ist gequetscht. Man soll das Spiel nur im Querformat spielen können.“
+
+**Ursache:** Das Spielbild wurde nur beim `resize`-Ereignis neu vermessen. Beim Drehen melden Handys die neue Größe oft erst danach. Das alte Bildraster wurde dann ins neue Format gestreckt.
+
+**Änderungen:**
+- `9-app.js`: `groesseAktuell()` prüft in jedem Bild `clientWidth`/`clientHeight` der Leinwand und passt das Raster sofort an.
+- **Nur Querformat:** Ist ein Touch-Gerät hochkant (`(orientation: portrait) and (pointer: coarse)`), deckt `#drehen` alles ab und zeigt „Bitte dreh dein Handy quer“ mit kleiner Dreh-Animation (ohne Animation bei reduzierter Bewegung). Ein laufendes Spiel pausiert, hochkant startet nichts. Wo erlaubt, wird beim ersten Tippen `screen.orientation.lock('landscape')` versucht. Das klappt nur bei installierter App oder im Vollbild, sonst wird es still ignoriert. Das Manifest hat jetzt `"orientation": "landscape"`.
+- Der Erklärtext „Gedrückt halten“ ist wieder kurz. Auf flachen Bildschirmen ist das Erklärungsfenster breiter, damit es auf 640×360 die Anzeige nicht überdeckt.
+- **Tests:** Die Browser-Tests spielen Handys jetzt quer (640×360, 667×375, 844×390, 1024×768). Neu geprüft wird: Hinweis hochkant, Start erst nach dem Drehen, Pause beim Hochdrehen, richtiges Seitenverhältnis nach jeder Größenänderung. Chromium 158/158, WebKit 158/158. Die Logik-Tests sind unverändert.
+- Service-Worker-Cache ist jetzt `sonnenrutsch-v9`.
+- Nicht auf einem echten Handy geprüft.
+
 ## Achte Runde (7.11.2026): Hohe Flüge kommen zügig voran
 
 Wunsch: „Wenn er sehr hoch fliegt, fühlt es sich an, als ob er schwerelos ist und ewig in der Luft bleibt. Er muss auch schnell vorankommen.“

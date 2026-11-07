@@ -118,6 +118,7 @@
   // ---------------------------------------------------------- Eingabe
   const app = {
     gedrueckt() {
+      if (hochformat.matches) return;   // Handy hochkant: Spiel ruht, bis es quer gedreht ist
       if (!halten && zustand === 'lauf') Ton.druck(lauf.boden);
       halten = true;
       if (zustand === 'bereit' && !fensterOffen()) {
@@ -422,6 +423,7 @@
   // ---------------------------------------------------------- Game Loop
   function rahmen(t) {
     requestAnimationFrame(rahmen);
+    groesseAktuell();
     const dt = Math.min(0.1, Math.max(0, (t - letzte) / 1000));
     letzte = t;
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
@@ -545,6 +547,27 @@
   // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
   function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6); }
   window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
+  // Beim Drehen melden manche Handys die neue Größe erst nach dem resize-Ereignis. Darum
+  // prüft die Spielschleife die Größe jedes Bild (siehe rahmen) – nie mehr gestauchtes Bild.
+  let bildB = 0, bildH = 0;
+  function groesseAktuell() {
+    const b = leinwand.clientWidth, h = leinwand.clientHeight;
+    if (b !== bildB || h !== bildH) { bildB = b; bildH = h; Grafik.groesse(); randMessen(); }
+  }
+  // Nur Querformat: hochkant auf Touch-Geräten pausiert das Spiel und zeigt einen Hinweis
+  const hochformat = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
+  function formatPruefen() {
+    if (!hochformat.matches) return;
+    Eingabe.alleLos(); halten = false;
+    if (zustand === 'lauf') pause();
+  }
+  if (hochformat.addEventListener) hochformat.addEventListener('change', formatPruefen);
+  else if (hochformat.addListener) hochformat.addListener(formatPruefen);
+  formatPruefen();
+  // Wo erlaubt (installierte App, Vollbild), das Querformat festhalten – sonst still ignorieren
+  document.addEventListener('pointerdown', () => {
+    try { const o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(() => {}); } catch (e) { /* egal */ }
+  }, { once: true });
   randMessen();
   setzeZustand('menue');
   startKrabbe();

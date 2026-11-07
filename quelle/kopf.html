@@ -148,7 +148,7 @@
     h1 { font-size: 18px; }
     .hudblock { max-width: 380px; padding: 5px 8px; gap: 4px; }
     #hudName { font-size: 12px; }
-    #erklaerung { top: 58%; padding: 10px 14px; }
+    #erklaerung { top: 58%; padding: 10px 14px; width: min(540px, calc(100% - 24px)); }
     #erklaerung ul { margin: 6px 0 4px; gap: 4px; }
     #erklaerung li { font-size: 14px; }
     #kette { top: 80px; }
@@ -204,7 +204,7 @@
       <h2 id="erklTitel">LERNSTRECKE</h2>
       <p id="erklEndlos" hidden>Flieg dem Sonnenuntergang davon! Erreiche die nächste Distanzmarke und lande sauber, um Tageslicht zu gewinnen.</p>
       <ul id="erklListe">
-        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle läuft los, macht sich schwer und rutscht schneller bergab. Ohne Drücken trägt ihn nur sein Schwung.</span></li>
+        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle läuft los und rutscht schwer bergab.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
         <li id="erklZiel"><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
         <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
@@ -334,5 +334,14 @@
 <script>
 %%SPIEL%%
 </script>
+<div id="drehen" role="alert" aria-live="assertive">
+  <svg viewBox="0 0 64 64" width="84" height="84" aria-hidden="true">
+    <rect x="20" y="6" width="24" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M14 52 A22 22 0 0 0 50 52" fill="none" stroke="#FFD35A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50 52 l-7 -1 M50 52 l1 -7" stroke="#FFD35A" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <p>Bitte dreh dein Handy quer</p>
+  <small>Sonnenrutsch spielt man im Querformat.</small>
+</div>
 </body>
 </html>

@@ -221,9 +221,24 @@
     .rund { width: 40px; height: 40px; }
     .tafel { padding: 18px 16px; }
   }
+  /* ---------- Nur Querformat auf Handy und Tablet ---------- */
+  #drehen { display: none; }
+  @media (orientation: portrait) and (pointer: coarse) {
+    #drehen {
+      position: fixed; inset: 0; z-index: 50;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      padding: 24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+      background: var(--bg); color: var(--text); text-align: center; touch-action: none;
+    }
+    #drehen p { margin: 0; font: 400 15px/1.6 var(--retro); color: var(--gelb); }
+    #drehen small { font-size: 15px; color: var(--muted); }
+    #drehen svg { animation: drehen 2.4s ease-in-out infinite; }
+    @keyframes drehen { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+  }
   @media (prefers-reduced-motion: reduce) {
     .btn:active { transform: none; }
     .sternreihe span { transition: none; }
+    #drehen svg { animation: none; }
   }
 
   /* ---------- Anzeige im Spiel ---------- */
@@ -358,7 +373,7 @@
     h1 { font-size: 18px; }
     .hudblock { max-width: 380px; padding: 5px 8px; gap: 4px; }
     #hudName { font-size: 12px; }
-    #erklaerung { top: 58%; padding: 10px 14px; }
+    #erklaerung { top: 58%; padding: 10px 14px; width: min(540px, calc(100% - 24px)); }
     #erklaerung ul { margin: 6px 0 4px; gap: 4px; }
     #erklaerung li { font-size: 14px; }
     #kette { top: 80px; }
@@ -414,7 +429,7 @@
       <h2 id="erklTitel">LERNSTRECKE</h2>
       <p id="erklEndlos" hidden>Flieg dem Sonnenuntergang davon! Erreiche die nächste Distanzmarke und lande sauber, um Tageslicht zu gewinnen.</p>
       <ul id="erklListe">
-        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle läuft los, macht sich schwer und rutscht schneller bergab. Ohne Drücken trägt ihn nur sein Schwung.</span></li>
+        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle läuft los und rutscht schwer bergab.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
         <li id="erklZiel"><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
         <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
@@ -3257,6 +3272,7 @@ const Eingabe = (() => {
   // ---------------------------------------------------------- Eingabe
   const app = {
     gedrueckt() {
+      if (hochformat.matches) return;   // Handy hochkant: Spiel ruht, bis es quer gedreht ist
       if (!halten && zustand === 'lauf') Ton.druck(lauf.boden);
       halten = true;
       if (zustand === 'bereit' && !fensterOffen()) {
@@ -3561,6 +3577,7 @@ const Eingabe = (() => {
   // ---------------------------------------------------------- Game Loop
   function rahmen(t) {
     requestAnimationFrame(rahmen);
+    groesseAktuell();
     const dt = Math.min(0.1, Math.max(0, (t - letzte) / 1000));
     letzte = t;
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
@@ -3684,6 +3701,27 @@ const Eingabe = (() => {
   // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
   function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6); }
   window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
+  // Beim Drehen melden manche Handys die neue Größe erst nach dem resize-Ereignis. Darum
+  // prüft die Spielschleife die Größe jedes Bild (siehe rahmen) – nie mehr gestauchtes Bild.
+  let bildB = 0, bildH = 0;
+  function groesseAktuell() {
+    const b = leinwand.clientWidth, h = leinwand.clientHeight;
+    if (b !== bildB || h !== bildH) { bildB = b; bildH = h; Grafik.groesse(); randMessen(); }
+  }
+  // Nur Querformat: hochkant auf Touch-Geräten pausiert das Spiel und zeigt einen Hinweis
+  const hochformat = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
+  function formatPruefen() {
+    if (!hochformat.matches) return;
+    Eingabe.alleLos(); halten = false;
+    if (zustand === 'lauf') pause();
+  }
+  if (hochformat.addEventListener) hochformat.addEventListener('change', formatPruefen);
+  else if (hochformat.addListener) hochformat.addListener(formatPruefen);
+  formatPruefen();
+  // Wo erlaubt (installierte App, Vollbild), das Querformat festhalten – sonst still ignorieren
+  document.addEventListener('pointerdown', () => {
+    try { const o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(() => {}); } catch (e) { /* egal */ }
+  }, { once: true });
   randMessen();
   setzeZustand('menue');
   startKrabbe();
@@ -3711,5 +3749,14 @@ const Eingabe = (() => {
 })();
 
 </script>
+<div id="drehen" role="alert" aria-live="assertive">
+  <svg viewBox="0 0 64 64" width="84" height="84" aria-hidden="true">
+    <rect x="20" y="6" width="24" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M14 52 A22 22 0 0 0 50 52" fill="none" stroke="#FFD35A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50 52 l-7 -1 M50 52 l1 -7" stroke="#FFD35A" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <p>Bitte dreh dein Handy quer</p>
+  <small>Sonnenrutsch spielt man im Querformat.</small>
+</div>
 </body>
 </html>
