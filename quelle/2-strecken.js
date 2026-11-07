@@ -83,18 +83,18 @@ const GEBIETE = [
 // zeit: Tageslicht in Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 37, sterne: [28.4, 19.8], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 50, sterne: [41.0, 31.9] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 58, sterne: [46.6, 35.3] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 61, sterne: [53, 44.9] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 72, sterne: [62.9, 53.9] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 63, sterne: [55.9, 48.9] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 71, sterne: [63.5, 56] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 67, sterne: [60.6, 54.1] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 65, sterne: [59.2, 53.5] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 70, sterne: [64.1, 58.2] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 79, sterne: [73, 66.9] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 95, sterne: [87.5, 80] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 40, sterne: [29.3, 18.6], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 58, sterne: [43.9, 29.7] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 64, sterne: [49.2, 34.4] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 59, sterne: [51.1, 43.2] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 73, sterne: [64.1, 55.3] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 64, sterne: [56, 48] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 68, sterne: [61, 53.9] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 65, sterne: [58.5, 52.1] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 63, sterne: [57.3, 51.6] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 72, sterne: [65.5, 59] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 69, sterne: [63.9, 58.7] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 90, sterne: [83.7, 77.4] },
 ];
 
 

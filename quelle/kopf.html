@@ -49,7 +49,12 @@
   #hudTag.knapp b { color: #ff9a7a; }
   #hudTag.knapp #tagFuellung { animation: puls 0.8s ease-in-out infinite; }
   @keyframes puls { 50% { filter: brightness(1.5); } }
-  #hudName { font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hudName { display: flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; }
+  #hudTitel { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #hudMuscheln { display: inline-flex; align-items: center; gap: 5px; flex: none; color: var(--text); font: 11px/1 var(--retro); }
+  #hudMuscheln svg { width: 18px; height: 16px; }
+  #hudMuscheln.plopp { animation: plopp 0.25s ease-out; }
+  @keyframes plopp { 40% { transform: scale(1.3); } }
   #hudName span { color: var(--gelb); font: 10px/1 var(--retro); margin-right: 6px; }
   .hudrechts { display: flex; gap: 6px; margin-left: auto; }
   .rund {
@@ -143,6 +148,7 @@
   <symbol id="logo" viewBox="0 0 11 11"><path fill="currentColor" d="M5 0h1v2H5zM3 2h5v1H3zM5 3h1v5H5zM1 6h1v1H1zM9 6h1v1H9zM1 7h2v1H1zM8 7h2v1H8zM2 8h3v1H2zM6 8h3v1H6zM3 9h5v1H3z"/></symbol>
   <symbol id="schloss" viewBox="0 0 16 16"><path fill="currentColor" d="M5 2h6v1H5zM4 3h1v4H4zM11 3h1v4h-1zM3 7h10v7H3zM7 9h2v3H7z"/></symbol>
   <symbol id="sonne" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5.5" fill="#ffd35a" stroke="#c9962a" stroke-width="1.2"/><g stroke="#ffd35a" stroke-width="2" stroke-linecap="round"><path d="M11 1.5v2.5M11 18v2.5M1.5 11H4M18 11h2.5M4.3 4.3l1.8 1.8M15.9 15.9l1.8 1.8M4.3 17.7l1.8-1.8M15.9 6.1l1.8-1.8"/></g></symbol>
+  <symbol id="muschel" viewBox="0 0 18 16"><path d="M9 14.5 2 6.5Q3 1.5 9 1t7 5.5z" fill="#ffc4bc" stroke="#8c3a4a" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 13.5 5 4M9 13.5 9 2M9 13.5 13 4" stroke="#8c3a4a" stroke-width="0.9" opacity=".6"/></symbol>
   <symbol id="flagge" viewBox="0 0 22 22"><path d="M5 2v19" stroke="#fff4dc" stroke-width="2" stroke-linecap="round"/><path d="M6 3h12l-3 4 3 4H6z" fill="#ff805b" stroke="#10243a" stroke-width="1"/></symbol>
 </svg>
 
@@ -152,7 +158,7 @@
 
     <div id="hud">
       <div class="hudblock">
-        <div id="hudName"><span id="hudNr">1</span><em id="hudTitel" style="font-style:normal"></em></div>
+        <div id="hudName"><span id="hudNr">1</span><em id="hudTitel" style="font-style:normal"></em><b id="hudMuscheln" title="Muscheln" aria-label="Muscheln"><svg viewBox="0 0 18 16" aria-hidden="true"><use href="#muschel"/></svg><span id="muschelZahl">0</span></b></div>
         <div class="hudzeile" id="hudTag" title="Tageslicht">
           <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#sonne"/></svg></span>
           <div class="balken" role="meter" aria-label="Tageslicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="tagBalken"><i id="tagFuellung"></i></div>
@@ -182,6 +188,7 @@
         <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
         <li><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
+        <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
       </ul>
       <p class="los"><span class="nurMaus">Leertaste oder Maus halten</span><span class="nurTouch">Bildschirm gedrückt halten</span> zum Losrutschen</p>
     </div>
@@ -247,6 +254,7 @@
         <div class="gross"><dt>Zeit</dt><dd id="eZeit">0</dd></div>
         <div><dt>Tageslicht übrig</dt><dd id="eRest">0</dd></div>
         <div><dt>Perfekte Landungen</dt><dd id="ePerfekt">0</dd></div>
+        <div><dt>Muscheln</dt><dd id="eMuscheln">0</dd></div>
         <div><dt>Weitester Flug</dt><dd id="eWeit">0</dd></div>
         <div><dt>Bestzeit</dt><dd id="eBest">0</dd></div>
       </dl>
@@ -268,6 +276,7 @@
       <dl class="zahlen">
         <div class="gross"><dt>Geschafft</dt><dd id="nAnteil">0 %</dd></div>
         <div><dt>Fehlten noch</dt><dd id="nRest">0 m</dd></div>
+        <div><dt>Muscheln</dt><dd id="nMuscheln">0</dd></div>
         <div><dt>Perfekte Landungen</dt><dd id="nPerfekt">0</dd></div>
         <div><dt>Bisher am weitesten</dt><dd id="nBest">0 %</dd></div>
       </dl>

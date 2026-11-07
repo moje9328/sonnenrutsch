@@ -65,7 +65,7 @@ const Ton = (() => {
 
   // Kleine Comic-Stimme: Sägezahn mit Vibrato durch zwei Vokal-Filter.
   // tonhoehen: [[zeit, Hz], …] relativ zum Start; formanten: [f1, f2] (hoch = klein und süß)
-  let letzteStimme = 0;
+  let letzteStimme = 0, letzteMuschel = 0, serie = 0;
   function stimme(start, dauer, tonhoehen, formanten, laut) {
     const t = ctx.currentTime + start;
     const osc = ctx.createOscillator();
@@ -161,6 +161,21 @@ const Ton = (() => {
       const f = hoch ? 988 : 784;
       ton(f, f, 0.35, { typ: 'sine', laut: 0.08 });
       ton(f * 2.01, f * 2, 0.2, { typ: 'sine', laut: 0.02 });
+    },
+    // Muschel: helles „Pling“, das bei schnellen Serien Ton für Ton höher klettert
+    muschel(gold) {
+      if (!bereit()) return;
+      const t = ctx.currentTime;
+      serie = t - letzteMuschel < 0.7 ? Math.min(serie + 1, 7) : 0;
+      letzteMuschel = t;
+      const f = [1047, 1175, 1319, 1397, 1568, 1760, 1976, 2093][serie];
+      if (gold) {
+        [1319, 1568, 2093, 2637].forEach((g, i) => ton(g, g, 0.12, { typ: 'triangle', laut: 0.13, start: i * 0.05 }));
+        ton(3136, 3136, 0.3, { typ: 'sine', laut: 0.05, start: 0.2 });
+      } else {
+        ton(f, f, 0.06, { typ: 'triangle', laut: 0.11 });
+        ton(f * 2, f * 2, 0.1, { typ: 'sine', laut: 0.035, start: 0.03 });
+      }
     },
     // Drücken: leises, tiefes „Wupp“ – Kalle macht sich schwer
     druck(boden) {

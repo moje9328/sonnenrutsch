@@ -450,6 +450,85 @@ const Grafik = (() => {
   }
 
   // ---------------------------------------------------------- Start und Ziel
+  // ---------------------------------------------------------- Muscheln
+  // Jakobsmuschel: Fächer mit Rippen und kleinem Fuß. Gold glänzt und funkelt.
+  function muschelForm(x, y, s, gold, drehung) {
+    c.save();
+    c.translate(x, y); c.rotate(drehung);
+    if (gold) {
+      const glanz = c.createRadialGradient(0, 0, s * 0.2, 0, 0, s * 1.6);
+      glanz.addColorStop(0, 'rgba(255, 230, 120, 0.55)'); glanz.addColorStop(1, 'rgba(255, 230, 120, 0)');
+      c.fillStyle = glanz; c.beginPath(); c.arc(0, 0, s * 1.6, 0, Math.PI * 2); c.fill();
+    }
+    const hell = gold ? '#ffe27a' : '#ffd6cf', mittel = gold ? '#f2b630' : '#ff9e9a', rand = gold ? '#8a5a10' : '#8c3a4a';
+    // Fächer
+    c.beginPath();
+    c.moveTo(0, s * 0.45);
+    for (let k = 0; k <= 6; k++) {
+      const w = Math.PI * (1.12 + k * 0.127);
+      const r = s * (k % 2 ? 0.92 : 1);
+      c.lineTo(Math.cos(w) * r, Math.sin(w) * r * 0.95 + s * 0.05);
+    }
+    c.closePath();
+    const v = c.createLinearGradient(0, -s, 0, s * 0.5);
+    v.addColorStop(0, hell); v.addColorStop(1, mittel);
+    c.fillStyle = v; c.fill();
+    c.lineWidth = Math.max(1.2 * dpr, s * 0.1); c.strokeStyle = rand; c.lineJoin = 'round'; c.stroke();
+    // Rippen
+    c.lineWidth = Math.max(0.8 * dpr, s * 0.06); c.strokeStyle = gold ? 'rgba(138, 90, 16, 0.55)' : 'rgba(140, 58, 74, 0.45)';
+    for (let k = 1; k < 6; k++) {
+      const w = Math.PI * (1.12 + k * 0.127);
+      c.beginPath(); c.moveTo(0, s * 0.4); c.lineTo(Math.cos(w) * s * 0.85, Math.sin(w) * s * 0.8 + s * 0.05); c.stroke();
+    }
+    // Fuß
+    c.beginPath(); c.moveTo(-s * 0.32, s * 0.36); c.lineTo(s * 0.32, s * 0.36); c.lineTo(s * 0.18, s * 0.58); c.lineTo(-s * 0.18, s * 0.58); c.closePath();
+    c.fillStyle = mittel; c.fill(); c.lineWidth = Math.max(1 * dpr, s * 0.08); c.strokeStyle = rand; c.stroke();
+    // Glanzpunkt
+    c.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    c.beginPath(); c.ellipse(-s * 0.3, -s * 0.45, s * 0.16, s * 0.09, -0.5, 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+  // Vorgezeichnete Muscheln (je Größe und Farbe einmal) – spart Farbverläufe in jedem Bild
+  const muschelBilder = new Map();
+  function muschelBild(s, gold) {
+    const groesse = Math.max(8, Math.round(s));
+    const schluessel = groesse + (gold ? 'g' : 'n');
+    let b = muschelBilder.get(schluessel);
+    if (!b) {
+      if (muschelBilder.size > 40) muschelBilder.clear();
+      b = document.createElement('canvas');
+      b.width = b.height = Math.ceil(groesse * 3.4);
+      const alt = c;
+      c = b.getContext('2d');
+      muschelForm(b.width / 2, b.height / 2, groesse, gold, 0);
+      c = alt;
+      muschelBilder.set(schluessel, b);
+    }
+    return b;
+  }
+  function muscheln(l) {
+    const x0 = kam.x - 3, x1 = kam.x + W / kam.z + 3;
+    const s = Math.max(12 * dpr, 0.95 * kam.z);
+    for (let i = Math.max(0, l.muschelIndex - 5); i < l.muscheln.length; i++) {
+      const m = l.muscheln[i];
+      if (m.x > x1) break;
+      if (m.weg || m.x < x0) continue;
+      const wipp = ruhig ? 0 : Math.sin(zeit * 3 + m.x * 0.7) * s * 0.12;
+      const gs = m.gold ? s * 1.25 : s;
+      const bild = muschelBild(gs, m.gold);
+      const dreh = ruhig ? 0 : Math.sin(zeit * 2 + m.x) * 0.12;
+      c.save(); c.translate(sx(m.x), sy(m.y) + wipp); c.rotate(dreh);
+      c.drawImage(bild, -bild.width / 2, -bild.height / 2);
+      c.restore();
+      if (m.gold && !ruhig && Math.sin(zeit * 5 + m.x) > 0.85) {
+        c.fillStyle = '#fffbe0';
+        const fx = sx(m.x) + gs * 0.7, fy = sy(m.y) - gs * 0.7, r = gs * 0.25;
+        c.beginPath(); c.moveTo(fx, fy - r); c.lineTo(fx + r * 0.25, fy - r * 0.25); c.lineTo(fx + r, fy); c.lineTo(fx + r * 0.25, fy + r * 0.25);
+        c.lineTo(fx, fy + r); c.lineTo(fx - r * 0.25, fy + r * 0.25); c.lineTo(fx - r, fy); c.lineTo(fx - r * 0.25, fy - r * 0.25); c.fill();
+      }
+    }
+  }
+
   function startZiel(l, f) {
     const g = l.g;
     // Ziel: Bogen aus Treibholz mit Wimpeln und Muschelflagge
@@ -596,6 +675,9 @@ const Grafik = (() => {
       }
     } else if (e.art === 'abflug') {
       staub(e.x, e.y, 5, thema.boden[0], 0.5);
+    } else if (e.art === 'muschel') {
+      funken(e.x, e.y - 1, e.gold ? 14 : 5);
+      if (e.gold) text(e.x, e.y + 2.5, '+5', '#ffd35a', 0.9);
     }
   }
   function effekte(dt, l) {
@@ -667,6 +749,7 @@ const Grafik = (() => {
     ferneKueste(horizont, f, thema, gebiet);
     startZiel(l, f);
     gelaende(l, thema, f, gebiet);
+    muscheln(l);
     flugSpur(l);
     krabbe(l, figur, pose);
     effekte(dt, l);

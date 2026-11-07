@@ -11,8 +11,8 @@ const K = {
   G: 24,                    // Grundschwerkraft
   SCHWER_BODEN: 3.0,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
   LEICHT_BODEN: 0.65,       // losgelassen am Boden: Kalle ist leicht und gleitet den Hang hinauf
-  SCHWER_LUFT: 3.4,         // gedrückt in der Luft: Sinkflug
-  LEICHT_LUFT: 0.7,        // losgelassen in der Luft: sanfter, weiter Flug
+  SCHWER_LUFT: 4.5,         // gedrückt in der Luft: Sinkflug
+  LEICHT_LUFT: 1.0,         // losgelassen in der Luft: normale Schwerkraft
 
   REIBUNG: 0.25,             // gleichmäßige Bremsung am Boden (m/s²)
   LUFTWIDERSTAND: 0.0004,   // Bremsung ~ v² am Boden
@@ -37,6 +37,9 @@ const K = {
   KETTEN_BONUS: 0.012,      // … plus 1,2 % je perfekter Landung in Folge
   KETTE_MAX: 5,
   HART_FAKTOR: 0.82,        // harte Landung am Gegenhang: zusätzlicher Tempoverlust
+
+  MUSCHEL_RADIUS: 2.2,      // so nah muss Kalle (Mitte) an eine Muschel kommen
+  GOLD_WERT: 5,             // eine goldene Muschel zählt so viel wie 5 normale
 
   ABHEBEN_SCHWELLE: 1.0,    // v²·Krümmung > g·cos·Schwelle → Kalle hebt ab
 

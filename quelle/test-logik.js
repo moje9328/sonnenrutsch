@@ -72,6 +72,24 @@ console.log('## Landungen bei jedem Tempo und Winkel');
   ok(hartNichtLangsamer === 0, 'Harte Landung am Gegenhang bremst spürbar');
 }
 
+console.log('## Muscheln');
+{
+  const frisch = require('./lade-logik.js')({ ohneMuscheldatei: true });
+  for (const d of STRECKEN) {
+    const gespeichert = new Lauf(d).muscheln;
+    const neu = frisch.berechneMuscheln(d, new frisch.Lauf(d, { ohneMuscheln: true }));
+    const gleich = gespeichert.length === neu.length && gespeichert.every((m, i) => Math.abs(m.x - neu[i].x) < 0.06 && Math.abs(m.y - neu[i].y) < 0.06 && m.gold === neu[i].gold);
+    ok(gleich, `Strecke ${d.id}: gespeicherte Muscheln passen zur Physik (sonst: node quelle/werkzeug-muscheln.js)`);
+    const l = new Lauf(d);
+    const unter = l.muscheln.filter(m => m.y < l.g.hoehe(m.x) + 0.5).length;
+    ok(unter === 0 && l.muscheln.length >= 30, `Strecke ${d.id}: ${l.muscheln.length} Muscheln, keine im Boden`);
+    const a = Bot.spiele(d, 'gut').lauf.muschelWert, b = Bot.spiele(d, 'gut').lauf.muschelWert;
+    ok(a === b && a > 0, `Strecke ${d.id}: Sammeln ist reproduzierbar (${a} Wert)`);
+    // Neustart: Muscheln sind wieder da
+    ok(new Lauf(d).muscheln.every(m => !m.weg), `Strecke ${d.id}: Neustart bringt alle Muscheln zurück`);
+  }
+}
+
 console.log('## Abheben hängt von Tempo und Halten ab');
 {
   const d = STRECKEN[1];

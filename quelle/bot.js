@@ -15,6 +15,7 @@ const Bot = (() => {
     Object.assign(k, l);
     k.ereignisse = [];
     k.statistik = Object.assign({}, l.statistik);
+    k.vorschau = true;   // Vorschau darf keine Muscheln einsammeln
     return k;
   }
   // Fliegt mit fester Haltung bis zur Landung; Ergebnis: Tempo danach

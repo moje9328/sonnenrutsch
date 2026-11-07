@@ -67,6 +67,7 @@
     $('hudNr').textContent = def.id;
     $('hudTitel').textContent = def.name;
     $('kette').hidden = true;
+    muschelAnzeige(true);
     // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
     const ausfuehrlich = def.lern || !Speicher.lernGesehen();
     $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
@@ -201,6 +202,7 @@
         let best = 'Noch nicht gefahren';
         if (e && e.zeit) best = 'Bestzeit ' + zeitText(e.zeit);
         else if (e && e.weit) best = 'Weiteste: ' + Math.floor(e.weit * 100) + ' %';
+        if (e && e.muscheln) best += ` · ${e.muscheln} Muscheln`;
         b.innerHTML = `<span class="nr">${s.lern ? 'LERNEN' : 'STRECKE ' + s.id}</span><span>${s.name}</span><span class="sterne" aria-label="${Speicher.sterne(s.id)} von 3 Sternen">${sterneHtml(Speicher.sterne(s.id))}</span><span class="best">${frei ? best : 'Gesperrt'}</span>`;
         b.prepend(cv);
         if (!frei) b.insertAdjacentHTML('beforeend', '<span class="schloss" aria-hidden="true"><svg><use href="#schloss"/></svg></span>');
@@ -237,6 +239,8 @@
     $('eRest').textContent = zeitText(lauf.rest);
     $('ePerfekt').textContent = st.perfekt + (st.kette > 1 ? ` (Kette ×${st.kette})` : '');
     $('eWeit').textContent = Math.round(st.weitester) + ' m';
+    const mehrMuscheln = Speicher.muscheln(def.id, lauf.muschelWert);
+    $('eMuscheln').textContent = muschelText() + (mehrMuscheln && lauf.muschelWert > 0 ? ' (Rekord!)' : '');
     $('eBest').textContent = zeitText(e.zeit);
     $('neuBest').hidden = !(besser.zeit && Speicher.level(def.id) && lauf.zeit <= e.zeit && (besser.sterne || besser.zeit) && !besser.neuFrei);
     $('sternInfo').textContent = sterne < 3 ? `${sterne + 1} Sterne ab ${zeitText(def.sterne[sterne === 1 ? 0 : 1])}.` : 'Alle Sterne geholt!';
@@ -257,6 +261,8 @@
     $('nAnteil').textContent = Math.floor(anteil * 100) + ' %';
     $('nRest').textContent = Math.max(0, Math.round(lauf.ziel - lauf.x)) + ' m';
     $('nPerfekt').textContent = lauf.statistik.perfekt;
+    Speicher.muscheln(def.id, lauf.muschelWert);
+    $('nMuscheln').textContent = muschelText();
     $('nBest').textContent = Math.floor(Math.max(altWeit, anteil) * 100) + ' %' + (anteil > altWeit + 0.001 && altWeit > 0 ? ' (neu!)' : '');
     const st = lauf.statistik;
     let tipp = 'Tipp: Bergab halten, vor dem Anstieg loslassen.';
@@ -281,6 +287,16 @@
     if (t) $('hinweis').textContent = t;
   }
   function ansage(t) { $('ansage').textContent = t; }
+  let muschelAlt = -1;
+  function muschelAnzeige(sofort) {
+    if (lauf.muschelWert === muschelAlt && !sofort) return;
+    muschelAlt = lauf.muschelWert;
+    $('muschelZahl').textContent = lauf.muschelWert;
+    $('hudMuscheln').setAttribute('aria-label', `${lauf.muschelWert} von ${lauf.muschelGesamt} Muscheln`);
+    const el = $('hudMuscheln');
+    if (!sofort) { el.classList.remove('plopp'); void el.offsetWidth; el.classList.add('plopp'); }
+  }
+  const muschelText = () => `${lauf.muschelWert} / ${lauf.muschelGesamt}`;
   let hudAlt = '';
   function hud() {
     const r = lauf.rest, f = lauf.fortschritt;
@@ -389,6 +405,9 @@
       const k = $('kette');
       if (e.kette > 1) { k.hidden = false; k.textContent = `PERFEKT ×${e.kette}`; }
       else if (e.guete !== 'perfekt') k.hidden = true;
+    } else if (e.art === 'muschel') {
+      Ton.muschel(e.gold);
+      muschelAnzeige(false);
     } else if (e.art === 'ziel') {
       setzeZustand('ende'); endeZeit = 0; Ton.sieg(); hinweis(null);
       $('kette').hidden = true;

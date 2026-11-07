@@ -17,7 +17,7 @@
 // ===================================================================
 
 class Lauf {
-  constructor(def) {
+  constructor(def, { ohneMuscheln = false } = {}) {
     this.def = def;
     const s = baueStrecke(def);
     this.g = s.gelaende;
@@ -42,6 +42,12 @@ class Lauf {
     this.abflugX = 0;
     this.hoechstImFlug = 0;
     this.nachZiel = 0;             // Zeit seit Zieldurchlauf
+    // Muscheln: [{ x, y, gold, weg }], nach x sortiert
+    this.muscheln = ohneMuscheln ? [] : legeMuscheln(def, this);
+    this.muschelIndex = 0;         // erste noch nicht vorbeigezogene Muschel
+    this.muschelWert = 0;          // gesammelt (gold zählt mehr)
+    this.muschelGesamt = this.muscheln.reduce((s, m) => s + (m.gold ? K.GOLD_WERT : 1), 0);
+    this.vorschau = false;         // Bot-Vorschau: sammelt nichts ein
   }
 
   get rest() { return Math.max(0, this.tag - this.zeit); }
@@ -76,6 +82,22 @@ class Lauf {
     if (this.boden) this.bodenSchritt(dt, auslauf);
     else this.luftSchritt(dt);
     this.statistik.vmax = Math.max(this.statistik.vmax, this.tempo);
+    if (!this.vorschau) this.sammeln();
+  }
+
+  // Muscheln in Reichweite einsammeln (Kalles Mitte liegt etwa 1 m über den Füßen)
+  sammeln() {
+    const m = this.muscheln, r = K.MUSCHEL_RADIUS;
+    while (this.muschelIndex < m.length && m[this.muschelIndex].x < this.x - r * 2) this.muschelIndex++;
+    for (let i = this.muschelIndex; i < m.length && m[i].x < this.x + r; i++) {
+      const mu = m[i];
+      if (mu.weg) continue;
+      if (Math.hypot(mu.x - this.x, mu.y - (this.y + 1)) < r) {
+        mu.weg = true;
+        this.muschelWert += mu.gold ? K.GOLD_WERT : 1;
+        this.ereignisse.push({ art: 'muschel', x: mu.x, y: mu.y, gold: mu.gold });
+      }
+    }
   }
 
   bodenSchritt(dt, auslauf) {
@@ -185,4 +207,57 @@ class Lauf {
     this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
     this.ereignisse.push({ art: 'landung', guete: art, winkel, v: this.v, verlust: v - this.v, x: this.x, y: h, kette: this.kette, flugzeit: this.flugzeit, weit, hoch });
   }
+}
+
+// Muscheln verteilen – fest pro Strecke (gleiche Saat → gleiche Muscheln):
+//  • Reihen knapp über den Abhängen (leicht, wer am Boden bleibt)
+//  • Bögen in der Luft genau dort, wo ein geübter Spieler fliegt (also erreichbar)
+//  • goldene Muschel am höchsten Punkt großer Flüge
+const MUSCHEL_CACHE = new Map();
+function legeMuscheln(def, lauf) {
+  // Einmal pro Strecke berechnen, danach nur kopieren (Neustart ohne Wartezeit)
+  // Vorab berechnet (2b-muscheln.js, erzeugt mit werkzeug-muscheln.js) – sonst hier ausrechnen
+  if (!MUSCHEL_CACHE.has(def.id)) {
+    const fertig = typeof MUSCHELN !== 'undefined' && MUSCHELN[def.id];
+    MUSCHEL_CACHE.set(def.id, fertig ? fertig.map(([x, y, gold]) => ({ x, y, gold: !!gold, weg: false })) : berechneMuscheln(def, lauf));
+  }
+  return MUSCHEL_CACHE.get(def.id).map(m => Object.assign({}, m));
+}
+function berechneMuscheln(def, lauf) {
+  const g = lauf.g, liste = [];
+  const r = zufall(def.saat * 31 + 7);
+  const s = baueStrecke(def);
+  // Reihen auf den Abhängen
+  let vorher = s.kuppen.length ? -1e9 : 0;
+  for (let i = 0; i < s.taeler.length; i++) {
+    const tal = s.taeler[i], kuppe = s.kuppen.filter(k => k[0] < tal[0]).pop() || [0, 0];
+    if (tal[0] > lauf.ziel - 20 || r() < 0.35) continue;
+    const anzahl = 3 + Math.floor(r() * 3);
+    const mitte = kuppe[0] + (tal[0] - kuppe[0]) * (0.45 + r() * 0.2);
+    for (let k = 0; k < anzahl; k++) {
+      const x = mitte + (k - anzahl / 2) * 3.2;
+      liste.push({ x, y: g.hoehe(x) + 1.3, gold: false, weg: false });
+    }
+  }
+  // Bögen entlang der Flugbahn eines geübten Spielers (Bot, der kurz vorausschaut)
+  const probe = new Lauf(def, { ohneMuscheln: true });
+  probe.starten(); probe.tag = 999;
+  const bot = Bot.neu('schnell');
+  let flug = [], schritte = 0;
+  while (!probe.ergebnis && schritte++ < 240 * 300) {
+    probe.schritt(bot.halten(probe));
+    if (!probe.boden) flug.push([probe.x, probe.y, probe.hoeheUeberBoden()]);
+    else if (flug.length) {
+      if (flug.length > 240 * 0.7) {
+        // 4 Muscheln über den Flug verteilt, oben vielleicht eine goldene
+        for (const t of [0.2, 0.35, 0.65, 0.8]) { const q = flug[Math.floor(flug.length * t)]; liste.push({ x: q[0], y: q[1] + 1, gold: false, weg: false }); }
+        let hoch = flug[0];
+        for (const q of flug) if (q[2] > hoch[2]) hoch = q;
+        liste.push({ x: hoch[0], y: hoch[1] + 1, gold: hoch[2] > 25 && r() < 0.6, weg: false });
+      }
+      flug = [];
+    }
+    probe.ereignisse.length = 0;
+  }
+  return liste.filter(m => m.x > 5 && m.x < lauf.ziel).sort((a, b) => a.x - b.x);
 }

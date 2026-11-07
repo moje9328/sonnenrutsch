@@ -31,6 +31,8 @@ const Speicher = (() => {
         const eintrag = {};
         if (sterne >= 1 && sterne <= 3 && zeit > 0 && zeit < 1000) { eintrag.sterne = sterne; eintrag.zeit = Math.round(zeit * 100) / 100; }
         if (weit > 0 && weit <= 1) eintrag.weit = weit;
+        const mu = Math.floor(Number(e.muscheln));
+        if (mu > 0 && mu < 10000) eintrag.muscheln = mu;
         if (Object.keys(eintrag).length) d.level[s.id] = eintrag;
       }
     }
@@ -62,6 +64,13 @@ const Speicher = (() => {
       daten.level[id] = Object.assign({}, alt, { sterne: Math.max(alt.sterne || 0, sterne), zeit: alt.zeit ? Math.min(alt.zeit, zeit) : zeit, weit: 1 });
       if (id + 1 > daten.frei && id < STRECKEN.length) { daten.frei = id + 1; besser.neuFrei = true; }
       sichern();
+      return besser;
+    },
+    // Meiste Muscheln einer Fahrt merken (egal ob geschafft)
+    muscheln(id, wert) {
+      const alt = daten.level[id] || {};
+      const besser = wert > (alt.muscheln || 0);
+      if (besser) { daten.level[id] = Object.assign({}, alt, { muscheln: wert }); sichern(); }
       return besser;
     },
     // Nicht geschafft: weiteste Strecke merken
