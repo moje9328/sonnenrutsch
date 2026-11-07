@@ -59,6 +59,7 @@
   function starteStrecke(id) {
     def = STRECKEN.find(s => s.id === id) || STRECKEN[0];
     lauf = new Lauf(def);
+    Rufe.stopp();
     Grafik.neuerLauf();
     rest = 0;
     endeZeit = 0;
@@ -123,6 +124,7 @@
     vorher = zustand;
     setzeZustand('pause');
     Ton.still();
+    Rufe.stopp();
     zeige('fPause');
   }
   function weiter() {
@@ -320,6 +322,7 @@
     pose.platt = Math.max(0, pose.platt - dt * 5);
     pose.jubelZeit = Math.max(0, pose.jubelZeit - dt);
     pose.verdutztZeit = Math.max(0, pose.verdutztZeit - dt);
+    pose.yippie = Math.max(0, (pose.yippie || 0) - dt);
     const schwer = halten && zustand === 'lauf';
     // Beine laufen, solange Kalle langsam am Boden ist; schnell = Beine angelegt
     if (l.boden && l.gestartet) pose.lauf += dt * Math.min(3.2, l.tempo * 0.35) * (l.tempo < 22 ? 1 : 0.25);
@@ -328,7 +331,7 @@
       platt: pose.platt,
       schwer,
       jubel: pose.jubelZeit > 0 || (zustand === 'ende' && l.ergebnis === 'ziel'),
-      armeHoch: !l.boden && l.vy > 2 && !schwer,
+      armeHoch: (!l.boden && l.vy > 2 && !schwer) || pose.yippie > 0,
       blick: 0.6,
       blickHoch: false,
       schielen: pose.verdutztZeit > 0.25,
@@ -368,6 +371,7 @@
       if (endeZeit > (lauf.ergebnis === 'ziel' ? 1.6 : 1.5) && !fensterOffen()) {
         setzeZustand('ergebnis');
         Ton.still();
+        Rufe.stopp();
         if (lauf.ergebnis === 'ziel') zeigeErfolg(); else zeigeNacht();
       }
     }
@@ -391,11 +395,13 @@
 
   function verarbeite(e) {
     Grafik.ereignis(e, lauf, THEMEN[def.gebiet]);
-    if (e.art === 'abflug') {
-      // „Juhuu!“ nur bei kräftigem Absprung steil nach oben, nicht bei jedem Hüpfer
-      const juhu = e.v > 30 && e.steigt > 0.35;
-      Ton.abflug(e.v, juhu);
-      if (juhu) { Grafik.juhu(e.x, e.y); pose.jubelZeit = 0.6; }
+    if (e.art === 'abflug') Ton.abflug(e.v);
+    else if (e.art === 'ruf') {
+      // Nur aktuelle Rufe: Ereignisse werden im selben Bild verarbeitet, nichts wird nachgeholt
+      Rufe.spiele(e.ruf);
+      Grafik.ruf(e.ruf);
+      pose.jubelZeit = e.ruf === 'yippie' ? 0.9 : 0.6;
+      pose.yippie = e.ruf === 'yippie' ? 0.9 : 0;
     }
     else if (e.art === 'landung') {
       Ton.landung(e.guete, e.kette);

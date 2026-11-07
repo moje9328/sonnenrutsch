@@ -4,10 +4,10 @@ const fs = require('fs'), path = require('path');
 const L = require('./lade-logik.js')({ ohneMuscheldatei: true });
 const zeilen = L.STRECKEN.map(d => {
   const lauf = new L.Lauf(d, { ohneMuscheln: true });
-  const liste = L.berechneMuscheln(d, lauf).map(m => `[${m.x.toFixed(1)},${m.y.toFixed(1)}${m.gold ? ',1' : ''}]`);
+  const liste = L.berechneMuscheln(d, lauf).map(m => `[${m.x.toFixed(2)},${m.y.toFixed(2)},${m.gold ? 1 : 0},${m.linie}]`);
   return `  ${d.id}: [${liste.join(',')}],`;
 });
-const text = `// Vorab berechnete Muscheln je Strecke: [x, y, gold?]. NICHT von Hand ändern –
+const text = `// Vorab berechnete Muscheln je Strecke: [x, y, gold, linie]. NICHT von Hand ändern –
 // erzeugt mit: node quelle/werkzeug-muscheln.js (nach Änderungen an Physik oder Strecken)
 const MUSCHELN = {
 ${zeilen.join('\n')}

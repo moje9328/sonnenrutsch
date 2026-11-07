@@ -63,33 +63,7 @@ const Ton = (() => {
   }
   const v = () => 1 + (Math.random() * 2 - 1) * 0.05;
 
-  // Kleine Comic-Stimme: Sägezahn mit Vibrato durch zwei Vokal-Filter.
-  // tonhoehen: [[zeit, Hz], …] relativ zum Start; formanten: [f1, f2] (hoch = klein und süß)
-  let letzteStimme = 0, letzteMuschel = 0, serie = 0;
-  function stimme(start, dauer, tonhoehen, formanten, laut) {
-    const t = ctx.currentTime + start;
-    const osc = ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(tonhoehen[0][1], t);
-    for (const [dt, f] of tonhoehen.slice(1)) osc.frequency.linearRampToValueAtTime(f, t + dt);
-    // Vibrato macht es lebendig
-    const vib = ctx.createOscillator(), vibG = ctx.createGain();
-    vib.frequency.value = 9; vibG.gain.value = tonhoehen[0][1] * 0.025;
-    vib.connect(vibG).connect(osc.frequency);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(laut, t + 0.025);
-    g.gain.setValueAtTime(laut, t + dauer * 0.7);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-    for (const [f, q, anteil] of [[formanten[0], 5, 1], [formanten[1], 7, 0.55]]) {
-      const fil = ctx.createBiquadFilter(); fil.type = 'bandpass'; fil.frequency.value = f; fil.Q.value = q;
-      const ga = ctx.createGain(); ga.gain.value = anteil * 2.2;
-      osc.connect(fil).connect(ga).connect(g);
-    }
-    g.connect(haupt);
-    osc.start(t); vib.start(t);
-    osc.stop(t + dauer + 0.05); vib.stop(t + dauer + 0.05);
-  }
+  let letzteMuschel = 0, serie = 0;
 
   // Dauerrauschen für Rutschen und Fahrtwind
   function rutschStarten() {
@@ -122,21 +96,15 @@ const Ton = (() => {
       rutsch.fil.Q.setTargetAtTime(boden ? 0.9 : 0.5, t, 0.1);
     },
     still() { if (rutsch && ctx) rutsch.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); },
-    // Absprung: Fahrtwind-„Hui“ und – bei richtigen Flügen – Kalles süßes „Juhuu!“
-    abflug(tempo, juhu) {
+    // Absprung: kurzes Fahrtwind-„Hui“ (die Stimme kommt aus 6b-rufe.js)
+    abflug(tempo) {
       if (!bereit()) return;
       const s = Math.min(1, tempo / 80);
       ton(320 + s * 200, 700 + s * 500, 0.2, { typ: 'sine', laut: 0.07 });
       rausch(0.25, { laut: 0.05, f1: 600, f2: 2400, q: 0.7 });
-      if (juhu && ctx.currentTime - letzteStimme > 2.0) {
-        letzteStimme = ctx.currentTime;
-        const p = (0.92 + Math.random() * 0.14) * (1 + s * 0.25);   // höher bei mehr Schwung
-        // „ju“: kurz, „huu“: lang, steigt fröhlich an und kippt am Ende nach oben
-        stimme(0, 0.11, [[0, 620 * p], [0.1, 760 * p]], [520, 1900], 0.16);
-        rausch(0.05, { laut: 0.03, start: 0.12, typ: 'highpass', f1: 2500, f2: 2000, q: 0.5 });
-        stimme(0.13, 0.42, [[0, 700 * p], [0.12, 980 * p], [0.3, 1060 * p], [0.42, 1300 * p]], [480, 1500], 0.18);
-      }
     },
+    // Für die Rufe: Audio-Kontext und Hauptregler, nur wenn Ton an und schon geweckt
+    kontext: () => (bereit() ? { ctx, haupt } : null),
     // Landungen
     landung(guete, kette) {
       if (!bereit()) return;

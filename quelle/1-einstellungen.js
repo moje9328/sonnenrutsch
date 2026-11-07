@@ -23,10 +23,11 @@ const K = {
   V_MAX: 80,                // Höchstgeschwindigkeit am Boden
   V_MAX_LUFT: 100,          // Höchstgeschwindigkeit in der Luft (begrenzt Sturzflüge)
   V_START: 14,
-  STEIL_MAX: 1.4,           // Höhe ≤ Breite × dies → steilste Stelle = atan(π/2 × dies)
 
   // Landungen
-  PERFEKT_WINKEL: 20,       // Grad zwischen Flugrichtung und Hang: darunter „perfekt“
+  PERFEKT_WINKEL: 26,       // perfekt: Flugrichtung höchstens so viele Grad neben der Hangtangente …
+  PERFEKT_QUER: 30,         // … und Aufprall quer zur Oberfläche höchstens so schnell (m/s)
+  PERFEKT_MIN_HOEHE: 1.2,   // … und vorher wirklich in der Luft gewesen (Meter über Boden)
   GUT_WINKEL: 36,           // darunter: Kalle wird in den Hang umgelenkt und behält fast alles Tempo
   GUT_ERHALT: 0.95,         // so viel Tempo bleibt bei einer guten Landung mindestens
   ABHANG_WINKEL: 55,        // auf einem Abhang zählt eine Landung bis zu diesem Winkel noch als gut …
@@ -38,8 +39,25 @@ const K = {
   KETTE_MAX: 5,
   HART_FAKTOR: 0.82,        // harte Landung am Gegenhang: zusätzlicher Tempoverlust
 
-  MUSCHEL_RADIUS: 2.2,      // so nah muss Kalle (Mitte) an eine Muschel kommen
+  MUSCHEL_RADIUS: 1.8,      // Sammelbereich: Abstand Kalles Mitte ↔ Muschel (Sensor, kein Stoß)
+  MUSCHEL_HOEHE: 1.1,       // Muscheln schweben so weit über dem Boden (entlang der Normalen)
+  KRABBE_MITTE: 1.0,        // Kalles Mitte liegt so weit über seinen Füßen
   GOLD_WERT: 5,             // eine goldene Muschel zählt so viel wie 5 normale
+
+  // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
+  RUF: {
+    JUHU_HOEHE: 24,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
+    JUHU_STEIG: 20,         // … und beim Absprung mindestens so schnell nach oben (m/s)
+    JUHU_MIN_ZEIT: 0.25,    // frühestens so lange nach dem Abheben (kurze Hüpfer sind dann schon vorbei)
+    YIPPIE_HOEHE: 55,       // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
+    YIPPIE_WEITE: 125,      // … oder so weit geflogen (m, waagerecht) …
+    YIPPIE_SOFORT: 85,      // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
+    YIPPIE_SOFORT_TEMPO: 70,//     bei mindestens diesem Absprungtempo (m/s)
+    ABSTAND: 1.8,           // Sekunden (Spielzeit) zwischen Rufen verschiedener Flüge mindestens
+    STEIGERUNG: 0.9,        // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (Juhu ist dann vorbei)
+    BODEN_RUHE: 0.3,        // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
+  },
+
 
   ABHEBEN_SCHWELLE: 1.0,    // v²·Krümmung > g·cos·Schwelle → Kalle hebt ab
 

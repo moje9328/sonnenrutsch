@@ -1,7 +1,7 @@
 // Logik-Tests ohne Browser: Physik, Landungen, Strecken, Schaffbarkeit.
 // Aufruf: node quelle/test-logik.js   (mit „schnell“ als Argument: ohne die langen Botläufe)
 const L = require('./lade-logik.js')();
-const { K, STRECKEN, Lauf, Bot } = L;
+const { K, STRECKEN, Lauf, Bot, GELAENDE, baueStrecke } = L;
 const schnell = process.argv.includes('schnell');
 let fehler = 0, geprueft = 0;
 const ok = (bed, text) => { geprueft++; if (!bed) { fehler++; console.log('  FEHLER:', text); } };
@@ -23,7 +23,27 @@ for (const d of STRECKEN) {
   }
   ok(!nan, `Strecke ${d.id}: Höhe/Steigung endlich und passend`);
   ok(maxSprung < 1e-4, `Strecke ${d.id}: kein Knick (Steigungssprung ${maxSprung.toExponential(1)})`);
-  ok(maxSteig < Math.PI / 2 * K.STEIL_MAX + 0.01, `Strecke ${d.id}: nicht zu steil (max ${maxSteig.toFixed(2)})`);
+  ok(maxSteig < Math.tan(66 * Math.PI / 180), `Strecke ${d.id}: nicht zu steil (steilste Stelle ${(Math.atan(maxSteig) * 180 / Math.PI).toFixed(0)}°)`);
+  // Krümmung stetig (kein Ruck an Übergängen), kurze fast flache Stücke, keine Mini-Wellen, keine Schluchten
+  let kSprung = 0;
+  for (const [px] of g.p) kSprung = Math.max(kSprung, Math.abs(g.kruemmung2(px - 1e-7) - g.kruemmung2(px + 1e-7)));
+  ok(kSprung < 1e-4, `Strecke ${d.id}: Krümmung an allen Übergängen stetig (Sprung ${kSprung.toExponential(1)})`);
+  let flach = 0, maxFlach = 0;
+  const bau = baueStrecke(d), zielAuslauf = bau.taeler[bau.taeler.length - 1][0] - 30;
+  for (let x = 0; x < zielAuslauf; x += 0.25) { if (Math.abs(g.steigung(x)) < GELAENDE.FLACH_STEIGUNG) { flach += 0.25; maxFlach = Math.max(maxFlach, flach); } else flach = 0; }
+  ok(maxFlach <= GELAENDE.FLACH_MAX, `Strecke ${d.id}: längstes fast flaches Stück ${maxFlach.toFixed(0)} m (≤ ${GELAENDE.FLACH_MAX})`);
+  const innen = g.p.filter(q => q[0] >= 0 && q[0] <= l.ziel);
+  let minStufe = Infinity, monoton = true;
+  for (let i = 1; i < innen.length; i++) {
+    minStufe = Math.min(minStufe, Math.abs(innen[i][1] - innen[i - 1][1]));
+    // jedes Stück steigt oder fällt durchgehend (kein Überschwingen, keine versteckte Welle)
+    const auf = innen[i][1] > innen[i - 1][1];
+    for (let x = innen[i - 1][0] + 0.2; x < innen[i][0] - 0.2; x += 0.4) if ((g.steigung(x) > 1e-9) !== auf && Math.abs(g.steigung(x)) > 1e-9) monoton = false;
+  }
+  ok(minStufe >= GELAENDE.HOEHE_MIN - 0.01, `Strecke ${d.id}: keine Mini-Wellen (kleinste Stufe ${minStufe.toFixed(1)} m)`);
+  ok(monoton, `Strecke ${d.id}: jedes Hügelstück steigt oder fällt ohne Zwischenwelle`);
+  const taeler = innen.filter((q, i) => i > 0 && i < innen.length - 1 && q[1] < innen[i - 1][1] && q[1] < innen[i + 1][1]);
+  ok(taeler.every(q => q[1] > -GELAENDE.TAL_SPIELRAUM - GELAENDE.HOEHE_MIN), `Strecke ${d.id}: keine extrem tiefen Täler`);
   ok(l.ziel > d.laenge - 80 && l.ziel < d.laenge + 120, `Strecke ${d.id}: Ziel bei ${l.ziel.toFixed(0)} m passt zur Länge`);
   ok(Math.abs(g.steigung(l.ziel)) < 0.01 && Math.abs(g.steigung(l.ziel + 200)) < 0.01, `Strecke ${d.id}: flacher Strand hinter dem Ziel`);
   // gleiche Saat → gleiche Strecke
@@ -82,12 +102,152 @@ console.log('## Muscheln');
     ok(gleich, `Strecke ${d.id}: gespeicherte Muscheln passen zur Physik (sonst: node quelle/werkzeug-muscheln.js)`);
     const l = new Lauf(d);
     const unter = l.muscheln.filter(m => m.y < l.g.hoehe(m.x) + 0.5).length;
-    ok(unter === 0 && l.muscheln.length >= 30, `Strecke ${d.id}: ${l.muscheln.length} Muscheln, keine im Boden`);
+    ok(unter === 0 && l.muscheln.length >= 15, `Strecke ${d.id}: ${l.muscheln.length} Muscheln, keine im Boden`);
     const a = Bot.spiele(d, 'gut').lauf.muschelWert, b = Bot.spiele(d, 'gut').lauf.muschelWert;
     ok(a === b && a > 0, `Strecke ${d.id}: Sammeln ist reproduzierbar (${a} Wert)`);
     // Neustart: Muscheln sind wieder da
     ok(new Lauf(d).muscheln.every(m => !m.weg), `Strecke ${d.id}: Neustart bringt alle Muscheln zurück`);
   }
+}
+
+console.log('## Muschel-Linien folgen der Rampe');
+{
+  const { MUSCHEL_LINIEN: ML } = L;
+  for (const d of STRECKEN) {
+    const l = new Lauf(d), g = l.g;
+    let abstandFalsch = 0, nichtBergab = 0, schlechterAbstand = 0, linienGanz = 0, linien = 0, hochZuviel = 0;
+    const gruppen = {};
+    for (const m of l.muscheln) (gruppen[m.linie] = gruppen[m.linie] || []).push(m);
+    for (const gr of Object.values(gruppen)) {
+      linien++;
+      for (const m of gr) {
+        // kürzester Abstand zur Kurve ≈ MUSCHEL_HOEHE (also entlang der Normalen), Fuß auf echtem Gefälle
+        let best = Infinity, fx = m.x;
+        for (let x = m.x - 4; x <= m.x + 4; x += 0.02) { const dd = Math.hypot(m.x - x, m.y - g.hoehe(x)); if (dd < best) { best = dd; fx = x; } }
+        if (Math.abs(best - K.MUSCHEL_HOEHE) > 0.06) abstandFalsch++;
+        if (-g.steigung(fx) < ML.MIN_STEIGUNG - 0.02) nichtBergab++;
+      }
+      for (let i = 1; i < gr.length; i++) { const dd = Math.hypot(gr[i].x - gr[i - 1].x, gr[i].y - gr[i - 1].y); if (Math.abs(dd - ML.ABSTAND) > 0.6) schlechterAbstand++; }
+      // Ein Kalle, der sauber auf der Rampe gleitet, sammelt die ganze Linie ein
+      const k = new Lauf(d); k.starten(); k.tag = 999;
+      k.x = gr[0].x - 8; k.y = k.g.hoehe(k.x); k.boden = true; k.v = 35;
+      let t = 0; while (k.x < gr[gr.length - 1].x + 3 && t < 10) { k.schritt(false); t += K.SCHRITT; if (!k.boden) { k.boden = true; k.y = k.g.hoehe(k.x); } }
+      if (gr.every(m => k.muscheln.find(q => q.x === m.x).weg)) linienGanz++;
+      // Wer 4 m zu hoch drüberfliegt, verpasst einen Teil
+      const f = new Lauf(d); f.starten(); f.tag = 999; f.vorschau = false;
+      let hoch = 0;
+      for (const m of gr) { f.x = m.x; f.y = f.g.hoehe(m.x) + 4.5; f.boden = false; f.vx = 30; f.vy = 0; f.sammeln(); }
+      hoch = gr.filter(m => f.muscheln.find(q => q.x === m.x).weg).length;
+      if (hoch > gr.length / 2) hochZuviel++;
+    }
+    ok(abstandFalsch === 0, `Strecke ${d.id}: alle Muscheln ${K.MUSCHEL_HOEHE} m über dem Hang (entlang der Normalen)`);
+    ok(nichtBergab === 0, `Strecke ${d.id}: Muscheln liegen nur über echten Abfahrten`);
+    ok(schlechterAbstand === 0, `Strecke ${d.id}: gleichmäßige Abstände entlang der Kurve`);
+    ok(linien >= 3 && linienGanz === linien, `Strecke ${d.id}: gleitend wird jede der ${linien} Linien ganz eingesammelt (${linienGanz})`);
+    ok(hochZuviel === 0, `Strecke ${d.id}: 4 m zu hoch drüber verpasst den Großteil`);
+    const gut = Bot.spiele(d, 'gut').lauf;
+    ok(gut.muschelWert >= gut.muschelGesamt * 0.75, `Strecke ${d.id}: guter Lauf mit sauberen Landungen sammelt fast alles (${gut.muschelWert}/${gut.muschelGesamt})`);
+  }
+}
+
+console.log('## Perfekte Landung ist physikalisch begründet');
+{
+  const d = STRECKEN[3];
+  const l0 = new Lauf(d);
+  const bau = baueStrecke(d);
+  const kuppe = bau.kuppen[3], tal = bau.taeler.find(t => t[0] > kuppe[0]);
+  const xm = kuppe[0] + (tal[0] - kuppe[0]) * 0.5;
+  const landung = (winkelDaneben, tempo, maxHoehe, flugzeit) => {
+    const l = new Lauf(d); l.starten(); l.tag = 999;
+    const s = l.g.steigung(xm), w = Math.atan(s) - winkelDaneben * Math.PI / 180;
+    l.x = xm; l.boden = false; l.echterFlug = true; l.flugzeit = flugzeit; l.maxUeberBoden = maxHoehe;
+    l.vx = tempo * Math.cos(w); l.vy = tempo * Math.sin(w); l.y = l.g.hoehe(xm) + 0.05;
+    for (let i = 0; i < 60 && !l.boden; i++) l.schritt(false);
+    const e = l.ereignisse.find(e => e.art === 'landung');
+    return e ? e.guete : 'keine';
+  };
+  ok(landung(5, 60, 8, 1.5) === 'perfekt', 'tangential auf der Abfahrt gelandet → perfekt');
+  ok(landung(18, 60, 8, 1.5) === 'perfekt', 'leicht steiler (18°), bei 60 m/s → noch perfekt (freundlich)');
+  ok(landung(40, 60, 8, 1.5) !== 'perfekt', 'steil auf die Abfahrt (40°) → nicht perfekt');
+  ok(landung(5, 60, 0.6, 1.5) !== 'perfekt', 'nur über eine Unebenheit gestreift → nicht perfekt');
+  ok(landung(5, 60, 8, 0.15) !== 'perfekt', 'zu kurzer Flug → nicht perfekt');
+  let perf = 0;
+  for (const dd of STRECKEN) { const st = Bot.spiele(dd, 'gut').stat; perf += st.perfekt; }
+  ok(perf >= 24, `gute Läufe landen öfter perfekt (zusammen ${perf} auf 12 Strecken)`);
+}
+
+console.log('## Flugrufe: Juhu und Yippie');
+{
+  const { Flugrufe } = L, R = K.RUF;
+  // Kleiner Testflug: Kalle startet bei (0, 0) mit vx/vy, Schwerkraft wie losgelassen; Boden weit unten
+  function flug(fr, zeit0, vx, vy, { dauer = 6, halten = false } = {}) {
+    const l = { boden: false, echterFlug: true, abflugX: 0, abflugY: 0, abflugV: Math.hypot(vx, vy), abflugSteig: vy / Math.hypot(vx, vy),
+      flugzeit: 0, x: 0, y: 0, vx, vy, zeit: zeit0, ergebnis: null, ereignisse: [] };
+    const g = K.G * (halten ? K.SCHWER_LUFT : K.LEICHT_LUFT);
+    const rufe = [];
+    for (let t = 0; t < dauer && l.y >= -0.01; t += K.SCHRITT) {
+      l.vy -= g * K.SCHRITT; l.x += l.vx * K.SCHRITT; l.y += l.vy * K.SCHRITT; l.flugzeit += K.SCHRITT; l.zeit += K.SCHRITT;
+      fr.schritt(l, K.SCHRITT);
+      for (const e of l.ereignisse) rufe.push([e.ruf, l.zeit]);
+      l.ereignisse.length = 0;
+    }
+    return { rufe, l };
+  }
+  function boden(fr, l, dauer) { l.boden = true; for (let t = 0; t < dauer; t += K.SCHRITT) { l.zeit += K.SCHRITT; fr.schritt(l, K.SCHRITT); } }
+  let fr = new Flugrufe();
+  ok(flug(fr, 0, 30, 8).rufe.length === 0, 'kleiner Hüpfer (bis ~1 m) → still');
+  fr = new Flugrufe();
+  ok(flug(fr, 0, 40, 18).rufe.length === 0, 'flacher Rampenkontakt (bis ~7 m) → still');
+  fr = new Flugrufe();
+  const mittel = flug(fr, 0, 30, 38).rufe;
+  ok(mittel.length === 1 && mittel[0][0] === 'juhu', `mittlerer schöner Flug (~30 m) → genau ein Juhu (${mittel.map(r => r[0])})`);
+  fr = new Flugrufe();
+  const gross = flug(fr, 0, 55, 58).rufe;
+  ok(gross.some(r => r[0] === 'yippie') && gross.filter(r => r[0] === 'juhu').length <= 1 && gross.filter(r => r[0] === 'yippie').length === 1, `hoher Flug (~70 m) → Yippie, höchstens ein Juhu davor (${gross.map(r => r[0])})`);
+  if (gross.length === 2) ok(gross[1][1] - gross[0][1] >= R.STEIGERUNG - 1e-9, 'Steigerung Juhu → Yippie überlagert sich nicht');
+  fr = new Flugrufe();
+  const sofort = flug(fr, 0, 60, 75).rufe;
+  ok(sofort.length === 1 && sofort[0][0] === 'yippie', `sofort spektakulär → direkt Yippie, kein Juhu (${sofort.map(r => r[0])})`);
+  fr = new Flugrufe();
+  const weit = flug(fr, 0, 100, 16).rufe;
+  ok(weit.length === 1 && weit[0][0] === 'yippie', `sehr weiter flacher Flug (>${R.YIPPIE_WEITE} m) → Yippie (${weit.map(r => r[0])})`);
+  // Schnelle Folge: zweiter Flug kurz nach dem ersten Ruf → kein zweiter Ruf
+  fr = new Flugrufe();
+  const a1 = flug(fr, 0, 30, 38, { dauer: 1.0 });
+  boden(fr, a1.l, R.BODEN_RUHE + 0.05);
+  const a2 = flug(fr, a1.l.zeit, 30, 38, { dauer: 1.0 });
+  ok(a1.rufe.length === 1 && a2.rufe.length === 0, 'zweiter Flug innerhalb des Mindestabstands bleibt still (und wird nicht nachgeholt)');
+  boden(fr, a2.l, 2);
+  const a3 = flug(fr, a2.l.zeit, 30, 38);
+  ok(a3.rufe.length === 1, 'nach genug Abstand und stabiler Landung ruft Kalle wieder');
+  // Kurzer Aufsetzer: gilt als derselbe Flug → kein neues Juhu
+  fr = new Flugrufe();
+  const b1 = flug(fr, 0, 30, 38, { dauer: 1.2 });
+  boden(fr, b1.l, 0.1);
+  const b2 = flug(fr, b1.l.zeit + 3, 30, 38, { dauer: 1.2 });
+  ok(b1.rufe.length === 1 && b2.rufe.length === 0, 'kurzer Aufsetzer (unter BODEN_RUHE) startet keinen neuen Flug');
+  // In allen echten Läufen: pro Flug höchstens 1 Juhu + 1 Yippie, Abstände eingehalten, kleine Flüge still
+  let fehlerPro = 0, fehlerAbstand = 0, kleineMitRuf = 0, juhuGesamt = 0, yippieGesamt = 0, fluege = 0;
+  for (const dd of STRECKEN) for (const art of ['gut', 'mittel', 'einfach']) {
+    let imFlug = [], letzte = null, maxH = 0, startY = 0;
+    Bot.spiele(dd, art, 3, { beiSchritt: (l) => {
+      if (!l.boden && l.echterFlug) { if (!imFlug.flug) { imFlug = []; imFlug.flug = true; startY = l.abflugY; maxH = 0; fluege++; } maxH = Math.max(maxH, l.y - startY); }
+      for (const e of l.ereignisse) if (e.art === 'ruf') {
+        imFlug.push(e.ruf); if (e.ruf === 'juhu') juhuGesamt++; else yippieGesamt++;
+        if (letzte !== null) { const d2 = l.zeit - letzte.zeit; if (d2 < (letzte.flug === imFlug ? R.STEIGERUNG : R.ABSTAND) - 1e-9) fehlerAbstand++; }
+        letzte = { zeit: l.zeit, flug: imFlug };
+      }
+      if (l.rufe.imFlug === false && imFlug.flug) {
+        if (imFlug.filter(r => r === 'juhu').length > 1 || imFlug.filter(r => r === 'yippie').length > 1) fehlerPro++;
+        if (maxH < 8 && imFlug.length) kleineMitRuf++;
+        imFlug = [];
+      }
+    } });
+  }
+  ok(fehlerPro === 0, 'in echten Läufen pro Flug höchstens ein Juhu und ein Yippie');
+  ok(fehlerAbstand === 0, 'in echten Läufen Mindestabstände zwischen Rufen eingehalten');
+  ok(kleineMitRuf === 0, 'in echten Läufen bleiben kleine Flüge (< 8 m) still');
+  ok(juhuGesamt > yippieGesamt && yippieGesamt > 0, `Juhu häufiger als Yippie (${juhuGesamt} Juhu, ${yippieGesamt} Yippie bei ${fluege} Flügen)`);
 }
 
 console.log('## Abheben hängt von Tempo und Halten ab');

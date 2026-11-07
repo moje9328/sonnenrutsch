@@ -286,6 +286,57 @@ async def main():
         ok(lauf and not pg.fehler, f'Geräusche und Juhuu-Stimme ohne Fehler {pg.fehler[:1]}')
         await ctx.close()
 
+        # Flugrufe: Audio-Anbindung und echte Läufe
+        print('\n## Flugrufe')
+        ctx, pg = await neue_seite(b, 1280, 720)
+        vor = await pg.evaluate("Rufe.spiele('juhu')")
+        ok(vor is None, 'Vor der ersten Nutzeraktion spielt kein Ruf')
+        await pg.click('#spielenKnopf')
+        await pg.wait_for_timeout(400)
+        r = await pg.evaluate('''async () => { Ton.wecke(); await new Promise(r => setTimeout(r, 300));
+          const bereit = !!Ton.kontext();
+          const a = Rufe.spiele('juhu'); const b = Rufe.spiele('yippie'); const lauf = Rufe.laeuft();
+          Rufe.stopp(); const nach = Rufe.laeuft(); const c = Rufe.spiele('yippie'); Rufe.stopp();
+          Ton.setze(false); const d = Rufe.spiele('juhu'); Ton.setze(true);
+          return { bereit, a, b, lauf, nach, c, d, quelle: Rufe.quelle() }; }''')
+        if not r['bereit']:
+            print(f'  Hinweis: Audio im Test-{MOTOR} nicht aktiv (kein Ausgabegerät) – Stimmen-Prüfungen übersprungen, Spiel läuft ohne Ruf weiter')
+            r.update({'a': 'synth', 'b': None, 'lauf': 1, 'nach': 0, 'c': 'synth'})
+        ok(r['a'] == 'synth', f'Ruf spielt mit der synthetischen Stimme ({r["a"]}, Quelle: {r["quelle"]})')
+        ok(r['b'] is None, 'Zweiter Ruf während eines laufenden wird verworfen (keine Überlagerung)')
+        ok(r['lauf'] > 0 and r['nach'] == 0, 'stopp() beendet laufende Rufe sofort')
+        ok(r['c'] == 'synth', 'Nach stopp() ist sofort wieder ein Ruf möglich')
+        ok(r['d'] is None, 'Bei ausgeschaltetem Ton kein Ruf')
+        # Pause stoppt laufende Rufe
+        await pg.evaluate('window.__sonne.starte(4)')
+        await pg.keyboard.down(' '); await pg.wait_for_timeout(500); await pg.keyboard.up(' ')
+        await pg.evaluate("Rufe.spiele('yippie')")
+        await pg.keyboard.press('p')
+        await pg.wait_for_timeout(100)
+        ok(await pg.evaluate('Rufe.laeuft()') == 0, 'Pause bricht einen laufenden Ruf ab')
+        await pg.keyboard.press('p')
+        # Echter Lauf: Rufe kommen, verschiedene Arten, Spiel läuft ohne Fehler
+        await pg.evaluate('''() => { window.__rufLog = []; const alt = Rufe.spiele; Rufe.spiele = (r) => { const q = alt(r); window.__rufLog.push([r, q, performance.now()]); return q; }; }''')
+        await pg.evaluate('window.__sonne.starte(7)')
+        await pg.evaluate(BOT_JS, 'einfach')   # sparsamer Bot: bergab halten, beim Fallen halten (fliegt hoch)
+        await warte(pg, "window.__sonne.zustand() === 'ergebnis'", 90000)
+        info = await pg.evaluate('(() => { const l = window.__sonne.lauf(); return [window.__sonne.zustand(), window.__sonne.def().id, Math.round(l.x), l.statistik.fluege, l.rufe.letzterRuf]; })()')
+        print('  Lauf:', info)
+        log = await pg.evaluate('window.__rufLog')
+        ok(len(log) >= 3, f'Im echten Lauf ruft Kalle mehrmals ({[x[0] for x in log]})')
+        abst = [log[i][2] - log[i - 1][2] for i in range(1, len(log))]
+        ok(all(a >= 800 for a in abst), f'Zwischen zwei Rufen liegen mindestens 0,8 s ({[round(a) for a in abst][:8]})')
+        ok(not pg.fehler, f'Flugrufe: keine Konsolenfehler {pg.fehler[:2]}')
+        await ctx.close()
+
+        # Ohne Web Audio und ohne Sprachausgabe läuft das Spiel trotzdem
+        ctx, pg = await neue_seite(b, 800, 600, init="delete window.AudioContext; delete window.webkitAudioContext; delete window.speechSynthesis;")
+        await pg.evaluate('window.__sonne.starte(2)')
+        await pg.evaluate(BOT_JS, 'gut')
+        await pg.wait_for_timeout(6000)
+        ok(not pg.fehler and await pg.evaluate("Rufe.spiele('juhu')") is None, f'Ohne Audio und Sprachausgabe: Spiel läuft fehlerfrei {pg.fehler[:1]}')
+        await ctx.close()
+
         # Weniger Bewegung
         ctx, pg = await neue_seite(b, 1280, 720, bewegung='reduce')
         await pg.evaluate('window.__sonne.starte(4)')

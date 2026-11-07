@@ -5,6 +5,54 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Vierte Runde (7.11.2026): Hügelrhythmus, Muschel-Linien, Juhu/Yippie, perfekte Landung
+
+Auftrag: ausführliche Vorgabe (Flugrufe, Hügel, Sammellinien, perfekte Landung, Technik, Prüfung).
+Die erwähnte Bildschirmaufnahme lag nicht vor, umgesetzt wurde nach der Textbeschreibung.
+
+- **Gelände (`2-strecken.js`):**
+  - Jedes Hügelstück ist jetzt ein Polynom 5. Grades statt eines Kosinusbogens. Höhe, Steigung **und Krümmung** sind an jedem Übergang stetig: kein Ruck, keine versteckte Kante (getestet, Sprung < 1e-4).
+  - Die Krümmung an Kuppe und Tal richtet sich nach dem stärkeren Nachbarstück, normiert höchstens 9. Ab etwa 20 würde ein Stück überschwingen; getestet ist, dass jedes Stück durchgehend steigt oder fällt.
+  - Grenzen zentral in `GELAENDE`:
+    - Stufe mindestens 7 m (keine Mini-Wellen)
+    - mittlere Neigung 0,32–1,15, steilste Stelle ~64°
+    - Täler höchstens ±5 m um die Grundlinie (keine Schluchten)
+    - fast flache Stücke (|Steigung| < 0,15) höchstens 15 m, Start und Zielstrand ausgenommen
+  - Vorher gab es bis zu 283 m fast flache Rutschstrecke (Strecke 12), jetzt höchstens 10 m.
+  - Die Schanze hat dahinter eine kräftige Abfahrt statt einer langen, flachen Landezone.
+  - Darstellung und Kollision nutzen dieselbe Funktion (`Gelaende.werte`).
+- **Muschel-Linien (`3b-muscheln.js`):**
+  - Linien gibt es nur auf Abfahrten, auf denen der gute Bot tatsächlich landet. Überflogene Abfahrten bleiben leer, und es folgen nie zwei Linien direkt hintereinander.
+  - Start 3 m vor der typischen Landestelle, dann 5–8 Muscheln mit 4,2 m Abstand entlang der Kurvenlänge, 1,1 m über dem Hang entlang der Normalen. Die Linie endet, bevor das Tal flach wird.
+  - Jede dritte Linie endet mit einer goldenen Muschel.
+  - Sammeln: Kalles Mitte liegt 1,0 m über den Füßen senkrecht zu seiner Lage, Radius 1,8 m. Reine Sensoren, kein Einfluss auf die Physik.
+  - Ergebnis: Gleitend wird jede Linie ganz eingesammelt (getestet). 4,5 m zu hoch verpasst den Großteil (getestet). Ein guter Lauf sammelt 80–99 %.
+  - Pro Strecke 4–10 Linien (24–77 Muscheln). Die Daten liegen vorab berechnet in `2b-muscheln.js` (`[x, y, gold, linie]`). **Nach Physik- oder Streckenänderungen `node quelle/werkzeug-muscheln.js` ausführen.**
+- **Perfekte Landung (`3-physik.js`, `landen`):** Alle Bedingungen müssen gelten:
+  - Landung auf einer Abfahrt (Steigung < −0,18)
+  - Abweichung von der Hangtangente ≤ 26°
+  - Aufprall quer zur Oberfläche ≤ 30 m/s
+  - Flugzeit > 0,32 s und vorher mindestens 1,2 m über dem Boden
+  - Bonus wie bisher +5 % Tempo (+1,2 % je weiterer Perfekter in Folge).
+- **Flugrufe:**
+  - Bewertung in `3c-flugrufe.js` (Klasse `Flugrufe`, Weltkoordinaten und Spielzeit, Schwellen in `K.RUF`).
+  - „Juhu!“: im Steigflug tatsächlich ≥ 24 m über dem Absprung und Absprung mit ≥ 20 m/s nach oben.
+  - „Yippie!“: ≥ 55 m tatsächlich erreicht, oder ≥ 125 m weit, oder sofort, wenn der vorhergesagte Gipfel ≥ 85 m bei ≥ 70 m/s liegt.
+  - Pro Flug höchstens ein Juhu und ein Yippie. Ein Yippie nach einem Juhu frühestens nach 0,9 s, sonst 1,8 s Abstand zwischen Rufen.
+  - Ein neuer Flug beginnt erst nach 0,3 s stabiler Bodenzeit. Was nicht sofort passt, entfällt und wird nicht nachgeholt.
+- **Stimme (`6b-rufe.js`):** Austauschbare Anbindung in dieser Reihenfolge:
+  1. Sprachclips (`RUF_CLIPS`) – **derzeit keine eingebunden**, die Liste ist leer.
+  2. Synthetische Comic-Stimme mit Web Audio – das ist die tatsächlich genutzte Quelle.
+  3. Optionale Browser-Sprachausgabe (`RUF_BROWSER_SPRACHE`, Standard aus).
+
+  Es spielt nur nach Nutzeraktion und bei eingeschaltetem Ton, nie zwei Rufe übereinander. `Rufe.stopp()` läuft bei Pause, Tabwechsel, Neustart und Ergebnis. Die Mimik beim Ruf: Jubelgesicht, beim Yippie Scheren hoch; die Physik bleibt unberührt.
+- Das alte „Juhuu“ aus `Ton.abflug` ist entfernt.
+- Zeiten neu kalibriert (Strecke 1–3 mit Anfänger-Reserve 42/56/57 s).
+- `sw.js` CACHE `sonnenrutsch-v5`.
+- **Tests:**
+  - Logik: siehe unten, mit neuen Gruppen: Krümmung, flache Stücke, Mini-Wellen, Muschel-Linien, perfekte Landung und Flugrufe (Einzelflüge und alle Bot-Läufe).
+  - Browser: 126/126 in Chromium und WebKit. In WebKit headless startet kein Audio (kein Ausgabegerät), dort werden die Stimmen-Prüfungen übersprungen und das Spiel läuft ohne Ruf weiter.
+
 ## Dritte Runde (7.11.2026): Schwerkraft und Muscheln
 
 - **Schwerkraft in der Luft:** Losgelassen 1,0 g statt 0,7 g, damit Kalle nicht zu lange oben bleibt. Gedrückt 4,5 g statt 3,4 g (schneller Sturz, um Schwung zu holen). Flüge gehen typisch 30–100 m hoch.
@@ -70,7 +118,7 @@ python3 quelle/baue.py              # baut index.html aus quelle/  (index.html n
 node quelle/test-logik.js           # Physik, Gelände, Landungen, Schaffbarkeit (~1 min; „schnell“ = ohne Botläufe)
 python3 quelle/test-browser.py      # Browser-Test, Chromium (~2 min); „webkit“ als Argument = Safari-Motor
 node quelle/kalibriere.js           # misst alle Strecken mit dem Testbot, schlägt Tageslicht/Sterne vor
-node quelle/werkzeug-muscheln.js    # Muschelpositionen neu berechnen (nach Physik-/Streckenänderung)
+node quelle/werkzeug-muscheln.js    # Muschel-Linien neu berechnen (nach Physik-/Streckenänderung)
 python3 quelle/mache-icons.py       # App-Icons neu zeichnen (aus index.html)
 ```
 
@@ -81,12 +129,16 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 | Datei | Inhalt |
 |---|---|
 | `1-einstellungen.js` | **Alle Stellschrauben** (`K`): Schwerkraft, Schwer-Faktoren, Landungswinkel, Bonus, Kamera |
-| `2-strecken.js` | Gelände (`Gelaende`), Gebiete, Bauplan der 12 Strecken (`STRECKEN`), Streckengenerator |
-| `3-physik.js` | `Lauf`: Boden/Luft, Abheben, Landung, Tageslicht, Ereignisse |
+| `2-strecken.js` | Gelände (`Gelaende`, Grenzen `GELAENDE`), Gebiete, Bauplan der 12 Strecken (`STRECKEN`), Streckengenerator |
+| `2b-muscheln.js` | vorab berechnete Muschel-Linien (nicht von Hand ändern) |
+| `3-physik.js` | `Lauf`: Boden/Luft, Abheben, Landung, Tageslicht, Muscheln einsammeln, Ereignisse |
+| `3b-muscheln.js` | Platzierung der Muschel-Linien (`MUSCHEL_LINIEN`) |
+| `3c-flugrufe.js` | Flugbewertung → Ruf-Ereignisse „Juhu“/„Yippie“ |
 | `bot.js` | Testbot (`gut`, `mittel`, `nie`, `immer`, `schnell`) – Tests und Menü-Hintergrund |
 | `4-krabbe.js` | `malKrabbe` – **wörtlich aus Krabben-Krawall** (dort wörtlich aus Krabbenalarm) + 4 Farbvarianten |
 | `5-speicher.js` | localStorage `pixelhafen.sonnenrutsch` (Version 1) |
 | `6-ton.js` | Web-Audio-Geräusche, Rutsch-/Windrauschen nach Tempo |
+| `6b-rufe.js` | Stimme für die Rufe (Clips / Synthese / optional Browser-Sprache) |
 | `7-grafik.js` | Himmel/Sonne/Parallaxe/Gelände/Kalle/Effekte, Kamera, Themen (`THEMEN`) |
 | `8-eingabe.js` | Ein-Tasten-Eingabe (Pointer Events + Tastatur) |
 | `9-app.js` | Zustände, Game Loop, HUD, Menüs, Ergebnisse, Test-Schnittstelle `window.__sonne` |
@@ -110,18 +162,18 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 
 | Nr | Gebiet | Name | Länge | Tageslicht | 2★ / 3★ bis | guter Bot |
 |---|---|---|---|---|---|---|
-| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 1000 m | 40 s | 29,3 / 18,6 s | 17,8 s |
-| 2 | Sanddünen | Dünenwellen | 1500 m | 58 s | 43,9 / 29,7 | 28,5 |
-| 3 | Sanddünen | Windkamm | 1800 m | 64 s | 49,2 / 34,4 | 33,1 |
-| 4 | Tropeninsel | Palmenbucht | 2000 m | 59 s | 51,1 / 43,2 | 41,6 |
-| 5 | Tropeninsel | Kokoshügel | 2200 m | 73 s | 64,1 / 55,3 | 53,2 |
-| 6 | Tropeninsel | Lagunensprung | 2300 m | 64 s | 56 / 48 | 47,4 |
-| 7 | Felsküste | Klippenpfad | 2400 m | 68 s | 61 / 53,9 | 51,8 |
-| 8 | Felsküste | Brandungsfels | 2500 m | 65 s | 58,5 / 52,1 | 50,1 |
-| 9 | Felsküste | Möwenkap | 2600 m | 63 s | 57,3 / 51,6 | 49,6 |
-| 10 | Korallenkap | Muschelbank | 2700 m | 72 s | 65,5 / 59 | 57,8 |
-| 11 | Korallenkap | Korallenkamm | 2800 m | 69 s | 63,9 / 58,7 | 56,5 |
-| 12 | Korallenkap | Leuchtturmlauf | 3000 m | 90 s | 83,7 / 77,4 | 74,6 |
+| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 1000 m | 42 s | 30,5 / 19 s | 18,5 s |
+| 2 | Sanddünen | Dünenwellen | 1500 m | 56 s | 43 / 30 | 28,8 |
+| 3 | Sanddünen | Windkamm | 1800 m | 57 s | 47,4 / 37,8 | 36,4 |
+| 4 | Tropeninsel | Palmenbucht | 2000 m | 59 s | 51,1 / 43,1 | 41,5 |
+| 5 | Tropeninsel | Kokoshügel | 2200 m | 64 s | 56,1 / 48,2 | 46,4 |
+| 6 | Tropeninsel | Lagunensprung | 2300 m | 63 s | 56,1 / 49,2 | 47,3 |
+| 7 | Felsküste | Klippenpfad | 2400 m | 66 s | 59,1 / 52,3 | 50,3 |
+| 8 | Felsküste | Brandungsfels | 2500 m | 65 s | 58,9 / 52,8 | 50,8 |
+| 9 | Felsküste | Möwenkap | 2600 m | 70 s | 63,7 / 57,5 | 55,3 |
+| 10 | Korallenkap | Muschelbank | 2700 m | 72 s | 65,8 / 59,6 | 57,3 |
+| 11 | Korallenkap | Korallenkamm | 2800 m | 76 s | 70,1 / 64,2 | 61,7 |
+| 12 | Korallenkap | Leuchtturmlauf | 3000 m | 77 s | 71,7 / 66,5 | 63,9 |
 
 Schwerer wird es durch höhere, breitere Hügel, steilere Rampen, unregelmäßigeren Rhythmus,
 ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 auf ×1,2).
@@ -129,8 +181,8 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 
 ## Geprüft (6.11.2026)
 
-- `test-logik.js`: 227 von 227 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
-- `test-browser.py`: 115 von 115 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
+- `test-logik.js`: 379 von 379 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
+- `test-browser.py`: 126 von 126 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
 - Screenshots aller Gebiete, von Tageslicht bis Sonnenuntergang, Hoch- und Querformat angesehen.
 
 ## Nicht geprüft / offene Punkte

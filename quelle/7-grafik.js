@@ -802,7 +802,8 @@ const Grafik = (() => {
 
   return {
     init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
-    juhu(x, y) { text(x, y + 3.5, 'Juhuu!', '#ffffff', 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
+    // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
+    ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
     get kam() { return kam; }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
     get cssW() { return cssW; }, get cssH() { return cssH; },
     // Für Tests: Bildposition von Kalle in CSS-Pixeln
