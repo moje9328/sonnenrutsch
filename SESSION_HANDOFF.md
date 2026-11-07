@@ -5,6 +5,49 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Fünfte Runde (7.11.2026): doppeltes Tempo und Endlosflug
+
+- **Tempo ×2 (`K.TEMPO` in `1-einstellungen.js`):**
+  - Die Physik läuft doppelt so schnell wie die echte Zeit. Das entspricht genau Geschwindigkeiten ×2 und Beschleunigungen ×4.
+  - Flugbahnen, Rampen, Muschel-Linien und Landeregeln bleiben räumlich identisch (getestet: gleiche Bahn, halbe Dauer).
+  - Die Schritte bleiben 1/240 s Physikzeit, höchstens 0,42 m pro Schritt. Das Gelände ist eine Höhenfunktion, deshalb gibt es kein Durchdringen.
+  - `Lauf.zeit` ist echte Zeit, `Lauf.simZeit` Physikzeit. Der Game Loop rechnet `dt · TEMPO`, höchstens 48 Schritte pro Bild.
+  - **Nicht beschleunigt:** Tageslicht, Rufabstände, Effekte, Menüs, Töne.
+- **Angepasst:**
+  - Kamera: mehr Vorschau (`KAM_VORSCHAU` 1,7 Physik-s ≈ 0,85 s echt, hochkant ×0,65), Kalle bei 26 % der Breite, Glättung schneller.
+  - Reaktionszeit des Test-Bots `mittel`: 0,11 s echte Zeit.
+  - Rufe: Abstand 2,5 s echte Zeit, Juhu ab 28 m, Yippie ab 62 m / 140 m / sofort ab 95 m. Damit ruft Kalle bei mittlerem Spiel etwa alle 4 s „Juhu!“ und unter einmal pro Minute „Yippie!“.
+  - Tageslicht der Strecken auf echte Zeit neu kalibriert (etwa halbiert).
+- **Endlosflug (`3d-endlos.js`, `K.ENDLOS`):**
+  - Ein eigener Startknopf. Der Streckenmodus bleibt.
+  - Jeder Lauf hat eine neue Saat und eine zufällige Küste. Tests nutzen `window.__endlosSaat`.
+  - Das Gelände wächst 1100 m voraus und wird 260 m hinter Kalle entfernt (bleibt unter 80 Punkten, getestet). Gleiche Hügelarten und Grenzen wie die Strecken. Die Schwierigkeit steigt bis 9000 m und bleibt dann konstant.
+  - Muschel-Linien: Ein unsichtbarer Testpilot (Bot `schnell`) fliegt 550 m voraus. Wo er auf einer Abfahrt landet, entsteht eine Linie nach denselben Regeln (`linienPunkte` in `3b-muscheln.js`).
+  - Tageslicht:
+    - Start 30 s, Vorrat höchstens 45 s.
+    - Distanzmarken bei 700 m und danach mit jeweils 90 m mehr Abstand, je +7 s.
+    - Perfekte Landung +1,5 s.
+    - Läuft nur in aktiven Physikschritten ab (Pause, Tabwechsel und Ergebnis verbrauchen nichts).
+  - Himmel und Sonne: `f = 1 − Rest/30`, also voller Startvorrat = Mittag. Nach Sonnenuntergang sinkt die Sonne ganz unter den Horizont.
+  - Punkte = Muschelwert × 10 + perfekte Landungen × 25.
+  - Rekorde (Strecke und Punkte) liegen in `Speicher.endlos`, getrennt von den Streckenbestzeiten.
+- **Balance** (Bots, je 3 Saaten, echte Zeit):
+
+  | Spielstil | Dauer | Strecke |
+  |---|---|---|
+  | nie drücken | 37 s | 1,3 km |
+  | Anfänger | 56 s | 3,6 km |
+  | mittel | 77 s | 7,1 km |
+  | gut | 139 s | 13,6 km |
+
+  Alle Läufe enden, weil die Marken immer weiter auseinanderrücken.
+- **Oberfläche:**
+  - Anzeige: Strecke (Balken bis zur nächsten Marke), Punkte, Rekord, Tageslicht, Muscheln, Ton-Knopf, Pause.
+  - Einblendung „+7 s Tageslicht“ bzw. „+1,5 s Tageslicht · Perfekt“.
+  - Distanzmarken als Pfosten mit Meterzahl, eigenes Ergebnisfenster mit „Sofort nochmal“.
+  - Kein Pulsieren der Tageslichtleiste mehr (keine Warnblitze).
+- `sw.js` CACHE `sonnenrutsch-v6`.
+
 ## Vierte Runde (7.11.2026): Hügelrhythmus, Muschel-Linien, Juhu/Yippie, perfekte Landung
 
 Auftrag: ausführliche Vorgabe (Flugrufe, Hügel, Sammellinien, perfekte Landung, Technik, Prüfung).
@@ -134,6 +177,7 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 | `3-physik.js` | `Lauf`: Boden/Luft, Abheben, Landung, Tageslicht, Muscheln einsammeln, Ereignisse |
 | `3b-muscheln.js` | Platzierung der Muschel-Linien (`MUSCHEL_LINIEN`) |
 | `3c-flugrufe.js` | Flugbewertung → Ruf-Ereignisse „Juhu“/„Yippie“ |
+| `3d-endlos.js` | Endlosflug: wachsendes Gelände, Testpilot, Muschel-Linien |
 | `bot.js` | Testbot (`gut`, `mittel`, `nie`, `immer`, `schnell`) – Tests und Menü-Hintergrund |
 | `4-krabbe.js` | `malKrabbe` – **wörtlich aus Krabben-Krawall** (dort wörtlich aus Krabbenalarm) + 4 Farbvarianten |
 | `5-speicher.js` | localStorage `pixelhafen.sonnenrutsch` (Version 1) |
@@ -160,20 +204,22 @@ Lokal spielen: `python3 -m http.server` im Ordner, dann http://localhost:8000.
 
 ## Strecken
 
-| Nr | Gebiet | Name | Länge | Tageslicht | 2★ / 3★ bis | guter Bot |
-|---|---|---|---|---|---|---|
-| 1 | Sanddünen | Lernstrecke (mit Hinweisen) | 1000 m | 42 s | 30,5 / 19 s | 18,5 s |
-| 2 | Sanddünen | Dünenwellen | 1500 m | 56 s | 43 / 30 | 28,8 |
-| 3 | Sanddünen | Windkamm | 1800 m | 57 s | 47,4 / 37,8 | 36,4 |
-| 4 | Tropeninsel | Palmenbucht | 2000 m | 59 s | 51,1 / 43,1 | 41,5 |
-| 5 | Tropeninsel | Kokoshügel | 2200 m | 64 s | 56,1 / 48,2 | 46,4 |
-| 6 | Tropeninsel | Lagunensprung | 2300 m | 63 s | 56,1 / 49,2 | 47,3 |
-| 7 | Felsküste | Klippenpfad | 2400 m | 66 s | 59,1 / 52,3 | 50,3 |
-| 8 | Felsküste | Brandungsfels | 2500 m | 65 s | 58,9 / 52,8 | 50,8 |
-| 9 | Felsküste | Möwenkap | 2600 m | 70 s | 63,7 / 57,5 | 55,3 |
-| 10 | Korallenkap | Muschelbank | 2700 m | 72 s | 65,8 / 59,6 | 57,3 |
-| 11 | Korallenkap | Korallenkamm | 2800 m | 76 s | 70,1 / 64,2 | 61,7 |
-| 12 | Korallenkap | Leuchtturmlauf | 3000 m | 77 s | 71,7 / 66,5 | 63,9 |
+Zeiten in echten Sekunden (Tempo ×2):
+
+| Nr | Name | Tageslicht | 2★ / 3★ bis | guter Bot |
+|---|---|---|---|---|
+| 1 | Lernstrecke | 21 s | 15,3 / 9,6 s | 9,2 s |
+| 2 | Dünenwellen | 28 s | 21,5 / 15 | 14,4 |
+| 3 | Windkamm | 29 s | 23,9 / 18,9 | 18,2 |
+| 4 | Palmenbucht | 30 s | 25,8 / 21,6 | 20,7 |
+| 5 | Kokoshügel | 32 s | 28,1 / 24,1 | 23,2 |
+| 6 | Lagunensprung | 32 s | 28,3 / 24,6 | 23,6 |
+| 7 | Klippenpfad | 33 s | 29,6 / 26,1 | 25,1 |
+| 8 | Brandungsfels | 33 s | 29,7 / 26,4 | 25,4 |
+| 9 | Möwenkap | 35 s | 31,9 / 28,7 | 27,6 |
+| 10 | Muschelbank | 36 s | 32,9 / 29,8 | 28,7 |
+| 11 | Korallenkamm | 38 s | 35 / 32,1 | 30,9 |
+| 12 | Leuchtturmlauf | 39 s | 36,1 / 33,2 | 32,0 |
 
 Schwerer wird es durch höhere, breitere Hügel, steilere Rampen, unregelmäßigeren Rhythmus,
 ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 auf ×1,2).
@@ -181,8 +227,8 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 
 ## Geprüft (6.11.2026)
 
-- `test-logik.js`: 379 von 379 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
-- `test-browser.py`: 126 von 126 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
+- `test-logik.js`: 502 von 502 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
+- `test-browser.py`: 149 von 149 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
 - Screenshots aller Gebiete, von Tageslicht bis Sonnenuntergang, Hoch- und Querformat angesehen.
 
 ## Nicht geprüft / offene Punkte

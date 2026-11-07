@@ -5,8 +5,15 @@
 // ===================================================================
 
 const K = {
-  SCHRITT: 1 / 240,         // feste Physik-Schrittweite (unabhängig von der Bildrate)
-  MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
+  SCHRITT: 1 / 240,         // feste Physik-Schrittweite in Physikzeit (unabhängig von der Bildrate)
+  // Spieltempo: Die Physik läuft TEMPO-mal so schnell wie die echte Zeit. Das ist dasselbe wie
+  // alle Geschwindigkeiten × TEMPO und alle Beschleunigungen × TEMPO², nur ohne hundert Werte
+  // umzurechnen: Flugkurven, Rampen, Muschel-Linien und Landeregeln bleiben räumlich gleich,
+  // alles passiert nur doppelt so schnell. Die Schritte bleiben 1/240 s Physikzeit klein –
+  // so kann Kalle auch bei hohem Tempo nie durch den Boden rutschen.
+  // Echtzeit-Dinge (Tageslicht, Rufabstände, Kamera, Effekte, Menüs) laufen NICHT schneller.
+  TEMPO: 2,
+  MAX_SCHRITTE: 48,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
 
   G: 24,                    // Grundschwerkraft
   SCHWER_BODEN: 3.0,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
@@ -46,30 +53,46 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    JUHU_HOEHE: 24,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
+    JUHU_HOEHE: 28,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
     JUHU_STEIG: 20,         // … und beim Absprung mindestens so schnell nach oben (m/s)
     JUHU_MIN_ZEIT: 0.25,    // frühestens so lange nach dem Abheben (kurze Hüpfer sind dann schon vorbei)
-    YIPPIE_HOEHE: 55,       // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
-    YIPPIE_WEITE: 125,      // … oder so weit geflogen (m, waagerecht) …
-    YIPPIE_SOFORT: 85,      // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
+    YIPPIE_HOEHE: 62,       // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
+    YIPPIE_WEITE: 140,      // … oder so weit geflogen (m, waagerecht) …
+    YIPPIE_SOFORT: 95,      // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
     YIPPIE_SOFORT_TEMPO: 70,//     bei mindestens diesem Absprungtempo (m/s)
-    ABSTAND: 1.8,           // Sekunden (Spielzeit) zwischen Rufen verschiedener Flüge mindestens
-    STEIGERUNG: 0.9,        // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (Juhu ist dann vorbei)
-    BODEN_RUHE: 0.3,        // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
+    ABSTAND: 2.5,           // Sekunden (echte Zeit) zwischen Rufen verschiedener Flüge mindestens
+    STEIGERUNG: 0.75,       // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (echte Zeit, Juhu ist dann vorbei)
+    BODEN_RUHE: 0.3,        // erst nach so langer stabiler Bodenzeit (Physikzeit) beginnt ein neuer Flug
   },
 
+
+  // Endlosflug: Tageslicht in echten Sekunden, Strecken in Metern
+  ENDLOS: {
+    START: 30,              // so viel Tageslicht zu Beginn
+    MAX: 45,                // mehr passt nie in den Vorrat
+    MARKE_ERSTE: 700,       // erste Distanzmarke (m)
+    MARKE_WACHSTUM: 90,     // jede weitere Marke liegt so viel weiter als die vorige (Läufe enden sicher)
+    MARKE_BONUS: 7,         // Tageslicht pro erreichter Marke (s)
+    PERFEKT_BONUS: 1.5,     // Tageslicht pro perfekter Landung (s)
+    PUNKTE_MUSCHEL: 10,     // Punkte je Muschelwert (Gold zählt 5×)
+    PUNKTE_PERFEKT: 25,     // Punkte je perfekter Landung
+    SCHWIERIG_WEG: 9000,    // nach so vielen Metern ist die volle Schwierigkeit erreicht (danach bleibt sie)
+    VORLAUF: 1100,          // so weit voraus ist das Gelände immer schon gebaut (m)
+    GEIST_VORLAUF: 550,     // so weit voraus fliegt der unsichtbare Testpilot, der die Landezonen findet
+    HINTEN: 260,            // weiter zurück wird Gelände entfernt (m)
+  },
 
   ABHEBEN_SCHWELLE: 1.0,    // v²·Krümmung > g·cos·Schwelle → Kalle hebt ab
 
   // Kamera
-  KAM_VORAUS: 0.30,         // Kalle steht bei 30 % der Bildbreite
+  KAM_VORAUS: 0.26,         // Kalle steht bei 26 % der Bildbreite (mehr Blick nach vorn)
   KAM_BREITE_MIN: 58,       // so viele Meter sieht man mindestens nach vorn/hinten (Querformat)
   KAM_BREITE_MIN_HOCH: 54,  // … hochkant
-  KAM_VORSCHAU: 1.1,        // Sekunden Vorschau bei der Breite (schneller = weiter sehen)
+  KAM_VORSCHAU: 1.7,        // Physik-Sekunden Vorschau bei der Breite (≈ 0,85 s echte Zeit bei TEMPO 2)
   KAM_RAND_OBEN: 7,         // Meter Luft über Kalle
   KAM_RAND_UNTEN: 4,
-  KAM_GLAETTE_ZOOM: 2.2,    // je größer, desto schneller folgt der Zoom
-  KAM_GLAETTE_Y: 4,
+  KAM_GLAETTE_ZOOM: 4,      // je größer, desto schneller folgt der Zoom (echte Zeit)
+  KAM_GLAETTE_Y: 7,
 
   KRABBE_BREITE: 3.0,       // so breit wird Kalle gezeichnet (Meter)
   KRABBE_MIN_PIXEL: 54,     // aber nie schmaler als so viele CSS-Pixel

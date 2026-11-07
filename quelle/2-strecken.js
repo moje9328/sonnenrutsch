@@ -20,16 +20,43 @@ class Gelaende {
     // Krümmung an jedem Stützpunkt: an beiden angrenzenden Stücken gleich (→ glatte
     // Übergänge ohne Ruck). Gewählt wie bei einer runden Kuppe/einem runden Tal, aber nie
     // stärker, als das kürzere/flachere Nachbarstück verträgt (sonst würde es überschwingen).
-    this.k = punkte.map((q, i) => {
-      if (i === 0 || i === this.n - 1) return 0;
-      const [x0, y0] = punkte[i - 1], [x1, y1] = q, [x2, y2] = punkte[i + 1];
+    this.k = punkte.map((q, i) => this.kBei(i));
+  }
+  // Krümmung am Stützpunkt i (0 an den Enden – dort wird beim Anhängen neu gerechnet)
+  kBei(i) {
+    const punkte = this.p;
+    if (i <= 0 || i >= this.n - 1) return 0;
+    {
+      const [x0, y0] = punkte[i - 1], [x1, y1] = punkte[i], [x2, y2] = punkte[i + 1];
       const hl = y1 - y0, hr = y2 - y1;
       if (Math.abs(hl) < 1e-9 || Math.abs(hr) < 1e-9 || Math.sign(hl) === Math.sign(hr)) return 0;
       const ql = Math.abs(hl) / ((x1 - x0) * (x1 - x0)), qr = Math.abs(hr) / ((x2 - x1) * (x2 - x1));
       // Rundung nach dem stärkeren Nachbarn, aber normiert höchstens RUNDUNG_MAX je Seite
       const k = Math.min(GELAENDE.RUNDUNG * Math.max(ql, qr), GELAENDE.RUNDUNG_MAX * ql, GELAENDE.RUNDUNG_MAX * qr);
       return (hl > 0 ? -1 : 1) * k;   // Kuppe: negativ, Tal: positiv
-    });
+    }
+  }
+  // Endlosmodus: neue Punkte hinten anhängen. Der bisher letzte Punkt bekommt jetzt seine
+  // echte Krümmung – Kalle ist nie auf den letzten Stücken (Vorlauf), daher ändert sich
+  // nichts unter ihm.
+  anhaengen(neue) {
+    for (const q of neue) {
+      if (q[0] <= this.p[this.n - 1][0]) throw new Error('Gelände: Punkte müssen nach rechts wachsen');
+      this.p.push(q); this.k.push(0); this.n++;
+      this.min = Math.min(this.min, q[1]); this.max = Math.max(this.max, q[1]);
+    }
+    for (let i = Math.max(1, this.n - neue.length - 1); i < this.n - 1; i++) this.k[i] = this.kBei(i);
+    this.ende = this.p[this.n - 1][0];
+  }
+  // Endlosmodus: weit zurückliegende Punkte entfernen (es bleiben mindestens 3)
+  kuerzen(xMin) {
+    let weg = 0;
+    while (this.n - weg > 3 && this.p[weg + 1][0] < xMin) weg++;
+    if (!weg) return 0;
+    this.p.splice(0, weg); this.k.splice(0, weg); this.n -= weg;
+    this.i = 0;
+    this.anfang = this.p[0][0];
+    return weg;
   }
   stueck(x) {
     const p = this.p;
@@ -103,21 +130,21 @@ const GEBIETE = [
 // steil: Verhältnis Anstieg/Abhang (kleiner = kürzere, steilere Rampen)
 // wechsel: wie stark Breite und Höhe von Hügel zu Hügel schwanken (0..1)
 // muster: Anteile der Hügelarten klein / gross / rampe (Rest: normal), siehe HUEGELARTEN
-// zeit: Tageslicht in Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
+// zeit: Tageslicht in ECHTEN Sekunden (bei K.TEMPO), sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 42, sterne: [30.5, 19], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 56, sterne: [43.0, 30] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 57, sterne: [47.4, 37.8] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 59, sterne: [51.1, 43.1] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 64, sterne: [56.1, 48.2] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 63, sterne: [56.1, 49.2] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 66, sterne: [59.1, 52.3] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 65, sterne: [58.9, 52.8] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 70, sterne: [63.7, 57.5] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 72, sterne: [65.8, 59.6] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 76, sterne: [70.1, 64.2] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 77, sterne: [71.7, 66.5] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 21, sterne: [15.3, 9.6], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 28, sterne: [21.5, 15] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 29, sterne: [23.9, 18.9] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 30, sterne: [25.8, 21.6] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 32, sterne: [28.1, 24.1] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 32, sterne: [28.3, 24.6] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 33, sterne: [29.6, 26.1] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 33, sterne: [29.7, 26.4] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 35, sterne: [31.9, 28.7] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 36, sterne: [32.9, 29.8] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 38, sterne: [35, 32.1] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 39, sterne: [36.1, 33.2] },
 ];
 
 

@@ -11,9 +11,10 @@
   const wurzel = document.documentElement;
   const leinwand = $('bild');
   const fenster = $('fenster');
-  const SEKTIONEN = ['fStart', 'fKrabben', 'fLevel', 'fPause', 'fErfolg', 'fNacht'];
+  const SEKTIONEN = ['fStart', 'fKrabben', 'fLevel', 'fPause', 'fErfolg', 'fNacht', 'fEndlos'];
 
   let zustand = 'menue';
+  let modus = 'strecke';        // 'strecke' | 'endlos'
   let lauf = null;
   let def = STRECKEN[0];
   let vorher = 'menue';         // für „Zurück“ aus der Krabbenwahl
@@ -49,42 +50,69 @@
       k.textContent = 'Ton: ' + (Ton.istAn() ? 'an' : 'aus');
       k.setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
     }
+    $('tonKnopfHud').setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
   }
-  function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) Ton.still(); }
+  function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) { Ton.still(); Rufe.stopp(); } }
   Ton.setze(Speicher.tonAn());
   tonKnoepfe();
   for (const k of document.querySelectorAll('.js-ton')) k.addEventListener('click', () => { tonUmschalten(); Ton.klick(); });
 
   // ---------------------------------------------------------- Strecke starten
   function starteStrecke(id) {
+    modus = 'strecke';
+    wurzel.dataset.modus = modus;
     def = STRECKEN.find(s => s.id === id) || STRECKEN[0];
     lauf = new Lauf(def);
+    laufVorbereiten();
+    $('hudNr').textContent = def.id;
+    $('hudTitel').textContent = def.name;
+    // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
+    const ausfuehrlich = def.lern || !Speicher.lernGesehen();
+    $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
+    $('erklListe').hidden = !ausfuehrlich;
+    $('erklEndlos').hidden = true;
+    ansage(`Strecke ${def.id}, ${def.name}. Gedrückt halten zum Losrutschen.`);
+  }
+  // Endlosflug: jedes Mal neue Landschaft (neue Saat) und eine zufällige Küste
+  function starteEndlos() {
+    modus = 'endlos';
+    wurzel.dataset.modus = modus;
+    const saat = (Math.random() * 1e9) >>> 0;
+    def = Object.assign({}, ENDLOS_DEF, { saat, gebiet: saat % GEBIETE.length });
+    if (window.__endlosSaat !== undefined) def = Object.assign(def, { saat: window.__endlosSaat, gebiet: window.__endlosSaat % GEBIETE.length });   // Tests
+    lauf = new Lauf(def);
+    laufVorbereiten();
+    $('hudNr').textContent = '∞';
+    $('hudTitel').textContent = 'Endlosflug';
+    $('erklTitel').textContent = 'ENDLOSFLUG';
+    $('erklEndlos').hidden = false;
+    $('erklListe').hidden = Speicher.lernGesehen();
+    $('rekordZahl').textContent = Speicher.endlosRekord().strecke + ' m';
+    ansage('Endlosflug. Flieg dem Sonnenuntergang davon. Gedrückt halten zum Losrutschen.');
+  }
+  // Gemeinsamer Neustart: alles Laufbezogene zurücksetzen
+  function laufVorbereiten() {
     Rufe.stopp();
     Grafik.neuerLauf();
     rest = 0;
     endeZeit = 0;
     glockeBei = 99;
-    Object.assign(pose, { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0 });
-    $('hudNr').textContent = def.id;
-    $('hudTitel').textContent = def.name;
+    Object.assign(pose, { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0, yippie: 0 });
     $('kette').hidden = true;
+    $('bonus').classList.remove('zeigen');
+    hudAlt = '';
     muschelAnzeige(true);
-    // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
-    const ausfuehrlich = def.lern || !Speicher.lernGesehen();
-    $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
-    $('erklListe').hidden = !ausfuehrlich;
     hinweis(null);
     setzeZustand('bereit');
     zeige(null);
     Eingabe.alleLos();
     halten = false;
     leinwand.focus({ preventScroll: true });
-    ansage(`Strecke ${def.id}, ${def.name}. Gedrückt halten zum Losrutschen.`);
   }
   function neustart() {
     if (zustand === 'menue' && !lauf) return;
     Ton.klick();
-    starteStrecke(def.id);
+    if (modus === 'endlos') starteEndlos(); else starteStrecke(def.id);
   }
 
   // ---------------------------------------------------------- Eingabe
@@ -113,11 +141,12 @@
   Eingabe.init($('buehne'), app);
 
   // Knöpfe im HUD dürfen kein „Halten“ auslösen
-  for (const id of ['neuKnopfHud', 'pauseKnopf']) {
+  for (const id of ['neuKnopfHud', 'pauseKnopf', 'tonKnopfHud']) {
     $(id).addEventListener('pointerdown', (e) => e.stopPropagation());
   }
   $('neuKnopfHud').addEventListener('click', () => neustart());
   $('pauseKnopf').addEventListener('click', () => pause());
+  $('tonKnopfHud').addEventListener('click', () => { tonUmschalten(); Ton.klick(); leinwand.focus({ preventScroll: true }); });
 
   function pause() {
     if (zustand !== 'lauf' && zustand !== 'bereit') return;
@@ -137,7 +166,7 @@
     leinwand.focus({ preventScroll: true });
   }
   $('weiterKnopf').addEventListener('click', weiter);
-  $('neuKnopf').addEventListener('click', () => starteStrecke(def.id));
+  $('neuKnopf').addEventListener('click', () => neustart());
   $('pauseLevelKnopf').addEventListener('click', () => { setzeZustand('menue'); levelWahl(); });
 
   // ---------------------------------------------------------- Menüs
@@ -147,11 +176,19 @@
     if (!Speicher.level(1) && Speicher.hoechsteFreie() === 1) starteStrecke(1);
     else levelWahl();
   });
+  $('endlosKnopf').addEventListener('click', () => { Ton.wecke(); Ton.klick(); starteEndlos(); });
+  $('endlosNochmal').addEventListener('click', () => { Ton.klick(); starteEndlos(); });
+  $('endlosMenue').addEventListener('click', () => { Ton.klick(); setzeZustand('menue'); startKrabbe(); zeige('fStart'); });
   $('levelZurueck').addEventListener('click', () => { Ton.klick(); zeige('fStart'); setzeZustand('menue'); });
   $('krabbeWahlKnopf').addEventListener('click', () => { Ton.klick(); krabbenWahl(); });
   $('krabbenFertig').addEventListener('click', () => { Ton.klick(); zeige('fStart'); startKrabbe(); });
 
-  function startKrabbe() { krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true }); }
+  function startKrabbe() {
+    krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true });
+    const r = Speicher.endlosRekord();
+    $('endlosRekordStart').hidden = !r.strecke;
+    $('startRekord').textContent = `${r.strecke} m · ${r.punkte} Punkte`;
+  }
 
   function krabbenWahl() {
     const liste = $('krabbenListe');
@@ -274,6 +311,27 @@
     zeige('fNacht');
     ansage(`Die Sonne ist untergegangen. ${Math.floor(anteil * 100)} Prozent geschafft.`);
   }
+  // Ergebnis des Endlosflugs (Sonne untergegangen)
+  function zeigeEndlos() {
+    const st = lauf.statistik;
+    const strecke = Math.floor(lauf.strecke), punkte = lauf.punkte;
+    const alt = Speicher.endlosRekord();
+    const neu = Speicher.endlosErgebnis(strecke, punkte);
+    const r = Speicher.endlosRekord();
+    krabbeInLeinwand($('endlosKrabbe'), { figur: Speicher.krabbe(), mund: neu.strecke ? 'jubel' : 'oh', schereHoch: neu.strecke, schereAuf: true, blickHoch: !neu.strecke });
+    $('endlosSpruch').textContent = neu.strecke ? 'So weit ist Kalle noch nie geflogen!' : strecke > alt.strecke * 0.8 ? 'Knapp am Rekord vorbei!' : 'Saubere Landungen bringen Tageslicht.';
+    $('enStrecke').textContent = strecke + ' m';
+    $('enPunkte').textContent = punkte;
+    $('enMuscheln').textContent = lauf.muschelWert;
+    $('enPerfekt').textContent = st.perfekt;
+    $('enBonus').textContent = '+' + Math.round(lauf.lichtBonus) + ' s';
+    $('enRekord').textContent = r.strecke + ' m';
+    $('enRekordPunkte').textContent = r.punkte;
+    $('enNeu').hidden = !(neu.strecke || neu.punkte);
+    $('enNeu').textContent = neu.strecke && neu.punkte ? 'NEUER REKORD: STRECKE UND PUNKTE!' : neu.strecke ? 'NEUER STRECKENREKORD!' : 'NEUER PUNKTEREKORD!';
+    zeige('fEndlos');
+    ansage(`Die Sonne ist untergegangen. ${strecke} Meter, ${punkte} Punkte.${neu.strecke ? ' Neuer Rekord.' : ''}`);
+  }
   $('nochmalKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
   $('nachtLevelKnopf').addEventListener('click', () => { Ton.klick(); levelWahl(); });
   $('nochmalErfolgKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
@@ -302,10 +360,23 @@
   let hudAlt = '';
   function hud() {
     const r = lauf.rest, f = lauf.fortschritt;
-    const tagAnteil = r / lauf.tag;
-    const schluessel = Math.ceil(r * 10) + '|' + Math.floor(f * 400);
+    const tagAnteil = Math.min(1, r / lauf.tag);
+    const schluessel = Math.ceil(r * 10) + '|' + Math.floor(f * 400) + '|' + Math.floor(lauf.strecke) + '|' + lauf.punkte;
     if (schluessel === hudAlt) return;
     hudAlt = schluessel;
+    if (modus === 'endlos') {
+      $('punkteZahl').textContent = lauf.punkte;
+      $('wegFuellung').style.width = (f * 100).toFixed(1) + '%';
+      $('wegKrabbe').style.left = (f * 100).toFixed(1) + '%';
+      $('wegText').textContent = Math.floor(lauf.strecke) + ' m';
+      $('wegBalken').setAttribute('aria-valuenow', Math.floor(f * 100));
+      $('wegBalken').setAttribute('aria-label', `Strecke ${Math.floor(lauf.strecke)} Meter, nächste Marke bei ${Math.round(lauf.marke)} Metern`);
+      $('tagFuellung').style.width = (tagAnteil * 100).toFixed(1) + '%';
+      $('tagText').textContent = Math.ceil(r) + ' s';
+      $('tagBalken').setAttribute('aria-valuenow', Math.round(tagAnteil * 100));
+      $('hudTag').classList.toggle('knapp', r < 8 && zustand === 'lauf');
+      return;
+    }
     $('tagFuellung').style.width = (tagAnteil * 100).toFixed(1) + '%';
     $('tagText').textContent = Math.ceil(r) + ' s';
     $('tagBalken').setAttribute('aria-valuenow', Math.round(tagAnteil * 100));
@@ -356,7 +427,7 @@
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
     const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
     if (aktiv) {
-      rest += dt;
+      rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
       let n = 0;
       while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
         lauf.schritt(zustand === 'lauf' && halten);
@@ -372,7 +443,7 @@
         setzeZustand('ergebnis');
         Ton.still();
         Rufe.stopp();
-        if (lauf.ergebnis === 'ziel') zeigeErfolg(); else zeigeNacht();
+        if (lauf.ergebnis === 'ziel') zeigeErfolg(); else if (modus === 'endlos') zeigeEndlos(); else zeigeNacht();
       }
     }
     // Lernhinweise an festen Stellen der Strecke
@@ -381,14 +452,19 @@
       hinweis(h ? h.text : null);
       // Warnglocke in den letzten Sekunden
       const r = Math.ceil(lauf.rest);
+      if (r > 10) glockeBei = 99;   // nach einem Zeitbonus wieder warnen dürfen
       if (r <= 5 && r < glockeBei && r > 0) { glockeBei = r; Ton.glocke(r <= 3); }
       else if (r === 10 && glockeBei > 10) { glockeBei = 10; Ton.glocke(false); }
     } else if (zustand !== 'pause') hinweis(null);
     if (zustand === 'pause' || zustand === 'menue') Ton.still();
     else Ton.fahrt(lauf.tempo, lauf.boden, halten, zustand === 'lauf' || (zustand === 'ende' && lauf.tempo > 2));
     posenFuerBild = posenSchritt(zustand === 'pause' ? 0 : dt);
-    const f = Math.min(1, lauf.zeit / lauf.tag);
-    Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
+    // Himmel und Sonne hängen am selben Restwert wie die Tageslichtanzeige.
+    // Nach Sonnenuntergang sinkt die Sonne noch ganz hinter den Horizont.
+    // Endlos: voller Startvorrat = Mittag (blau/türkis), wenig = Gold/Koralle, kurz vor 0 = violett
+    const f = modus === 'endlos' ? 1 - Math.min(1, lauf.rest / K.ENDLOS.START) : Math.min(1, 1 - lauf.rest / lauf.tag);
+    const fSonne = lauf.ergebnis === 'nacht' ? 1 + Math.min(0.15, endeZeit * 0.12) : f;
+    Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, fSonne, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
     hud();
   }
   let posenFuerBild = null;
@@ -411,6 +487,13 @@
       const k = $('kette');
       if (e.kette > 1) { k.hidden = false; k.textContent = `PERFEKT ×${e.kette}`; }
       else if (e.guete !== 'perfekt') k.hidden = true;
+    } else if (e.art === 'licht') {
+      // Zeitgewinn kurz und verständlich anzeigen (gerundet auf halbe Sekunden)
+      const plus = Math.round(e.plus * 2) / 2;
+      if (plus > 0) bonusZeigen(`+${String(plus).replace('.', ',')} s Tageslicht${e.grund === 'perfekt' ? ' · Perfekt' : ''}`);
+    } else if (e.art === 'marke') {
+      Ton.marke();
+      Grafik.weltText(e.x, lauf.g.hoehe(e.x) + 10, `${Math.round(e.x)} m!`, '#9fe7c4');
     } else if (e.art === 'muschel') {
       Ton.muschel(e.gold);
       muschelAnzeige(false);
@@ -423,6 +506,15 @@
     }
   }
 
+  let bonusUhr = 0;
+  function bonusZeigen(text) {
+    const b = $('bonus');
+    b.textContent = text;
+    b.classList.add('zeigen');
+    clearTimeout(bonusUhr);
+    bonusUhr = setTimeout(() => b.classList.remove('zeigen'), 1400);
+  }
+
   // Hinter dem Startmenü fährt ein Bot die Lernstrecke (lebendiger Hintergrund)
   let vorfuehrung = null, vorfuehrBot = null;
   function zeichneMenueHintergrund(dt) {
@@ -433,7 +525,7 @@
       vorfuehrBot = Bot.neu('schnell');
       Grafik.neuerLauf();
     }
-    rest += dt;
+    rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
     let n = 0;
     while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
       vorfuehrung.schritt(vorfuehrBot.halten(vorfuehrung)); rest -= K.SCHRITT; n++;
@@ -465,6 +557,9 @@
     zustand: () => zustand,
     lauf: () => lauf,
     starte: (id) => starteStrecke(id),
+    starteEndlos: () => starteEndlos(),
+    modus: () => modus,
+    himmel: () => ({ f: Grafik.letztesF, sonne: Grafik.sonneF }),
     def: () => def,
     kamera: () => ({ x: Grafik.kam.x, b: Grafik.kam.b, z: Grafik.kam.z }),
     krabbeImBild: () => Grafik.krabbeImBild(lauf),

@@ -89,7 +89,7 @@ const Grafik = (() => {
   function kameraZiel(l) {
     const v = l.tempo;
     const minB = hochkant() ? K.KAM_BREITE_MIN_HOCH : K.KAM_BREITE_MIN;
-    let breite = minB + v * K.KAM_VORSCHAU;
+    let breite = minB + v * K.KAM_VORSCHAU * (hochkant() ? 0.65 : 1);   // hochkant ist der Bildschirm schmal: etwas weniger Vorschau, dafür größer
     const links = l.x - breite * K.KAM_VORAUS;
     const [lo, hi] = l.g.bereich(links, links + breite * 1.15);
     const oben = Math.max(l.y + K.KAM_RAND_OBEN, hi + 3);
@@ -100,7 +100,7 @@ const Grafik = (() => {
     z = Math.min(z, W / (minB * 0.8));
     // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
     const frei = H / z - hoeheNoetig;
-    const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.42 : 0.3), hoeheNoetig * (hochkant() ? 1.2 : 0.6)) : 0;
+    const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.5 : 0.3), hoeheNoetig * (hochkant() ? 2 : 0.6)) : 0;
     return { z, unten: unten - tiefer, x: l.x };
   }
   function kamera(l, dt, sofort) {
@@ -141,7 +141,8 @@ const Grafik = (() => {
     }
     // Sonne: wandert vor Kalle zum Horizont hinunter
     const sxp = W * (hochkant() ? 0.7 : 0.76);
-    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(f, 1.25) + f * f * H * 0.04;
+    const fs = sonneF;
+    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(fs, 1.25) + fs * fs * H * 0.04 + Math.max(0, fs - 1) * H * 0.6;
     const r = Math.min(W, H) * (0.055 + f * 0.03);
     const sf = verlauf(SONNE_FARBE, f);
     const glanz = c.createRadialGradient(sxp, syp, r * 0.6, sxp, syp, r * 4.5);
@@ -529,12 +530,33 @@ const Grafik = (() => {
     }
   }
 
+  let sonneF = 0;
+  // Distanzmarke im Endlosflug: Pfosten mit Schild und Wimpel
+  function distanzMarke(l, mx, erreicht) {
+    const g = l.g, s = kam.z;
+    const px = sx(mx), py = sy(g.hoehe(mx));
+    if (px < -s * 8 || px > W + s * 8) return;
+    c.lineCap = 'round';
+    c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.45;
+    c.beginPath(); c.moveTo(px, py); c.lineTo(px, py - s * 6.5); c.stroke();
+    eckigWelt(px - s * 3.2, py - s * 8.4, s * 6.4, s * 2, s * 0.35, erreicht ? '#9fe7c4' : '#ffd35a', '#4a2f1a');
+    c.fillStyle = '#10243a';
+    c.font = `${Math.round(s * 0.95)}px 'Press Start 2P', monospace`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(Math.round(mx) + ' m', px, py - s * 7.35);
+    c.fillStyle = '#ff805b';
+    c.beginPath(); c.moveTo(px, py - s * 6.4); c.lineTo(px + s * 2 + Math.sin(zeit * 5) * s * 0.2, py - s * 5.8); c.lineTo(px, py - s * 5.2); c.fill();
+  }
   function startZiel(l, f) {
     const g = l.g;
+    if (l.endlos) {
+      if (l.markeVorher > 0) distanzMarke(l, l.markeVorher, true);
+      distanzMarke(l, l.marke, false);
+    }
     // Ziel: Bogen aus Treibholz mit Wimpeln und Muschelflagge
-    const zx = l.ziel, zy = g.hoehe(zx);
+    const zx = l.ziel, zy = Number.isFinite(zx) ? g.hoehe(zx) : 0;
     const px = sx(zx), py = sy(zy), s = kam.z;
-    if (px > -s * 10 && px < W + s * 10) {
+    if (Number.isFinite(zx) && px > -s * 10 && px < W + s * 10) {
       c.lineCap = 'round';
       c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.55;
       c.beginPath(); c.moveTo(px - s * 3, py); c.lineTo(px - s * 3, py - s * 7); c.moveTo(px + s * 3, py); c.lineTo(px + s * 3, py - s * 7); c.stroke();
@@ -558,6 +580,7 @@ const Grafik = (() => {
     }
     // Start: Holzschild
     const qx = sx(-14), qy = sy(g.hoehe(-14));
+    if (-14 < g.anfang) return;
     if (qx > -s * 6 && qx < W + s * 6) {
       c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.4;
       c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx, qy - s * 3.6); c.stroke();
@@ -740,9 +763,12 @@ const Grafik = (() => {
 
   // ---------------------------------------------------------- Ein Bild
   // f = Tageslicht-Fortschritt (0 = Mittag, 1 = Sonne weg)
-  function zeichne(l, { dt, f, figur, pose, gebiet }) {
+  let letztesF = 0;
+  function zeichne(l, { dt, f, fSonne, figur, pose, gebiet }) {
     zeit += dt;
     f = Math.max(0, Math.min(1, f || 0));
+    sonneF = Math.max(0, Math.min(1.15, fSonne === undefined ? f : fSonne));   // darf ganz hinter den Horizont
+    letztesF = f;
     const thema = THEMEN[gebiet] || THEMEN[0];
     kamera(l, dt);
     const horizont = himmel(f, thema);
@@ -804,7 +830,9 @@ const Grafik = (() => {
     init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
-    get kam() { return kam; }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
+    get kam() { return kam; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
+    // Kurzer Schriftzug im Bild (z. B. Distanzmarke erreicht)
+    weltText(x, y, inhalt, farbe) { text(x, y, inhalt, farbe, 1); }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
     get cssW() { return cssW; }, get cssH() { return cssH; },
     // Für Tests: Bildposition von Kalle in CSS-Pixeln
     krabbeImBild(l) { return { x: sx(l.x) / dpr, y: sy(l.y) / dpr }; },

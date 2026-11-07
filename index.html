@@ -206,14 +206,14 @@
   .zahlen dd { margin: 0; font: 13px/1.4 var(--retro); }
   .zahlen .gross dd { color: var(--gelb); font-size: 18px; }
   .hervor { margin: 12px 0 0; padding: 8px 10px; color: var(--auf-gelb); background: var(--gelb); border-radius: 8px; font: 11px/1.6 var(--retro); text-align: center; }
-  #erfolgKrabbe, #nachtKrabbe { display: block; width: 110px; height: 90px; margin: 4px auto 0; }
+  #erfolgKrabbe, #nachtKrabbe, #endlosKrabbe { display: block; width: 110px; height: 90px; margin: 4px auto 0; }
 
   @media (orientation: landscape) and (max-height: 560px) {
     .tafel { width: min(640px, 100%); padding: 14px 18px; }
     .marke { display: none; }
     #startKrabbe { width: 110px; height: 90px; }
     .knoepfe { grid-template-columns: 1fr 1fr; margin-top: 12px; }
-    #erfolgKrabbe, #nachtKrabbe { width: 80px; height: 66px; }
+    #erfolgKrabbe, #nachtKrabbe, #endlosKrabbe { width: 80px; height: 66px; }
     .sternreihe { font-size: 34px; margin-top: 6px; }
     .rund { width: 40px; height: 40px; }
   }
@@ -257,10 +257,18 @@
   #wegKrabbe { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #e8503a; border: 2px solid #3a1418; }
   #wegZiel { position: absolute; right: -4px; top: -6px; width: 10px; height: 22px; }
   #hudTag.knapp b { color: #ff9a7a; }
-  #hudTag.knapp #tagFuellung { animation: puls 0.8s ease-in-out infinite; }
   @keyframes puls { 50% { filter: brightness(1.5); } }
   #hudName { display: flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; }
   #hudTitel { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #hudEndlos { display: flex; justify-content: space-between; gap: 10px; font: 600 13px/1.2 var(--body); color: var(--muted); }
+  #hudEndlos b { color: var(--gelb); font: 11px/1.2 var(--retro); font-weight: 400; }
+  :root:not([data-modus="endlos"]) #hudEndlos { display: none; }
+  :root[data-modus="endlos"] #hudNr, :root[data-modus="endlos"] #erklZiel { display: none; }
+  #bonus { position: absolute; top: 100px; left: 12px; z-index: 3; padding: 6px 12px; color: var(--auf-gelb); background: var(--gelb); border-radius: 10px; font: 11px/1.5 var(--retro); pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s; }
+  #bonus.zeigen { opacity: 1; transform: none; }
+  #erklEndlos { margin: 8px 0 0; font-size: 15px; line-height: 1.4; }
+  .rekordzeile { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
+  .rekordzeile b { color: var(--gelb); font: 11px/1.4 var(--retro); font-weight: 400; }
   #hudMuscheln { display: inline-flex; align-items: center; gap: 5px; flex: none; color: var(--text); font: 11px/1 var(--retro); }
   #hudMuscheln svg { width: 18px; height: 16px; }
   #hudMuscheln.plopp { animation: plopp 0.25s ease-out; }
@@ -278,6 +286,9 @@
   }
   .rund:hover { background: rgba(31, 64, 102, 0.95); }
   .rund svg { width: 18px; height: 18px; }
+  #tonKnopfHud .aus { display: none; }
+  #tonKnopfHud[aria-pressed="false"] .aus { display: inline; }
+  #tonKnopfHud[aria-pressed="false"] .welle { display: none; }
   :root:not([data-zustand="bereit"]):not([data-zustand="lauf"]):not([data-zustand="ende"]) #hud { visibility: hidden; }
 
   /* Kette perfekter Landungen */
@@ -328,6 +339,8 @@
   .karte .best { color: var(--muted); font: 600 12px/1.2 var(--body); }
 
   @media (max-width: 520px) {
+    #bonus { top: 118px; left: 8px; }
+    #hudEndlos { font-size: 12px; }
     #hud { top: 6px; left: 6px; right: 6px; gap: 6px; }
     .hudblock { padding: 6px 8px; gap: 5px; }
     .hudzeile { grid-template-columns: 18px 1fr auto; gap: 6px; }
@@ -374,15 +387,19 @@
           <div class="balken" role="meter" aria-label="Tageslicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="tagBalken"><i id="tagFuellung"></i></div>
           <b id="tagText">0:00</b>
         </div>
-        <div class="hudzeile" id="hudWeg" title="Strecke bis zum Ziel">
+        <div class="hudzeile" id="hudWeg" title="Strecke">
           <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#flagge"/></svg></span>
           <div class="balken" role="meter" aria-label="Strecke" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wegBalken"><i id="wegFuellung"></i><span id="wegKrabbe"></span></div>
           <b id="wegText">0 %</b>
         </div>
+        <div id="hudEndlos"><span>Punkte <b id="punkteZahl">0</b></span><span>Rekord <b id="rekordZahl">0 m</b></span></div>
       </div>
       <div class="hudrechts">
         <button class="rund" id="neuKnopfHud" type="button" aria-label="Strecke neu starten (R)">
           <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2h6v1H5zM3 3h2v1H3zM11 3h2v1h-2zM2 4h1v2H2zM13 4h1v1h-1zM2 6h1v4H2zM2 10h1v2H2zM3 12h2v1H3zM5 13h6v1H5zM11 12h2v1h-2zM13 10h1v2h-1zM10 5h4v1h-4zM13 2h1v3h-1z"/></svg>
+        </button>
+        <button class="rund" id="tonKnopfHud" type="button" aria-label="Ton an/aus (M)" aria-pressed="true">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 6h3v4H2zM5 5h1v6H5zM6 4h1v8H6zM7 3h1v10H7z"/><path class="welle" d="M10 6h1v4h-1zM12 4h1v8h-1z"/><path class="aus" d="M10 5h1v1h-1zM11 6h1v1h-1zM12 7h1v2h-1zM13 9h1v1h-1zM14 10h1v1h-1zM14 5h1v1h-1zM13 6h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1z"/></svg>
         </button>
         <button class="rund" id="pauseKnopf" type="button" aria-label="Pause (P)">
           <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z"/></svg>
@@ -391,13 +408,15 @@
     </div>
 
     <div id="kette" hidden></div>
+    <div id="bonus" role="status" aria-live="polite"></div>
 
     <div id="erklaerung" aria-live="polite">
       <h2 id="erklTitel">LERNSTRECKE</h2>
+      <p id="erklEndlos" hidden>Flieg dem Sonnenuntergang davon! Erreiche die nächste Distanzmarke und lande sauber, um Tageslicht zu gewinnen.</p>
       <ul id="erklListe">
         <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
-        <li><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
+        <li id="erklZiel"><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
         <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
       </ul>
       <p class="los"><span class="nurMaus">Leertaste oder Maus halten</span><span class="nurTouch">Bildschirm gedrückt halten</span> zum Losrutschen</p>
@@ -417,7 +436,9 @@
       <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
       <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
       <div class="knoepfe">
-        <button class="btn main" id="spielenKnopf" type="button">Spielen</button>
+        <button class="btn main" id="spielenKnopf" type="button">Strecken</button>
+        <button class="btn main" id="endlosKnopf" type="button">Endlosflug</button>
+        <p class="rekordzeile" id="endlosRekordStart" hidden>Endlos-Rekord: <b id="startRekord">0 m</b></p>
         <div class="knoepfe zwei" style="margin-top:0">
           <button class="btn klein" id="krabbeWahlKnopf" type="button">Krabbe wählen</button>
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
@@ -479,6 +500,26 @@
       </div>
     </section>
 
+    <section id="fEndlos" hidden>
+      <h2 data-titel id="endlosTitel">Die Sonne ist untergegangen</h2>
+      <canvas id="endlosKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="endlosSpruch"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Strecke</dt><dd id="enStrecke">0 m</dd></div>
+        <div class="gross"><dt>Punkte</dt><dd id="enPunkte">0</dd></div>
+        <div><dt>Muscheln</dt><dd id="enMuscheln">0</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="enPerfekt">0</dd></div>
+        <div><dt>Gewonnenes Tageslicht</dt><dd id="enBonus">0 s</dd></div>
+        <div><dt>Rekord Strecke</dt><dd id="enRekord">0 m</dd></div>
+        <div><dt>Rekord Punkte</dt><dd id="enRekordPunkte">0</dd></div>
+      </dl>
+      <p class="hervor" id="enNeu" hidden>NEUER REKORD!</p>
+      <div class="knoepfe">
+        <button class="btn main" id="endlosNochmal" type="button">Sofort nochmal</button>
+        <button class="btn klein" id="endlosMenue" type="button">Zum Menü</button>
+      </div>
+    </section>
+
     <section id="fNacht" hidden>
       <h2 data-titel>Die Sonne ist weg!</h2>
       <canvas id="nachtKrabbe" width="220" height="180" aria-hidden="true"></canvas>
@@ -508,8 +549,15 @@
 // ===================================================================
 
 const K = {
-  SCHRITT: 1 / 240,         // feste Physik-Schrittweite (unabhängig von der Bildrate)
-  MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
+  SCHRITT: 1 / 240,         // feste Physik-Schrittweite in Physikzeit (unabhängig von der Bildrate)
+  // Spieltempo: Die Physik läuft TEMPO-mal so schnell wie die echte Zeit. Das ist dasselbe wie
+  // alle Geschwindigkeiten × TEMPO und alle Beschleunigungen × TEMPO², nur ohne hundert Werte
+  // umzurechnen: Flugkurven, Rampen, Muschel-Linien und Landeregeln bleiben räumlich gleich,
+  // alles passiert nur doppelt so schnell. Die Schritte bleiben 1/240 s Physikzeit klein –
+  // so kann Kalle auch bei hohem Tempo nie durch den Boden rutschen.
+  // Echtzeit-Dinge (Tageslicht, Rufabstände, Kamera, Effekte, Menüs) laufen NICHT schneller.
+  TEMPO: 2,
+  MAX_SCHRITTE: 48,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
 
   G: 24,                    // Grundschwerkraft
   SCHWER_BODEN: 3.0,        // gedrückt am Boden: so viel schwerer (bergab schneller, bergauf langsamer)
@@ -549,30 +597,46 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    JUHU_HOEHE: 24,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
+    JUHU_HOEHE: 28,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
     JUHU_STEIG: 20,         // … und beim Absprung mindestens so schnell nach oben (m/s)
     JUHU_MIN_ZEIT: 0.25,    // frühestens so lange nach dem Abheben (kurze Hüpfer sind dann schon vorbei)
-    YIPPIE_HOEHE: 55,       // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
-    YIPPIE_WEITE: 125,      // … oder so weit geflogen (m, waagerecht) …
-    YIPPIE_SOFORT: 85,      // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
+    YIPPIE_HOEHE: 62,       // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
+    YIPPIE_WEITE: 140,      // … oder so weit geflogen (m, waagerecht) …
+    YIPPIE_SOFORT: 95,      // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
     YIPPIE_SOFORT_TEMPO: 70,//     bei mindestens diesem Absprungtempo (m/s)
-    ABSTAND: 1.8,           // Sekunden (Spielzeit) zwischen Rufen verschiedener Flüge mindestens
-    STEIGERUNG: 0.9,        // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (Juhu ist dann vorbei)
-    BODEN_RUHE: 0.3,        // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
+    ABSTAND: 2.5,           // Sekunden (echte Zeit) zwischen Rufen verschiedener Flüge mindestens
+    STEIGERUNG: 0.75,       // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (echte Zeit, Juhu ist dann vorbei)
+    BODEN_RUHE: 0.3,        // erst nach so langer stabiler Bodenzeit (Physikzeit) beginnt ein neuer Flug
   },
 
+
+  // Endlosflug: Tageslicht in echten Sekunden, Strecken in Metern
+  ENDLOS: {
+    START: 30,              // so viel Tageslicht zu Beginn
+    MAX: 45,                // mehr passt nie in den Vorrat
+    MARKE_ERSTE: 700,       // erste Distanzmarke (m)
+    MARKE_WACHSTUM: 90,     // jede weitere Marke liegt so viel weiter als die vorige (Läufe enden sicher)
+    MARKE_BONUS: 7,         // Tageslicht pro erreichter Marke (s)
+    PERFEKT_BONUS: 1.5,     // Tageslicht pro perfekter Landung (s)
+    PUNKTE_MUSCHEL: 10,     // Punkte je Muschelwert (Gold zählt 5×)
+    PUNKTE_PERFEKT: 25,     // Punkte je perfekter Landung
+    SCHWIERIG_WEG: 9000,    // nach so vielen Metern ist die volle Schwierigkeit erreicht (danach bleibt sie)
+    VORLAUF: 1100,          // so weit voraus ist das Gelände immer schon gebaut (m)
+    GEIST_VORLAUF: 550,     // so weit voraus fliegt der unsichtbare Testpilot, der die Landezonen findet
+    HINTEN: 260,            // weiter zurück wird Gelände entfernt (m)
+  },
 
   ABHEBEN_SCHWELLE: 1.0,    // v²·Krümmung > g·cos·Schwelle → Kalle hebt ab
 
   // Kamera
-  KAM_VORAUS: 0.30,         // Kalle steht bei 30 % der Bildbreite
+  KAM_VORAUS: 0.26,         // Kalle steht bei 26 % der Bildbreite (mehr Blick nach vorn)
   KAM_BREITE_MIN: 58,       // so viele Meter sieht man mindestens nach vorn/hinten (Querformat)
   KAM_BREITE_MIN_HOCH: 54,  // … hochkant
-  KAM_VORSCHAU: 1.1,        // Sekunden Vorschau bei der Breite (schneller = weiter sehen)
+  KAM_VORSCHAU: 1.7,        // Physik-Sekunden Vorschau bei der Breite (≈ 0,85 s echte Zeit bei TEMPO 2)
   KAM_RAND_OBEN: 7,         // Meter Luft über Kalle
   KAM_RAND_UNTEN: 4,
-  KAM_GLAETTE_ZOOM: 2.2,    // je größer, desto schneller folgt der Zoom
-  KAM_GLAETTE_Y: 4,
+  KAM_GLAETTE_ZOOM: 4,      // je größer, desto schneller folgt der Zoom (echte Zeit)
+  KAM_GLAETTE_Y: 7,
 
   KRABBE_BREITE: 3.0,       // so breit wird Kalle gezeichnet (Meter)
   KRABBE_MIN_PIXEL: 54,     // aber nie schmaler als so viele CSS-Pixel
@@ -612,16 +676,43 @@ class Gelaende {
     // Krümmung an jedem Stützpunkt: an beiden angrenzenden Stücken gleich (→ glatte
     // Übergänge ohne Ruck). Gewählt wie bei einer runden Kuppe/einem runden Tal, aber nie
     // stärker, als das kürzere/flachere Nachbarstück verträgt (sonst würde es überschwingen).
-    this.k = punkte.map((q, i) => {
-      if (i === 0 || i === this.n - 1) return 0;
-      const [x0, y0] = punkte[i - 1], [x1, y1] = q, [x2, y2] = punkte[i + 1];
+    this.k = punkte.map((q, i) => this.kBei(i));
+  }
+  // Krümmung am Stützpunkt i (0 an den Enden – dort wird beim Anhängen neu gerechnet)
+  kBei(i) {
+    const punkte = this.p;
+    if (i <= 0 || i >= this.n - 1) return 0;
+    {
+      const [x0, y0] = punkte[i - 1], [x1, y1] = punkte[i], [x2, y2] = punkte[i + 1];
       const hl = y1 - y0, hr = y2 - y1;
       if (Math.abs(hl) < 1e-9 || Math.abs(hr) < 1e-9 || Math.sign(hl) === Math.sign(hr)) return 0;
       const ql = Math.abs(hl) / ((x1 - x0) * (x1 - x0)), qr = Math.abs(hr) / ((x2 - x1) * (x2 - x1));
       // Rundung nach dem stärkeren Nachbarn, aber normiert höchstens RUNDUNG_MAX je Seite
       const k = Math.min(GELAENDE.RUNDUNG * Math.max(ql, qr), GELAENDE.RUNDUNG_MAX * ql, GELAENDE.RUNDUNG_MAX * qr);
       return (hl > 0 ? -1 : 1) * k;   // Kuppe: negativ, Tal: positiv
-    });
+    }
+  }
+  // Endlosmodus: neue Punkte hinten anhängen. Der bisher letzte Punkt bekommt jetzt seine
+  // echte Krümmung – Kalle ist nie auf den letzten Stücken (Vorlauf), daher ändert sich
+  // nichts unter ihm.
+  anhaengen(neue) {
+    for (const q of neue) {
+      if (q[0] <= this.p[this.n - 1][0]) throw new Error('Gelände: Punkte müssen nach rechts wachsen');
+      this.p.push(q); this.k.push(0); this.n++;
+      this.min = Math.min(this.min, q[1]); this.max = Math.max(this.max, q[1]);
+    }
+    for (let i = Math.max(1, this.n - neue.length - 1); i < this.n - 1; i++) this.k[i] = this.kBei(i);
+    this.ende = this.p[this.n - 1][0];
+  }
+  // Endlosmodus: weit zurückliegende Punkte entfernen (es bleiben mindestens 3)
+  kuerzen(xMin) {
+    let weg = 0;
+    while (this.n - weg > 3 && this.p[weg + 1][0] < xMin) weg++;
+    if (!weg) return 0;
+    this.p.splice(0, weg); this.k.splice(0, weg); this.n -= weg;
+    this.i = 0;
+    this.anfang = this.p[0][0];
+    return weg;
   }
   stueck(x) {
     const p = this.p;
@@ -695,21 +786,21 @@ const GEBIETE = [
 // steil: Verhältnis Anstieg/Abhang (kleiner = kürzere, steilere Rampen)
 // wechsel: wie stark Breite und Höhe von Hügel zu Hügel schwanken (0..1)
 // muster: Anteile der Hügelarten klein / gross / rampe (Rest: normal), siehe HUEGELARTEN
-// zeit: Tageslicht in Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
+// zeit: Tageslicht in ECHTEN Sekunden (bei K.TEMPO), sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 42, sterne: [30.5, 19], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 56, sterne: [43.0, 30] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 57, sterne: [47.4, 37.8] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 59, sterne: [51.1, 43.1] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 64, sterne: [56.1, 48.2] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 63, sterne: [56.1, 49.2] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 66, sterne: [59.1, 52.3] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 65, sterne: [58.9, 52.8] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 70, sterne: [63.7, 57.5] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 72, sterne: [65.8, 59.6] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 76, sterne: [70.1, 64.2] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 77, sterne: [71.7, 66.5] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 21, sterne: [15.3, 9.6], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 28, sterne: [21.5, 15] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 29, sterne: [23.9, 18.9] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 30, sterne: [25.8, 21.6] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 32, sterne: [28.1, 24.1] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 32, sterne: [28.3, 24.6] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 33, sterne: [29.6, 26.1] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 33, sterne: [29.7, 26.4] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 35, sterne: [31.9, 28.7] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 36, sterne: [32.9, 29.8] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 38, sterne: [35, 32.1] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 39, sterne: [36.1, 33.2] },
 ];
 
 
@@ -831,9 +922,16 @@ const MUSCHELN = {
 // ===================================================================
 
 class Lauf {
-  constructor(def, { ohneMuscheln = false } = {}) {
+  constructor(def, { ohneMuscheln = false, gelaende = null } = {}) {
     this.def = def;
-    const s = baueStrecke(def);
+    let s;
+    if (gelaende) {
+      // Testpilot im Endlosflug: fährt auf dem gemeinsamen, wachsenden Gelände
+      s = { gelaende, ziel: Infinity, hinweise: [], start: { x: -6 } };
+    } else if (def.endlos) {
+      this.endlos = new Endlos(def.saat);
+      s = { gelaende: this.endlos.g, ziel: Infinity, hinweise: [], start: { x: -6 } };
+    } else s = baueStrecke(def);
     this.g = s.gelaende;
     this.ziel = s.ziel;
     this.hinweise = s.hinweise;
@@ -843,7 +941,8 @@ class Lauf {
     this.vx = 0; this.vy = 0;
     this.boden = true;
     this.gestartet = false;
-    this.zeit = 0;                 // verstrichene Spielzeit
+    this.zeit = 0;                 // verstrichene Spielzeit in ECHTER Zeit (Tageslicht, Rufe, Ergebnis)
+    this.simZeit = 0;              // verstrichene Physikzeit (= zeit · TEMPO)
     this.tag = def.zeit;           // Tageslicht gesamt
     this.ergebnis = null;          // 'ziel' | 'nacht'
     this.flugzeit = 0;
@@ -857,17 +956,39 @@ class Lauf {
     this.hoechstImFlug = 0;
     this.nachZiel = 0;             // Zeit seit Zieldurchlauf
     // Muscheln: [{ x, y, gold, weg }], nach x sortiert
-    this.muscheln = ohneMuscheln ? [] : legeMuscheln(def, this);
+    this.muscheln = ohneMuscheln || gelaende ? [] : this.endlos ? this.endlos.muscheln : legeMuscheln(def, this);
     this.muschelIndex = 0;         // erste noch nicht vorbeigezogene Muschel
     this.muschelWert = 0;          // gesammelt (gold zählt mehr)
     this.muschelGesamt = this.muscheln.reduce((s, m) => s + (m.gold ? K.GOLD_WERT : 1), 0);
     this.vorschau = false;         // Bot-Vorschau: sammelt nichts ein
     this.maxUeberBoden = 0;        // größte Höhe über dem Boden im aktuellen Flug
     this.rufe = new Flugrufe();    // bewertet Flüge → „Juhu!“ / „Yippie!“
+    if (this.endlos) {
+      this.tag = K.ENDLOS.MAX;     // Bezugsgröße für Anzeige und Himmel
+      this.licht = K.ENDLOS.START; // verbleibendes Tageslicht (echte Sekunden)
+      this.markeNr = 0;
+      this.markeVorher = 0;
+      this.marke = K.ENDLOS.MARKE_ERSTE;
+      this.lichtBonus = 0;         // insgesamt gewonnenes Tageslicht
+      this.endlos.pflege(this);
+    }
   }
 
-  get rest() { return Math.max(0, this.tag - this.zeit); }
-  get fortschritt() { return Math.max(0, Math.min(1, this.x / this.ziel)); }
+  get rest() { return this.endlos ? Math.max(0, this.licht) : Math.max(0, this.tag - this.zeit); }
+  // Level: Anteil der Strecke. Endlos: Anteil bis zur nächsten Distanzmarke
+  get fortschritt() {
+    if (this.endlos) return Math.max(0, Math.min(1, (this.x - this.markeVorher) / (this.marke - this.markeVorher)));
+    return Math.max(0, Math.min(1, this.x / this.ziel));
+  }
+  get strecke() { return Math.max(0, this.x); }
+  get punkte() { return this.muschelWert * K.ENDLOS.PUNKTE_MUSCHEL + this.statistik.perfekt * K.ENDLOS.PUNKTE_PERFEKT; }
+  // Tageslicht gewinnen (Endlos), nie über den Vorrat hinaus
+  lichtGewinn(plus, grund) {
+    const vorher = this.licht;
+    this.licht = Math.min(K.ENDLOS.MAX, this.licht + plus);
+    this.lichtBonus += this.licht - vorher;
+    this.ereignisse.push({ art: 'licht', plus: this.licht - vorher, grund, x: this.x, y: this.y });
+  }
   get tempo() { return this.boden ? this.v : Math.hypot(this.vx, this.vy); }
   // Richtung der Bewegung (Bogenmaß, 0 = nach rechts) – für die Grafik
   get winkel() {
@@ -888,8 +1009,20 @@ class Lauf {
     this.halten = !!halten;
     if (!this.gestartet) return;
     if (!this.ergebnis) {
-      this.zeit += dt;
-      if (this.x >= this.ziel) { this.ergebnis = 'ziel'; this.ereignisse.push({ art: 'ziel' }); }
+      this.simZeit += dt;
+      this.zeit += dt / K.TEMPO;
+      if (this.endlos) {
+        // Tageslicht läuft nur während aktiver Physikschritte ab (Pause/Tabwechsel: keine Schritte)
+        this.licht -= dt / K.TEMPO;
+        if (this.x >= this.marke) {
+          this.markeNr++;
+          this.ereignisse.push({ art: 'marke', nr: this.markeNr, x: this.marke });
+          this.lichtGewinn(K.ENDLOS.MARKE_BONUS, 'marke');
+          this.markeVorher = this.marke;
+          this.marke += K.ENDLOS.MARKE_ERSTE + K.ENDLOS.MARKE_WACHSTUM * this.markeNr;
+        }
+        if (this.licht <= 0) { this.licht = 0; this.ergebnis = 'nacht'; this.ereignisse.push({ art: 'nacht' }); }
+      } else if (this.x >= this.ziel) { this.ergebnis = 'ziel'; this.ereignisse.push({ art: 'ziel' }); }
       else if (this.zeit >= this.tag) { this.zeit = this.tag; this.ergebnis = 'nacht'; this.ereignisse.push({ art: 'nacht' }); }
     }
     // Nach dem Ziel ausrollen, bei Nacht langsam stehen bleiben
@@ -899,6 +1032,7 @@ class Lauf {
     else this.luftSchritt(dt);
     this.statistik.vmax = Math.max(this.statistik.vmax, this.tempo);
     if (!this.vorschau) this.rufe.schritt(this, dt);
+    if (this.endlos && !this.vorschau) this.endlos.pflege(this);
     if (!this.vorschau) this.sammeln();
   }
 
@@ -1012,6 +1146,7 @@ class Lauf {
       neu *= 1 + K.PERFEKT_BONUS + K.KETTEN_BONUS * (this.kette - 1);
       st.perfekt++;
       st.kette = Math.max(st.kette, this.kette);
+      if (this.endlos && !this.ergebnis && !this.vorschau) this.lichtGewinn(K.ENDLOS.PERFEKT_BONUS, 'perfekt');
     } else if (winkel < K.GUT_WINKEL || (s < -0.1 && winkel < K.ABHANG_WINKEL)) {
       art = 'gut';
       // Sauber in den Hang gelenkt: fast das ganze Tempo bleibt (nur auf einem Abhang)
@@ -1091,6 +1226,21 @@ function typischeLandungen(def, art = typeof window === 'undefined' ? 'gut' : 's
   return landungen;
 }
 
+// Eine Linie auf der Abfahrt bis talX, beginnend kurz vor der Landestelle land.
+// Rückgabe: Fußpunkte (x) entlang der Kurve – leer, wenn dort kein echtes Gefälle ist.
+function linienPunkte(g, land, talX, anzahl) {
+  const ML = MUSCHEL_LINIEN;
+  let x = land - ML.VORLAUF;
+  while (x < talX && -g.steigung(x) < ML.MIN_STEIGUNG) x += 0.25;   // erst wo es richtig bergab geht
+  const punkte = [];
+  while (punkte.length < anzahl && x < talX && -g.steigung(x) >= ML.MIN_STEIGUNG) {
+    punkte.push(x);
+    let weg = 0;   // ABSTAND entlang der Kurvenlänge weitergehen
+    while (weg < ML.ABSTAND && x < talX) { const sl = g.steigung(x); weg += 0.1 * Math.sqrt(1 + sl * sl); x += 0.1; }
+  }
+  return punkte.length >= 3 ? punkte : [];
+}
+
 function berechneMuscheln(def, lauf) {
   const g = lauf.g, ML = MUSCHEL_LINIEN, liste = [];
   const r = zufall(def.saat * 31 + 7);
@@ -1106,17 +1256,9 @@ function berechneMuscheln(def, lauf) {
     // Bewusste Pausen: nicht jede Abfahrt, nie zwei Linien direkt hintereinander
     if (letzteHatte || r() > ML.ANTEIL) { letzteHatte = false; continue; }
     // Start: kurz vor der typischen Landestelle
-    let x = land - ML.VORLAUF;
-    while (x < tal[0] && -g.steigung(x) < ML.MIN_STEIGUNG) x += 0.25;   // erst wo es richtig bergab geht
     const anzahl = ML.ANZAHL[0] + Math.floor(r() * (ML.ANZAHL[1] - ML.ANZAHL[0] + 1));
-    const punkte = [];
-    while (punkte.length < anzahl && x < tal[0] && -g.steigung(x) >= ML.MIN_STEIGUNG) {
-      punkte.push(x);
-      // ABSTAND entlang der Kurvenlänge weitergehen
-      let weg = 0;
-      while (weg < ML.ABSTAND && x < tal[0]) { const sl = g.steigung(x); weg += 0.1 * Math.sqrt(1 + sl * sl); x += 0.1; }
-    }
-    if (punkte.length < 3) continue;   // zu kurz – lieber keine Linie
+    const punkte = linienPunkte(g, land, tal[0], anzahl);
+    if (!punkte.length) continue;   // zu kurz – lieber keine Linie
     linie++;
     letzteHatte = true;
     punkte.forEach((px, k) => {
@@ -1241,7 +1383,7 @@ const Bot = (() => {
   }
   function neu(art, saat = 1) {
     const r = zufall(saat);
-    const verzoegerung = art === 'mittel' ? Math.round(0.11 / K.SCHRITT) : 0;
+    const verzoegerung = art === 'mittel' ? Math.round(0.11 * K.TEMPO / K.SCHRITT) : 0;   // 0,11 s echte Reaktionszeit
     const schlange = [];
     let entscheidung = false, naechste = 0, schritte = 0;
     const vorlauf = art === 'mittel' ? 0.05 : 0.0;
@@ -1283,6 +1425,134 @@ const Bot = (() => {
   }
   return { neu, spiele, kopie };
 })();
+
+// ===================================================================
+// 3d · ENDLOSFLUG
+// Ein zusammenhängender Lauf ohne Levelgrenzen:
+//   • Gelände wird laufend nach vorn erweitert (gleiche Hügelarten und Grenzen
+//     wie die Strecken; die Schwierigkeit steigt langsam mit der Strecke bis zu
+//     einer Obergrenze) und hinten wieder entfernt.
+//   • Ein unsichtbarer Testpilot (Bot 'schnell') fliegt GEIST_VORLAUF Meter
+//     voraus. Wo er auf einer Abfahrt landet, entsteht eine Muschel-Linie –
+//     dieselbe Regel wie bei den Strecken (nur erreichbare Abfahrten, Pausen).
+//   • Tageslicht, Distanzmarken und Boni stehen in Lauf (3-physik.js).
+// Alles ist deterministisch: gleiche Saat → gleicher Lauf (für Tests).
+// ===================================================================
+
+const ENDLOS_ANFANG = { L: [42, 54], A: [18, 26], steil: [0.72, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.12, rampe: 0.12 } };
+const ENDLOS_ENDE = { L: [56, 88], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 } };
+
+// Bauplan des Endlosflugs (wie ein Streckeneintrag, aber ohne Ziel). Die Saat setzt die App je Lauf neu.
+const ENDLOS_DEF = { id: 'endlos', endlos: true, name: 'Endlosflug', gebiet: 0, saat: 1 };
+
+class Endlos {
+  constructor(saat) {
+    this.saat = saat >>> 0;
+    this.r = zufall(this.saat * 7919 + 13);
+    this.rLinie = zufall(this.saat * 31 + 7);
+    const startY = 10 + ENDLOS_ANFANG.A[0] * 1.2;
+    this.g = new Gelaende([[-120, startY], [0, startY]]);
+    this.x = 0; this.y = startY;
+    this.zaehler = 0;
+    this.naechsterAbhang = null;
+    this.kuppen = []; this.taeler = [];
+    this.muscheln = [];
+    this.linie = 0;
+    this.entschieden = new Map();   // Abfahrt (x des Tals) → Linie ja/nein
+    this.letzteHatte = false;
+    this.erweitern(K.ENDLOS.VORLAUF);
+    this.geist = new Lauf({ id: 'geist', saat }, { gelaende: this.g });
+    this.geist.vorschau = true;     // sammelt nichts, ruft nicht
+    this.geist.tag = 1e9;
+    this.geist.starten();
+    this.geistBot = Bot.neu('schnell');
+  }
+  // Schwierigkeit 0..1 nach zurückgelegter Strecke – danach konstant (Obergrenze)
+  schwierigkeit(x) { return Math.max(0, Math.min(1, x / K.ENDLOS.SCHWIERIG_WEG)); }
+
+  // Ein Hügel: Abfahrt ins Tal + Steigung zur nächsten Kuppe
+  naechsterHuegel() {
+    const r = this.r, p = this.schwierigkeit(this.x), a = ENDLOS_ANFANG, e = ENDLOS_ENDE;
+    const mitte = (bereich) => (bereich[0] + bereich[1]) / 2;
+    const wechsel = mischen(a.wechsel, e.wechsel, p);
+    const w = () => 1 + wechsel * (r() * 2 - 1) * 0.6;
+    const Lg = mischen(mitte(a.L), mitte(e.L), p) * (0.85 + r() * 0.3);
+    const Ag = mischen(mitte(a.A), mitte(e.A), p) * (0.85 + r() * 0.3);
+    const m = {};
+    for (const k of ['klein', 'gross', 'rampe']) m[k] = mischen(a.muster[k], e.muster[k], p);
+    let art = 'normal';
+    const z = r();
+    if (this.zaehler >= 2) {
+      if (z < m.rampe) art = 'rampe';
+      else if (z < m.rampe + m.gross) art = 'gross';
+      else if (z < m.rampe + m.gross + m.klein) art = 'klein';
+    }
+    this.zaehler++;
+    const h = HUEGELARTEN[art];
+    const grund = 6 + 4 * Math.sin(this.x / 300 + this.saat);
+    const ab = this.naechsterAbhang || h.ab;
+    this.naechsterAbhang = null;
+    let ty = this.y - Ag * ab[1] * w();
+    ty = Math.max(grund - GELAENDE.TAL_SPIELRAUM, Math.min(ty, grund + GELAENDE.TAL_SPIELRAUM));
+    const [hAb, LAb] = stueckGrenzen(this.y - ty, Lg * ab[0] * w());
+    this.x += LAb; this.y -= hAb;
+    const tal = [this.x, this.y];
+    const steil = mischen(mitte(a.steil), mitte(e.steil), p) * (art === 'rampe' ? 0.75 : 1);
+    const [hAuf, LAuf] = stueckGrenzen(Ag * h.auf[1] * w() * (0.85 + r() * 0.2), Lg * h.auf[0] * steil * w());
+    this.x += LAuf; this.y += hAuf;
+    const kuppe = [this.x, this.y];
+    if (h.danach) this.naechsterAbhang = h.danach.ab;
+    this.taeler.push(tal); this.kuppen.push(kuppe);
+    return [tal, kuppe];
+  }
+  erweitern(bisX) {
+    while (this.g.ende < bisX) this.g.anhaengen(this.naechsterHuegel());
+  }
+
+  // Bei jedem Physikschritt des echten Laufs (nicht für Vorschau oder Testpilot)
+  pflege(l) {
+    const E = K.ENDLOS;
+    this.erweitern(l.x + E.VORLAUF);
+    // Testpilot vorausfliegen lassen (höchstens 600 Schritte je Aufruf, holt danach weiter auf)
+    const gst = this.geist;
+    let n = 0;
+    while (gst.x < l.x + E.GEIST_VORLAUF && n++ < 600) {
+      this.erweitern(gst.x + E.VORLAUF * 0.6);
+      gst.schritt(this.geistBot.halten(gst));
+      for (const e of gst.ereignisse) if (e.art === 'landung') this.landung(e.x);
+      gst.ereignisse.length = 0;
+    }
+    // Hinten aufräumen: Gelände, Hügellisten, Muscheln
+    const weg = l.x - E.HINTEN;
+    if (this.g.n > 6 && this.g.p[2][0] < weg) this.g.kuerzen(weg);
+    while (this.kuppen.length && this.kuppen[0][0] < weg) this.kuppen.shift();
+    while (this.taeler.length && this.taeler[0][0] < weg) this.taeler.shift();
+    let raus = 0;
+    while (raus < this.muscheln.length && this.muscheln[raus].x < weg) raus++;
+    if (raus) { this.muscheln.splice(0, raus); l.muschelIndex = Math.max(0, l.muschelIndex - raus); }
+    for (const [tx] of this.entschieden) { if (tx < weg) this.entschieden.delete(tx); else break; }
+  }
+
+  // Der Testpilot ist auf einer Abfahrt gelandet → dort eventuell eine Muschel-Linie
+  landung(x) {
+    const kuppe = this.kuppen.filter(k => k[0] < x).pop();
+    const tal = this.taeler.find(t => t[0] > x);
+    if (!kuppe || !tal || kuppe[0] > tal[0] || this.entschieden.has(tal[0])) return;
+    const ML = MUSCHEL_LINIEN, r = this.rLinie;
+    // Pausen wie bei den Strecken: nicht jede Abfahrt, nie zwei Linien direkt hintereinander
+    const wuerfel = r(), anzahl = ML.ANZAHL[0] + Math.floor(r() * (ML.ANZAHL[1] - ML.ANZAHL[0] + 1));
+    const punkte = !this.letzteHatte && wuerfel <= ML.ANTEIL && x > 40 ? linienPunkte(this.g, x, tal[0], anzahl) : [];
+    const ja = punkte.length > 0;
+    this.entschieden.set(tal[0], ja);
+    this.letzteHatte = ja;
+    if (!ja) return;
+    this.linie++;
+    punkte.forEach((px, k) => {
+      const q = ueberBoden(this.g, px, K.MUSCHEL_HOEHE);
+      this.muscheln.push({ x: q.x, y: q.y, gold: k === punkte.length - 1 && this.linie % ML.GOLD_JEDE === 0, linie: this.linie, weg: false });
+    });
+  }
+}
 
 // ===================================================================
 // 4 · KRABBE
@@ -1548,7 +1818,7 @@ function krabbeInLeinwand(leinwand, o) {
 const Speicher = (() => {
   const SCHLUESSEL = 'pixelhafen.sonnenrutsch';
   const VERSION = 1;
-  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false });
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, endlos: { strecke: 0, punkte: 0 } });
   let daten = leer();
 
   function lager() { try { return window.localStorage || null; } catch (e) { return null; } }
@@ -1559,6 +1829,12 @@ const Speicher = (() => {
     if (typeof roh.ton === 'boolean') d.ton = roh.ton;
     if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
     if (roh.lernGesehen === true) d.lernGesehen = true;
+    // Endlos-Rekord: getrennt von den Streckenbestzeiten
+    if (roh.endlos && typeof roh.endlos === 'object') {
+      const st = Math.floor(Number(roh.endlos.strecke)), pu = Math.floor(Number(roh.endlos.punkte));
+      if (st > 0 && st < 1e7) d.endlos.strecke = st;
+      if (pu > 0 && pu < 1e8) d.endlos.punkte = pu;
+    }
     const f = Math.floor(Number(roh.frei));
     if (f >= 1) d.frei = Math.min(f, STRECKEN.length);
     if (roh.level && typeof roh.level === 'object') {
@@ -1605,6 +1881,15 @@ const Speicher = (() => {
       if (id + 1 > daten.frei && id < STRECKEN.length) { daten.frei = id + 1; besser.neuFrei = true; }
       sichern();
       return besser;
+    },
+    endlosRekord: () => Object.assign({}, daten.endlos),
+    // Endlos-Lauf beendet: Rekorde nur verbessern
+    endlosErgebnis(strecke, punkte) {
+      const alt = daten.endlos;
+      const neu = { strecke: strecke > alt.strecke, punkte: punkte > alt.punkte };
+      daten.endlos = { strecke: Math.max(alt.strecke, Math.floor(strecke)), punkte: Math.max(alt.punkte, Math.floor(punkte)) };
+      sichern();
+      return neu;
     },
     // Meiste Muscheln einer Fahrt merken (egal ob geschafft)
     muscheln(id, wert) {
@@ -1747,6 +2032,13 @@ const Ton = (() => {
         ton(200 * v(), 120, 0.09, { typ: 'sine', laut: 0.16 });
         rausch(0.09, { laut: 0.08, f1: 900, f2: 300 });
       }
+    },
+    // Distanzmarke erreicht: helles, freundliches Zwei-Ton-Signal
+    marke() {
+      if (!bereit()) return;
+      ton(784, 784, 0.12, { typ: 'triangle', laut: 0.16 });
+      ton(1175, 1175, 0.25, { typ: 'triangle', laut: 0.16, start: 0.1 });
+      ton(2350, 2350, 0.2, { typ: 'sine', laut: 0.03, start: 0.12 });
     },
     // Letzte Sekunden Tageslicht: leise Glocke
     glocke(hoch) {
@@ -2024,7 +2316,7 @@ const Grafik = (() => {
   function kameraZiel(l) {
     const v = l.tempo;
     const minB = hochkant() ? K.KAM_BREITE_MIN_HOCH : K.KAM_BREITE_MIN;
-    let breite = minB + v * K.KAM_VORSCHAU;
+    let breite = minB + v * K.KAM_VORSCHAU * (hochkant() ? 0.65 : 1);   // hochkant ist der Bildschirm schmal: etwas weniger Vorschau, dafür größer
     const links = l.x - breite * K.KAM_VORAUS;
     const [lo, hi] = l.g.bereich(links, links + breite * 1.15);
     const oben = Math.max(l.y + K.KAM_RAND_OBEN, hi + 3);
@@ -2035,7 +2327,7 @@ const Grafik = (() => {
     z = Math.min(z, W / (minB * 0.8));
     // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
     const frei = H / z - hoeheNoetig;
-    const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.42 : 0.3), hoeheNoetig * (hochkant() ? 1.2 : 0.6)) : 0;
+    const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.5 : 0.3), hoeheNoetig * (hochkant() ? 2 : 0.6)) : 0;
     return { z, unten: unten - tiefer, x: l.x };
   }
   function kamera(l, dt, sofort) {
@@ -2076,7 +2368,8 @@ const Grafik = (() => {
     }
     // Sonne: wandert vor Kalle zum Horizont hinunter
     const sxp = W * (hochkant() ? 0.7 : 0.76);
-    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(f, 1.25) + f * f * H * 0.04;
+    const fs = sonneF;
+    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(fs, 1.25) + fs * fs * H * 0.04 + Math.max(0, fs - 1) * H * 0.6;
     const r = Math.min(W, H) * (0.055 + f * 0.03);
     const sf = verlauf(SONNE_FARBE, f);
     const glanz = c.createRadialGradient(sxp, syp, r * 0.6, sxp, syp, r * 4.5);
@@ -2464,12 +2757,33 @@ const Grafik = (() => {
     }
   }
 
+  let sonneF = 0;
+  // Distanzmarke im Endlosflug: Pfosten mit Schild und Wimpel
+  function distanzMarke(l, mx, erreicht) {
+    const g = l.g, s = kam.z;
+    const px = sx(mx), py = sy(g.hoehe(mx));
+    if (px < -s * 8 || px > W + s * 8) return;
+    c.lineCap = 'round';
+    c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.45;
+    c.beginPath(); c.moveTo(px, py); c.lineTo(px, py - s * 6.5); c.stroke();
+    eckigWelt(px - s * 3.2, py - s * 8.4, s * 6.4, s * 2, s * 0.35, erreicht ? '#9fe7c4' : '#ffd35a', '#4a2f1a');
+    c.fillStyle = '#10243a';
+    c.font = `${Math.round(s * 0.95)}px 'Press Start 2P', monospace`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(Math.round(mx) + ' m', px, py - s * 7.35);
+    c.fillStyle = '#ff805b';
+    c.beginPath(); c.moveTo(px, py - s * 6.4); c.lineTo(px + s * 2 + Math.sin(zeit * 5) * s * 0.2, py - s * 5.8); c.lineTo(px, py - s * 5.2); c.fill();
+  }
   function startZiel(l, f) {
     const g = l.g;
+    if (l.endlos) {
+      if (l.markeVorher > 0) distanzMarke(l, l.markeVorher, true);
+      distanzMarke(l, l.marke, false);
+    }
     // Ziel: Bogen aus Treibholz mit Wimpeln und Muschelflagge
-    const zx = l.ziel, zy = g.hoehe(zx);
+    const zx = l.ziel, zy = Number.isFinite(zx) ? g.hoehe(zx) : 0;
     const px = sx(zx), py = sy(zy), s = kam.z;
-    if (px > -s * 10 && px < W + s * 10) {
+    if (Number.isFinite(zx) && px > -s * 10 && px < W + s * 10) {
       c.lineCap = 'round';
       c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.55;
       c.beginPath(); c.moveTo(px - s * 3, py); c.lineTo(px - s * 3, py - s * 7); c.moveTo(px + s * 3, py); c.lineTo(px + s * 3, py - s * 7); c.stroke();
@@ -2493,6 +2807,7 @@ const Grafik = (() => {
     }
     // Start: Holzschild
     const qx = sx(-14), qy = sy(g.hoehe(-14));
+    if (-14 < g.anfang) return;
     if (qx > -s * 6 && qx < W + s * 6) {
       c.strokeStyle = '#4a2f1a'; c.lineWidth = s * 0.4;
       c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx, qy - s * 3.6); c.stroke();
@@ -2675,9 +2990,12 @@ const Grafik = (() => {
 
   // ---------------------------------------------------------- Ein Bild
   // f = Tageslicht-Fortschritt (0 = Mittag, 1 = Sonne weg)
-  function zeichne(l, { dt, f, figur, pose, gebiet }) {
+  let letztesF = 0;
+  function zeichne(l, { dt, f, fSonne, figur, pose, gebiet }) {
     zeit += dt;
     f = Math.max(0, Math.min(1, f || 0));
+    sonneF = Math.max(0, Math.min(1.15, fSonne === undefined ? f : fSonne));   // darf ganz hinter den Horizont
+    letztesF = f;
     const thema = THEMEN[gebiet] || THEMEN[0];
     kamera(l, dt);
     const horizont = himmel(f, thema);
@@ -2739,7 +3057,9 @@ const Grafik = (() => {
     init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
-    get kam() { return kam; }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
+    get kam() { return kam; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
+    // Kurzer Schriftzug im Bild (z. B. Distanzmarke erreicht)
+    weltText(x, y, inhalt, farbe) { text(x, y, inhalt, farbe, 1); }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
     get cssW() { return cssW; }, get cssH() { return cssH; },
     // Für Tests: Bildposition von Kalle in CSS-Pixeln
     krabbeImBild(l) { return { x: sx(l.x) / dpr, y: sy(l.y) / dpr }; },
@@ -2818,9 +3138,10 @@ const Eingabe = (() => {
   const wurzel = document.documentElement;
   const leinwand = $('bild');
   const fenster = $('fenster');
-  const SEKTIONEN = ['fStart', 'fKrabben', 'fLevel', 'fPause', 'fErfolg', 'fNacht'];
+  const SEKTIONEN = ['fStart', 'fKrabben', 'fLevel', 'fPause', 'fErfolg', 'fNacht', 'fEndlos'];
 
   let zustand = 'menue';
+  let modus = 'strecke';        // 'strecke' | 'endlos'
   let lauf = null;
   let def = STRECKEN[0];
   let vorher = 'menue';         // für „Zurück“ aus der Krabbenwahl
@@ -2856,42 +3177,69 @@ const Eingabe = (() => {
       k.textContent = 'Ton: ' + (Ton.istAn() ? 'an' : 'aus');
       k.setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
     }
+    $('tonKnopfHud').setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
   }
-  function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) Ton.still(); }
+  function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) { Ton.still(); Rufe.stopp(); } }
   Ton.setze(Speicher.tonAn());
   tonKnoepfe();
   for (const k of document.querySelectorAll('.js-ton')) k.addEventListener('click', () => { tonUmschalten(); Ton.klick(); });
 
   // ---------------------------------------------------------- Strecke starten
   function starteStrecke(id) {
+    modus = 'strecke';
+    wurzel.dataset.modus = modus;
     def = STRECKEN.find(s => s.id === id) || STRECKEN[0];
     lauf = new Lauf(def);
+    laufVorbereiten();
+    $('hudNr').textContent = def.id;
+    $('hudTitel').textContent = def.name;
+    // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
+    const ausfuehrlich = def.lern || !Speicher.lernGesehen();
+    $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
+    $('erklListe').hidden = !ausfuehrlich;
+    $('erklEndlos').hidden = true;
+    ansage(`Strecke ${def.id}, ${def.name}. Gedrückt halten zum Losrutschen.`);
+  }
+  // Endlosflug: jedes Mal neue Landschaft (neue Saat) und eine zufällige Küste
+  function starteEndlos() {
+    modus = 'endlos';
+    wurzel.dataset.modus = modus;
+    const saat = (Math.random() * 1e9) >>> 0;
+    def = Object.assign({}, ENDLOS_DEF, { saat, gebiet: saat % GEBIETE.length });
+    if (window.__endlosSaat !== undefined) def = Object.assign(def, { saat: window.__endlosSaat, gebiet: window.__endlosSaat % GEBIETE.length });   // Tests
+    lauf = new Lauf(def);
+    laufVorbereiten();
+    $('hudNr').textContent = '∞';
+    $('hudTitel').textContent = 'Endlosflug';
+    $('erklTitel').textContent = 'ENDLOSFLUG';
+    $('erklEndlos').hidden = false;
+    $('erklListe').hidden = Speicher.lernGesehen();
+    $('rekordZahl').textContent = Speicher.endlosRekord().strecke + ' m';
+    ansage('Endlosflug. Flieg dem Sonnenuntergang davon. Gedrückt halten zum Losrutschen.');
+  }
+  // Gemeinsamer Neustart: alles Laufbezogene zurücksetzen
+  function laufVorbereiten() {
     Rufe.stopp();
     Grafik.neuerLauf();
     rest = 0;
     endeZeit = 0;
     glockeBei = 99;
-    Object.assign(pose, { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0 });
-    $('hudNr').textContent = def.id;
-    $('hudTitel').textContent = def.name;
+    Object.assign(pose, { lauf: 0, platt: 0, jubelZeit: 0, verdutztZeit: 0, yippie: 0 });
     $('kette').hidden = true;
+    $('bonus').classList.remove('zeigen');
+    hudAlt = '';
     muschelAnzeige(true);
-    // Erklärung: ausführlich auf der Lernstrecke und beim allerersten Mal, sonst kurz
-    const ausfuehrlich = def.lern || !Speicher.lernGesehen();
-    $('erklTitel').textContent = def.lern ? 'LERNSTRECKE' : `STRECKE ${def.id} · ${def.name.toUpperCase()}`;
-    $('erklListe').hidden = !ausfuehrlich;
     hinweis(null);
     setzeZustand('bereit');
     zeige(null);
     Eingabe.alleLos();
     halten = false;
     leinwand.focus({ preventScroll: true });
-    ansage(`Strecke ${def.id}, ${def.name}. Gedrückt halten zum Losrutschen.`);
   }
   function neustart() {
     if (zustand === 'menue' && !lauf) return;
     Ton.klick();
-    starteStrecke(def.id);
+    if (modus === 'endlos') starteEndlos(); else starteStrecke(def.id);
   }
 
   // ---------------------------------------------------------- Eingabe
@@ -2920,11 +3268,12 @@ const Eingabe = (() => {
   Eingabe.init($('buehne'), app);
 
   // Knöpfe im HUD dürfen kein „Halten“ auslösen
-  for (const id of ['neuKnopfHud', 'pauseKnopf']) {
+  for (const id of ['neuKnopfHud', 'pauseKnopf', 'tonKnopfHud']) {
     $(id).addEventListener('pointerdown', (e) => e.stopPropagation());
   }
   $('neuKnopfHud').addEventListener('click', () => neustart());
   $('pauseKnopf').addEventListener('click', () => pause());
+  $('tonKnopfHud').addEventListener('click', () => { tonUmschalten(); Ton.klick(); leinwand.focus({ preventScroll: true }); });
 
   function pause() {
     if (zustand !== 'lauf' && zustand !== 'bereit') return;
@@ -2944,7 +3293,7 @@ const Eingabe = (() => {
     leinwand.focus({ preventScroll: true });
   }
   $('weiterKnopf').addEventListener('click', weiter);
-  $('neuKnopf').addEventListener('click', () => starteStrecke(def.id));
+  $('neuKnopf').addEventListener('click', () => neustart());
   $('pauseLevelKnopf').addEventListener('click', () => { setzeZustand('menue'); levelWahl(); });
 
   // ---------------------------------------------------------- Menüs
@@ -2954,11 +3303,19 @@ const Eingabe = (() => {
     if (!Speicher.level(1) && Speicher.hoechsteFreie() === 1) starteStrecke(1);
     else levelWahl();
   });
+  $('endlosKnopf').addEventListener('click', () => { Ton.wecke(); Ton.klick(); starteEndlos(); });
+  $('endlosNochmal').addEventListener('click', () => { Ton.klick(); starteEndlos(); });
+  $('endlosMenue').addEventListener('click', () => { Ton.klick(); setzeZustand('menue'); startKrabbe(); zeige('fStart'); });
   $('levelZurueck').addEventListener('click', () => { Ton.klick(); zeige('fStart'); setzeZustand('menue'); });
   $('krabbeWahlKnopf').addEventListener('click', () => { Ton.klick(); krabbenWahl(); });
   $('krabbenFertig').addEventListener('click', () => { Ton.klick(); zeige('fStart'); startKrabbe(); });
 
-  function startKrabbe() { krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true }); }
+  function startKrabbe() {
+    krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true });
+    const r = Speicher.endlosRekord();
+    $('endlosRekordStart').hidden = !r.strecke;
+    $('startRekord').textContent = `${r.strecke} m · ${r.punkte} Punkte`;
+  }
 
   function krabbenWahl() {
     const liste = $('krabbenListe');
@@ -3081,6 +3438,27 @@ const Eingabe = (() => {
     zeige('fNacht');
     ansage(`Die Sonne ist untergegangen. ${Math.floor(anteil * 100)} Prozent geschafft.`);
   }
+  // Ergebnis des Endlosflugs (Sonne untergegangen)
+  function zeigeEndlos() {
+    const st = lauf.statistik;
+    const strecke = Math.floor(lauf.strecke), punkte = lauf.punkte;
+    const alt = Speicher.endlosRekord();
+    const neu = Speicher.endlosErgebnis(strecke, punkte);
+    const r = Speicher.endlosRekord();
+    krabbeInLeinwand($('endlosKrabbe'), { figur: Speicher.krabbe(), mund: neu.strecke ? 'jubel' : 'oh', schereHoch: neu.strecke, schereAuf: true, blickHoch: !neu.strecke });
+    $('endlosSpruch').textContent = neu.strecke ? 'So weit ist Kalle noch nie geflogen!' : strecke > alt.strecke * 0.8 ? 'Knapp am Rekord vorbei!' : 'Saubere Landungen bringen Tageslicht.';
+    $('enStrecke').textContent = strecke + ' m';
+    $('enPunkte').textContent = punkte;
+    $('enMuscheln').textContent = lauf.muschelWert;
+    $('enPerfekt').textContent = st.perfekt;
+    $('enBonus').textContent = '+' + Math.round(lauf.lichtBonus) + ' s';
+    $('enRekord').textContent = r.strecke + ' m';
+    $('enRekordPunkte').textContent = r.punkte;
+    $('enNeu').hidden = !(neu.strecke || neu.punkte);
+    $('enNeu').textContent = neu.strecke && neu.punkte ? 'NEUER REKORD: STRECKE UND PUNKTE!' : neu.strecke ? 'NEUER STRECKENREKORD!' : 'NEUER PUNKTEREKORD!';
+    zeige('fEndlos');
+    ansage(`Die Sonne ist untergegangen. ${strecke} Meter, ${punkte} Punkte.${neu.strecke ? ' Neuer Rekord.' : ''}`);
+  }
   $('nochmalKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
   $('nachtLevelKnopf').addEventListener('click', () => { Ton.klick(); levelWahl(); });
   $('nochmalErfolgKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id); });
@@ -3109,10 +3487,23 @@ const Eingabe = (() => {
   let hudAlt = '';
   function hud() {
     const r = lauf.rest, f = lauf.fortschritt;
-    const tagAnteil = r / lauf.tag;
-    const schluessel = Math.ceil(r * 10) + '|' + Math.floor(f * 400);
+    const tagAnteil = Math.min(1, r / lauf.tag);
+    const schluessel = Math.ceil(r * 10) + '|' + Math.floor(f * 400) + '|' + Math.floor(lauf.strecke) + '|' + lauf.punkte;
     if (schluessel === hudAlt) return;
     hudAlt = schluessel;
+    if (modus === 'endlos') {
+      $('punkteZahl').textContent = lauf.punkte;
+      $('wegFuellung').style.width = (f * 100).toFixed(1) + '%';
+      $('wegKrabbe').style.left = (f * 100).toFixed(1) + '%';
+      $('wegText').textContent = Math.floor(lauf.strecke) + ' m';
+      $('wegBalken').setAttribute('aria-valuenow', Math.floor(f * 100));
+      $('wegBalken').setAttribute('aria-label', `Strecke ${Math.floor(lauf.strecke)} Meter, nächste Marke bei ${Math.round(lauf.marke)} Metern`);
+      $('tagFuellung').style.width = (tagAnteil * 100).toFixed(1) + '%';
+      $('tagText').textContent = Math.ceil(r) + ' s';
+      $('tagBalken').setAttribute('aria-valuenow', Math.round(tagAnteil * 100));
+      $('hudTag').classList.toggle('knapp', r < 8 && zustand === 'lauf');
+      return;
+    }
     $('tagFuellung').style.width = (tagAnteil * 100).toFixed(1) + '%';
     $('tagText').textContent = Math.ceil(r) + ' s';
     $('tagBalken').setAttribute('aria-valuenow', Math.round(tagAnteil * 100));
@@ -3163,7 +3554,7 @@ const Eingabe = (() => {
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
     const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
     if (aktiv) {
-      rest += dt;
+      rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
       let n = 0;
       while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
         lauf.schritt(zustand === 'lauf' && halten);
@@ -3179,7 +3570,7 @@ const Eingabe = (() => {
         setzeZustand('ergebnis');
         Ton.still();
         Rufe.stopp();
-        if (lauf.ergebnis === 'ziel') zeigeErfolg(); else zeigeNacht();
+        if (lauf.ergebnis === 'ziel') zeigeErfolg(); else if (modus === 'endlos') zeigeEndlos(); else zeigeNacht();
       }
     }
     // Lernhinweise an festen Stellen der Strecke
@@ -3188,14 +3579,19 @@ const Eingabe = (() => {
       hinweis(h ? h.text : null);
       // Warnglocke in den letzten Sekunden
       const r = Math.ceil(lauf.rest);
+      if (r > 10) glockeBei = 99;   // nach einem Zeitbonus wieder warnen dürfen
       if (r <= 5 && r < glockeBei && r > 0) { glockeBei = r; Ton.glocke(r <= 3); }
       else if (r === 10 && glockeBei > 10) { glockeBei = 10; Ton.glocke(false); }
     } else if (zustand !== 'pause') hinweis(null);
     if (zustand === 'pause' || zustand === 'menue') Ton.still();
     else Ton.fahrt(lauf.tempo, lauf.boden, halten, zustand === 'lauf' || (zustand === 'ende' && lauf.tempo > 2));
     posenFuerBild = posenSchritt(zustand === 'pause' ? 0 : dt);
-    const f = Math.min(1, lauf.zeit / lauf.tag);
-    Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
+    // Himmel und Sonne hängen am selben Restwert wie die Tageslichtanzeige.
+    // Nach Sonnenuntergang sinkt die Sonne noch ganz hinter den Horizont.
+    // Endlos: voller Startvorrat = Mittag (blau/türkis), wenig = Gold/Koralle, kurz vor 0 = violett
+    const f = modus === 'endlos' ? 1 - Math.min(1, lauf.rest / K.ENDLOS.START) : Math.min(1, 1 - lauf.rest / lauf.tag);
+    const fSonne = lauf.ergebnis === 'nacht' ? 1 + Math.min(0.15, endeZeit * 0.12) : f;
+    Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, fSonne, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
     hud();
   }
   let posenFuerBild = null;
@@ -3218,6 +3614,13 @@ const Eingabe = (() => {
       const k = $('kette');
       if (e.kette > 1) { k.hidden = false; k.textContent = `PERFEKT ×${e.kette}`; }
       else if (e.guete !== 'perfekt') k.hidden = true;
+    } else if (e.art === 'licht') {
+      // Zeitgewinn kurz und verständlich anzeigen (gerundet auf halbe Sekunden)
+      const plus = Math.round(e.plus * 2) / 2;
+      if (plus > 0) bonusZeigen(`+${String(plus).replace('.', ',')} s Tageslicht${e.grund === 'perfekt' ? ' · Perfekt' : ''}`);
+    } else if (e.art === 'marke') {
+      Ton.marke();
+      Grafik.weltText(e.x, lauf.g.hoehe(e.x) + 10, `${Math.round(e.x)} m!`, '#9fe7c4');
     } else if (e.art === 'muschel') {
       Ton.muschel(e.gold);
       muschelAnzeige(false);
@@ -3230,6 +3633,15 @@ const Eingabe = (() => {
     }
   }
 
+  let bonusUhr = 0;
+  function bonusZeigen(text) {
+    const b = $('bonus');
+    b.textContent = text;
+    b.classList.add('zeigen');
+    clearTimeout(bonusUhr);
+    bonusUhr = setTimeout(() => b.classList.remove('zeigen'), 1400);
+  }
+
   // Hinter dem Startmenü fährt ein Bot die Lernstrecke (lebendiger Hintergrund)
   let vorfuehrung = null, vorfuehrBot = null;
   function zeichneMenueHintergrund(dt) {
@@ -3240,7 +3652,7 @@ const Eingabe = (() => {
       vorfuehrBot = Bot.neu('schnell');
       Grafik.neuerLauf();
     }
-    rest += dt;
+    rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
     let n = 0;
     while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
       vorfuehrung.schritt(vorfuehrBot.halten(vorfuehrung)); rest -= K.SCHRITT; n++;
@@ -3272,6 +3684,9 @@ const Eingabe = (() => {
     zustand: () => zustand,
     lauf: () => lauf,
     starte: (id) => starteStrecke(id),
+    starteEndlos: () => starteEndlos(),
+    modus: () => modus,
+    himmel: () => ({ f: Grafik.letztesF, sonne: Grafik.sonneF }),
     def: () => def,
     kamera: () => ({ x: Grafik.kam.x, b: Grafik.kam.b, z: Grafik.kam.z }),
     krabbeImBild: () => Grafik.krabbeImBild(lauf),

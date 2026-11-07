@@ -47,7 +47,7 @@ const Bot = (() => {
   }
   function neu(art, saat = 1) {
     const r = zufall(saat);
-    const verzoegerung = art === 'mittel' ? Math.round(0.11 / K.SCHRITT) : 0;
+    const verzoegerung = art === 'mittel' ? Math.round(0.11 * K.TEMPO / K.SCHRITT) : 0;   // 0,11 s echte Reaktionszeit
     const schlange = [];
     let entscheidung = false, naechste = 0, schritte = 0;
     const vorlauf = art === 'mittel' ? 0.05 : 0.0;

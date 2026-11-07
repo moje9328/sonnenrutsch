@@ -123,6 +123,13 @@ const Ton = (() => {
         rausch(0.09, { laut: 0.08, f1: 900, f2: 300 });
       }
     },
+    // Distanzmarke erreicht: helles, freundliches Zwei-Ton-Signal
+    marke() {
+      if (!bereit()) return;
+      ton(784, 784, 0.12, { typ: 'triangle', laut: 0.16 });
+      ton(1175, 1175, 0.25, { typ: 'triangle', laut: 0.16, start: 0.1 });
+      ton(2350, 2350, 0.2, { typ: 'sine', laut: 0.03, start: 0.12 });
+    },
     // Letzte Sekunden Tageslicht: leise Glocke
     glocke(hoch) {
       if (!bereit()) return;

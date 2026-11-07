@@ -17,9 +17,16 @@
 // ===================================================================
 
 class Lauf {
-  constructor(def, { ohneMuscheln = false } = {}) {
+  constructor(def, { ohneMuscheln = false, gelaende = null } = {}) {
     this.def = def;
-    const s = baueStrecke(def);
+    let s;
+    if (gelaende) {
+      // Testpilot im Endlosflug: fährt auf dem gemeinsamen, wachsenden Gelände
+      s = { gelaende, ziel: Infinity, hinweise: [], start: { x: -6 } };
+    } else if (def.endlos) {
+      this.endlos = new Endlos(def.saat);
+      s = { gelaende: this.endlos.g, ziel: Infinity, hinweise: [], start: { x: -6 } };
+    } else s = baueStrecke(def);
     this.g = s.gelaende;
     this.ziel = s.ziel;
     this.hinweise = s.hinweise;
@@ -29,7 +36,8 @@ class Lauf {
     this.vx = 0; this.vy = 0;
     this.boden = true;
     this.gestartet = false;
-    this.zeit = 0;                 // verstrichene Spielzeit
+    this.zeit = 0;                 // verstrichene Spielzeit in ECHTER Zeit (Tageslicht, Rufe, Ergebnis)
+    this.simZeit = 0;              // verstrichene Physikzeit (= zeit · TEMPO)
     this.tag = def.zeit;           // Tageslicht gesamt
     this.ergebnis = null;          // 'ziel' | 'nacht'
     this.flugzeit = 0;
@@ -43,17 +51,39 @@ class Lauf {
     this.hoechstImFlug = 0;
     this.nachZiel = 0;             // Zeit seit Zieldurchlauf
     // Muscheln: [{ x, y, gold, weg }], nach x sortiert
-    this.muscheln = ohneMuscheln ? [] : legeMuscheln(def, this);
+    this.muscheln = ohneMuscheln || gelaende ? [] : this.endlos ? this.endlos.muscheln : legeMuscheln(def, this);
     this.muschelIndex = 0;         // erste noch nicht vorbeigezogene Muschel
     this.muschelWert = 0;          // gesammelt (gold zählt mehr)
     this.muschelGesamt = this.muscheln.reduce((s, m) => s + (m.gold ? K.GOLD_WERT : 1), 0);
     this.vorschau = false;         // Bot-Vorschau: sammelt nichts ein
     this.maxUeberBoden = 0;        // größte Höhe über dem Boden im aktuellen Flug
     this.rufe = new Flugrufe();    // bewertet Flüge → „Juhu!“ / „Yippie!“
+    if (this.endlos) {
+      this.tag = K.ENDLOS.MAX;     // Bezugsgröße für Anzeige und Himmel
+      this.licht = K.ENDLOS.START; // verbleibendes Tageslicht (echte Sekunden)
+      this.markeNr = 0;
+      this.markeVorher = 0;
+      this.marke = K.ENDLOS.MARKE_ERSTE;
+      this.lichtBonus = 0;         // insgesamt gewonnenes Tageslicht
+      this.endlos.pflege(this);
+    }
   }
 
-  get rest() { return Math.max(0, this.tag - this.zeit); }
-  get fortschritt() { return Math.max(0, Math.min(1, this.x / this.ziel)); }
+  get rest() { return this.endlos ? Math.max(0, this.licht) : Math.max(0, this.tag - this.zeit); }
+  // Level: Anteil der Strecke. Endlos: Anteil bis zur nächsten Distanzmarke
+  get fortschritt() {
+    if (this.endlos) return Math.max(0, Math.min(1, (this.x - this.markeVorher) / (this.marke - this.markeVorher)));
+    return Math.max(0, Math.min(1, this.x / this.ziel));
+  }
+  get strecke() { return Math.max(0, this.x); }
+  get punkte() { return this.muschelWert * K.ENDLOS.PUNKTE_MUSCHEL + this.statistik.perfekt * K.ENDLOS.PUNKTE_PERFEKT; }
+  // Tageslicht gewinnen (Endlos), nie über den Vorrat hinaus
+  lichtGewinn(plus, grund) {
+    const vorher = this.licht;
+    this.licht = Math.min(K.ENDLOS.MAX, this.licht + plus);
+    this.lichtBonus += this.licht - vorher;
+    this.ereignisse.push({ art: 'licht', plus: this.licht - vorher, grund, x: this.x, y: this.y });
+  }
   get tempo() { return this.boden ? this.v : Math.hypot(this.vx, this.vy); }
   // Richtung der Bewegung (Bogenmaß, 0 = nach rechts) – für die Grafik
   get winkel() {
@@ -74,8 +104,20 @@ class Lauf {
     this.halten = !!halten;
     if (!this.gestartet) return;
     if (!this.ergebnis) {
-      this.zeit += dt;
-      if (this.x >= this.ziel) { this.ergebnis = 'ziel'; this.ereignisse.push({ art: 'ziel' }); }
+      this.simZeit += dt;
+      this.zeit += dt / K.TEMPO;
+      if (this.endlos) {
+        // Tageslicht läuft nur während aktiver Physikschritte ab (Pause/Tabwechsel: keine Schritte)
+        this.licht -= dt / K.TEMPO;
+        if (this.x >= this.marke) {
+          this.markeNr++;
+          this.ereignisse.push({ art: 'marke', nr: this.markeNr, x: this.marke });
+          this.lichtGewinn(K.ENDLOS.MARKE_BONUS, 'marke');
+          this.markeVorher = this.marke;
+          this.marke += K.ENDLOS.MARKE_ERSTE + K.ENDLOS.MARKE_WACHSTUM * this.markeNr;
+        }
+        if (this.licht <= 0) { this.licht = 0; this.ergebnis = 'nacht'; this.ereignisse.push({ art: 'nacht' }); }
+      } else if (this.x >= this.ziel) { this.ergebnis = 'ziel'; this.ereignisse.push({ art: 'ziel' }); }
       else if (this.zeit >= this.tag) { this.zeit = this.tag; this.ergebnis = 'nacht'; this.ereignisse.push({ art: 'nacht' }); }
     }
     // Nach dem Ziel ausrollen, bei Nacht langsam stehen bleiben
@@ -85,6 +127,7 @@ class Lauf {
     else this.luftSchritt(dt);
     this.statistik.vmax = Math.max(this.statistik.vmax, this.tempo);
     if (!this.vorschau) this.rufe.schritt(this, dt);
+    if (this.endlos && !this.vorschau) this.endlos.pflege(this);
     if (!this.vorschau) this.sammeln();
   }
 
@@ -198,6 +241,7 @@ class Lauf {
       neu *= 1 + K.PERFEKT_BONUS + K.KETTEN_BONUS * (this.kette - 1);
       st.perfekt++;
       st.kette = Math.max(st.kette, this.kette);
+      if (this.endlos && !this.ergebnis && !this.vorschau) this.lichtGewinn(K.ENDLOS.PERFEKT_BONUS, 'perfekt');
     } else if (winkel < K.GUT_WINKEL || (s < -0.1 && winkel < K.ABHANG_WINKEL)) {
       art = 'gut';
       // Sauber in den Hang gelenkt: fast das ganze Tempo bleibt (nur auf einem Abhang)

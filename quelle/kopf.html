@@ -47,10 +47,18 @@
   #wegKrabbe { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #e8503a; border: 2px solid #3a1418; }
   #wegZiel { position: absolute; right: -4px; top: -6px; width: 10px; height: 22px; }
   #hudTag.knapp b { color: #ff9a7a; }
-  #hudTag.knapp #tagFuellung { animation: puls 0.8s ease-in-out infinite; }
   @keyframes puls { 50% { filter: brightness(1.5); } }
   #hudName { display: flex; align-items: center; gap: 6px; font: 600 13px/1.2 var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; }
   #hudTitel { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #hudEndlos { display: flex; justify-content: space-between; gap: 10px; font: 600 13px/1.2 var(--body); color: var(--muted); }
+  #hudEndlos b { color: var(--gelb); font: 11px/1.2 var(--retro); font-weight: 400; }
+  :root:not([data-modus="endlos"]) #hudEndlos { display: none; }
+  :root[data-modus="endlos"] #hudNr, :root[data-modus="endlos"] #erklZiel { display: none; }
+  #bonus { position: absolute; top: 100px; left: 12px; z-index: 3; padding: 6px 12px; color: var(--auf-gelb); background: var(--gelb); border-radius: 10px; font: 11px/1.5 var(--retro); pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s; }
+  #bonus.zeigen { opacity: 1; transform: none; }
+  #erklEndlos { margin: 8px 0 0; font-size: 15px; line-height: 1.4; }
+  .rekordzeile { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
+  .rekordzeile b { color: var(--gelb); font: 11px/1.4 var(--retro); font-weight: 400; }
   #hudMuscheln { display: inline-flex; align-items: center; gap: 5px; flex: none; color: var(--text); font: 11px/1 var(--retro); }
   #hudMuscheln svg { width: 18px; height: 16px; }
   #hudMuscheln.plopp { animation: plopp 0.25s ease-out; }
@@ -68,6 +76,9 @@
   }
   .rund:hover { background: rgba(31, 64, 102, 0.95); }
   .rund svg { width: 18px; height: 18px; }
+  #tonKnopfHud .aus { display: none; }
+  #tonKnopfHud[aria-pressed="false"] .aus { display: inline; }
+  #tonKnopfHud[aria-pressed="false"] .welle { display: none; }
   :root:not([data-zustand="bereit"]):not([data-zustand="lauf"]):not([data-zustand="ende"]) #hud { visibility: hidden; }
 
   /* Kette perfekter Landungen */
@@ -118,6 +129,8 @@
   .karte .best { color: var(--muted); font: 600 12px/1.2 var(--body); }
 
   @media (max-width: 520px) {
+    #bonus { top: 118px; left: 8px; }
+    #hudEndlos { font-size: 12px; }
     #hud { top: 6px; left: 6px; right: 6px; gap: 6px; }
     .hudblock { padding: 6px 8px; gap: 5px; }
     .hudzeile { grid-template-columns: 18px 1fr auto; gap: 6px; }
@@ -164,15 +177,19 @@
           <div class="balken" role="meter" aria-label="Tageslicht" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="tagBalken"><i id="tagFuellung"></i></div>
           <b id="tagText">0:00</b>
         </div>
-        <div class="hudzeile" id="hudWeg" title="Strecke bis zum Ziel">
+        <div class="hudzeile" id="hudWeg" title="Strecke">
           <span class="ico"><svg width="22" height="22" aria-hidden="true"><use href="#flagge"/></svg></span>
           <div class="balken" role="meter" aria-label="Strecke" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wegBalken"><i id="wegFuellung"></i><span id="wegKrabbe"></span></div>
           <b id="wegText">0 %</b>
         </div>
+        <div id="hudEndlos"><span>Punkte <b id="punkteZahl">0</b></span><span>Rekord <b id="rekordZahl">0 m</b></span></div>
       </div>
       <div class="hudrechts">
         <button class="rund" id="neuKnopfHud" type="button" aria-label="Strecke neu starten (R)">
           <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2h6v1H5zM3 3h2v1H3zM11 3h2v1h-2zM2 4h1v2H2zM13 4h1v1h-1zM2 6h1v4H2zM2 10h1v2H2zM3 12h2v1H3zM5 13h6v1H5zM11 12h2v1h-2zM13 10h1v2h-1zM10 5h4v1h-4zM13 2h1v3h-1z"/></svg>
+        </button>
+        <button class="rund" id="tonKnopfHud" type="button" aria-label="Ton an/aus (M)" aria-pressed="true">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 6h3v4H2zM5 5h1v6H5zM6 4h1v8H6zM7 3h1v10H7z"/><path class="welle" d="M10 6h1v4h-1zM12 4h1v8h-1z"/><path class="aus" d="M10 5h1v1h-1zM11 6h1v1h-1zM12 7h1v2h-1zM13 9h1v1h-1zM14 10h1v1h-1zM14 5h1v1h-1zM13 6h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1z"/></svg>
         </button>
         <button class="rund" id="pauseKnopf" type="button" aria-label="Pause (P)">
           <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z"/></svg>
@@ -181,13 +198,15 @@
     </div>
 
     <div id="kette" hidden></div>
+    <div id="bonus" role="status" aria-live="polite"></div>
 
     <div id="erklaerung" aria-live="polite">
       <h2 id="erklTitel">LERNSTRECKE</h2>
+      <p id="erklEndlos" hidden>Flieg dem Sonnenuntergang davon! Erreiche die nächste Distanzmarke und lande sauber, um Tageslicht zu gewinnen.</p>
       <ul id="erklListe">
         <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
-        <li><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
+        <li id="erklZiel"><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
         <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
       </ul>
       <p class="los"><span class="nurMaus">Leertaste oder Maus halten</span><span class="nurTouch">Bildschirm gedrückt halten</span> zum Losrutschen</p>
@@ -207,7 +226,9 @@
       <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
       <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
       <div class="knoepfe">
-        <button class="btn main" id="spielenKnopf" type="button">Spielen</button>
+        <button class="btn main" id="spielenKnopf" type="button">Strecken</button>
+        <button class="btn main" id="endlosKnopf" type="button">Endlosflug</button>
+        <p class="rekordzeile" id="endlosRekordStart" hidden>Endlos-Rekord: <b id="startRekord">0 m</b></p>
         <div class="knoepfe zwei" style="margin-top:0">
           <button class="btn klein" id="krabbeWahlKnopf" type="button">Krabbe wählen</button>
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
@@ -266,6 +287,26 @@
           <button class="btn klein" id="nochmalErfolgKnopf" type="button">Noch einmal</button>
           <button class="btn klein" id="erfolgLevelKnopf" type="button">Streckenwahl</button>
         </div>
+      </div>
+    </section>
+
+    <section id="fEndlos" hidden>
+      <h2 data-titel id="endlosTitel">Die Sonne ist untergegangen</h2>
+      <canvas id="endlosKrabbe" width="220" height="180" aria-hidden="true"></canvas>
+      <p class="spruch" id="endlosSpruch"></p>
+      <dl class="zahlen">
+        <div class="gross"><dt>Strecke</dt><dd id="enStrecke">0 m</dd></div>
+        <div class="gross"><dt>Punkte</dt><dd id="enPunkte">0</dd></div>
+        <div><dt>Muscheln</dt><dd id="enMuscheln">0</dd></div>
+        <div><dt>Perfekte Landungen</dt><dd id="enPerfekt">0</dd></div>
+        <div><dt>Gewonnenes Tageslicht</dt><dd id="enBonus">0 s</dd></div>
+        <div><dt>Rekord Strecke</dt><dd id="enRekord">0 m</dd></div>
+        <div><dt>Rekord Punkte</dt><dd id="enRekordPunkte">0</dd></div>
+      </dl>
+      <p class="hervor" id="enNeu" hidden>NEUER REKORD!</p>
+      <div class="knoepfe">
+        <button class="btn main" id="endlosNochmal" type="button">Sofort nochmal</button>
+        <button class="btn klein" id="endlosMenue" type="button">Zum Menü</button>
       </div>
     </section>
 

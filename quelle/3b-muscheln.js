@@ -52,6 +52,21 @@ function typischeLandungen(def, art = typeof window === 'undefined' ? 'gut' : 's
   return landungen;
 }
 
+// Eine Linie auf der Abfahrt bis talX, beginnend kurz vor der Landestelle land.
+// Rückgabe: Fußpunkte (x) entlang der Kurve – leer, wenn dort kein echtes Gefälle ist.
+function linienPunkte(g, land, talX, anzahl) {
+  const ML = MUSCHEL_LINIEN;
+  let x = land - ML.VORLAUF;
+  while (x < talX && -g.steigung(x) < ML.MIN_STEIGUNG) x += 0.25;   // erst wo es richtig bergab geht
+  const punkte = [];
+  while (punkte.length < anzahl && x < talX && -g.steigung(x) >= ML.MIN_STEIGUNG) {
+    punkte.push(x);
+    let weg = 0;   // ABSTAND entlang der Kurvenlänge weitergehen
+    while (weg < ML.ABSTAND && x < talX) { const sl = g.steigung(x); weg += 0.1 * Math.sqrt(1 + sl * sl); x += 0.1; }
+  }
+  return punkte.length >= 3 ? punkte : [];
+}
+
 function berechneMuscheln(def, lauf) {
   const g = lauf.g, ML = MUSCHEL_LINIEN, liste = [];
   const r = zufall(def.saat * 31 + 7);
@@ -67,17 +82,9 @@ function berechneMuscheln(def, lauf) {
     // Bewusste Pausen: nicht jede Abfahrt, nie zwei Linien direkt hintereinander
     if (letzteHatte || r() > ML.ANTEIL) { letzteHatte = false; continue; }
     // Start: kurz vor der typischen Landestelle
-    let x = land - ML.VORLAUF;
-    while (x < tal[0] && -g.steigung(x) < ML.MIN_STEIGUNG) x += 0.25;   // erst wo es richtig bergab geht
     const anzahl = ML.ANZAHL[0] + Math.floor(r() * (ML.ANZAHL[1] - ML.ANZAHL[0] + 1));
-    const punkte = [];
-    while (punkte.length < anzahl && x < tal[0] && -g.steigung(x) >= ML.MIN_STEIGUNG) {
-      punkte.push(x);
-      // ABSTAND entlang der Kurvenlänge weitergehen
-      let weg = 0;
-      while (weg < ML.ABSTAND && x < tal[0]) { const sl = g.steigung(x); weg += 0.1 * Math.sqrt(1 + sl * sl); x += 0.1; }
-    }
-    if (punkte.length < 3) continue;   // zu kurz – lieber keine Linie
+    const punkte = linienPunkte(g, land, tal[0], anzahl);
+    if (!punkte.length) continue;   // zu kurz – lieber keine Linie
     linie++;
     letzteHatte = true;
     punkte.forEach((px, k) => {

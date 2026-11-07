@@ -199,6 +199,8 @@ console.log('## Flugrufe: Juhu und Yippie');
   fr = new Flugrufe();
   ok(flug(fr, 0, 40, 18).rufe.length === 0, 'flacher Rampenkontakt (bis ~7 m) → still');
   fr = new Flugrufe();
+  ok(flug(fr, 0, 40, 30).rufe.length === 0, 'mittelhoher Hüpfer (~19 m) → noch still');
+  fr = new Flugrufe();
   const mittel = flug(fr, 0, 30, 38).rufe;
   ok(mittel.length === 1 && mittel[0][0] === 'juhu', `mittlerer schöner Flug (~30 m) → genau ein Juhu (${mittel.map(r => r[0])})`);
   fr = new Flugrufe();
@@ -209,12 +211,12 @@ console.log('## Flugrufe: Juhu und Yippie');
   const sofort = flug(fr, 0, 60, 75).rufe;
   ok(sofort.length === 1 && sofort[0][0] === 'yippie', `sofort spektakulär → direkt Yippie, kein Juhu (${sofort.map(r => r[0])})`);
   fr = new Flugrufe();
-  const weit = flug(fr, 0, 100, 16).rufe;
+  const weit = flug(fr, 0, 112, 16).rufe;
   ok(weit.length === 1 && weit[0][0] === 'yippie', `sehr weiter flacher Flug (>${R.YIPPIE_WEITE} m) → Yippie (${weit.map(r => r[0])})`);
   // Schnelle Folge: zweiter Flug kurz nach dem ersten Ruf → kein zweiter Ruf
   fr = new Flugrufe();
-  const a1 = flug(fr, 0, 30, 38, { dauer: 1.0 });
-  boden(fr, a1.l, R.BODEN_RUHE + 0.05);
+  const a1 = flug(fr, 0, 30, 38, { dauer: 1.3 });
+  boden(fr, a1.l, R.BODEN_RUHE + 0.01);
   const a2 = flug(fr, a1.l.zeit, 30, 38, { dauer: 1.0 });
   ok(a1.rufe.length === 1 && a2.rufe.length === 0, 'zweiter Flug innerhalb des Mindestabstands bleibt still (und wird nicht nachgeholt)');
   boden(fr, a2.l, 2);
@@ -248,6 +250,104 @@ console.log('## Flugrufe: Juhu und Yippie');
   ok(fehlerAbstand === 0, 'in echten Läufen Mindestabstände zwischen Rufen eingehalten');
   ok(kleineMitRuf === 0, 'in echten Läufen bleiben kleine Flüge (< 8 m) still');
   ok(juhuGesamt > yippieGesamt && yippieGesamt > 0, `Juhu häufiger als Yippie (${juhuGesamt} Juhu, ${yippieGesamt} Yippie bei ${fluege} Flügen)`);
+}
+
+console.log('## Doppeltes Spieltempo');
+{
+  ok(K.TEMPO === 2, `Spieltempo ×${K.TEMPO}`);
+  // Gleiche Flugsituation: echte Dauer halbiert, Bahn identisch
+  const flug = (tempo) => {
+    const alt = K.TEMPO; K.TEMPO = tempo;
+    const l = new Lauf(STRECKEN[4]); l.starten(); l.tag = 999;
+    const bau = baueStrecke(STRECKEN[4]), kuppe = bau.kuppen[4];
+    l.x = kuppe[0] - 2; l.boden = false; l.echterFlug = true; l.vx = 55; l.vy = 25; l.y = l.g.hoehe(l.x) + 0.5;
+    let maxY = l.y, n = 0;
+    while (!l.boden && n++ < 100000) { l.schritt(false); maxY = Math.max(maxY, l.y); }
+    K.TEMPO = alt;
+    return { zeit: l.zeit, x: l.x, maxY };
+  };
+  const a1 = flug(1), a2 = flug(2);
+  ok(Math.abs(a2.zeit / a1.zeit - 0.5) < 0.01, `gleicher Flug dauert halb so lange (${a1.zeit.toFixed(2)} s → ${a2.zeit.toFixed(2)} s)`);
+  ok(Math.abs(a2.x - a1.x) < 1e-6 && Math.abs(a2.maxY - a1.maxY) < 1e-6, 'Flugbahn, Gipfel und Landestelle bleiben exakt gleich (Landungen und Sammelreihen passen weiter)');
+  const steigen = (tempo) => { const alt = K.TEMPO; K.TEMPO = tempo; const l = new Lauf(STRECKEN[0]); l.starten(); l.tag = 999; l.x = 100; l.boden = false; l.echterFlug = true; l.vx = 30; l.vy = 40; l.y = l.g.hoehe(100) + 50; while (l.vy > 0) l.schritt(false); K.TEMPO = alt; return l.zeit; };
+  ok(steigen(2) < steigen(1) * 0.51, `Aufstieg bis zum Gipfel doppelt so schnell (${steigen(1).toFixed(2)} s → ${steigen(2).toFixed(2)} s)`);
+  // Pro Physikschritt bewegt sich Kalle höchstens so weit wie vorher – kein Durchdringen
+  ok(K.V_MAX_LUFT * K.SCHRITT < 0.5, `Weg pro Physikschritt höchstens ${(K.V_MAX_LUFT * K.SCHRITT).toFixed(2)} m (Gelände ist eine Höhenfunktion, jeder Schritt wird geprüft)`);
+}
+
+console.log('## Endlosflug');
+{
+  const { ENDLOS_DEF } = L, E = K.ENDLOS;
+  const def = (saat) => Object.assign({}, ENDLOS_DEF, { saat });
+  // Frischer Lauf
+  const f0 = new Lauf(def(7));
+  ok(f0.rest === E.START && f0.strecke === 0 && f0.punkte === 0 && f0.zeit === 0 && f0.muscheln.every(m => !m.weg), 'Neuer Lauf: volles Start-Tageslicht, Strecke/Punkte 0');
+  ok(f0.g.ende >= E.VORLAUF, `Gelände ist ${Math.round(f0.g.ende)} m voraus gebaut`);
+  // Deterministisch
+  const kurz = (saat, art) => { const l = new Lauf(def(saat)); const b = Bot.neu(art, saat); l.starten(); for (let i = 0; i < 240 * 20; i++) l.schritt(b.halten(l)); return l.x.toFixed(6) + '|' + l.punkte; };
+  ok(kurz(3, 'gut') === kurz(3, 'gut'), 'gleiche Saat → gleicher Lauf');
+  ok(kurz(3, 'gut') !== kurz(4, 'gut'), 'andere Saat → andere Landschaft');
+  // Lange Läufe mit verschiedenen Spielern und Saaten
+  const ergebnisse = {};
+  for (const art of ['gut', 'mittel', 'einfach', 'nie']) for (const saat of [1, 2, 3]) {
+    const l = new Lauf(def(saat)); const b = Bot.neu(art, saat); l.starten();
+    let unter = 0, steht = 0, standZeit = 0, letzteX = -1e9, nacht = 0, marken = [], lichtEv = 0, perfektEv = 0, perfektBonus = 0, ueberMax = 0;
+    let maxPunkte = 0, maxMuscheln = 0, kSprung = 0, flach = 0, maxFlach = 0, flachX = 0, abstandFalsch = 0, nichtBergab = 0, geprueft = new Set();
+    let n = 0;
+    while (n++ < 240 * 60 * 30) {
+      const vorher = l.ergebnis;
+      l.schritt(b.halten(l));
+      if (l.y < l.g.hoehe(l.x) - 1e-6) unter++;
+      if (!l.ergebnis) { if (l.x <= letzteX + 1e-4) { standZeit += K.SCHRITT; if (standZeit > 0.5) steht++; } else standZeit = 0; }
+      letzteX = l.x;
+      if (l.licht > E.MAX + 1e-9) ueberMax++;
+      for (const e of l.ereignisse) {
+        if (e.art === 'nacht') nacht++;
+        if (e.art === 'marke') marken.push(e.x);
+        if (e.art === 'licht') { lichtEv++; if (e.grund === 'perfekt') perfektBonus++; }
+        if (e.art === 'landung' && e.guete === 'perfekt' && !vorher) perfektEv++;
+      }
+      l.ereignisse.length = 0;
+      maxPunkte = Math.max(maxPunkte, l.g.n); maxMuscheln = Math.max(maxMuscheln, l.muscheln.length);
+      // Gelände direkt hinter und vor Kalle: Anschlüsse glatt, keine langen Flachstücke
+      if (n % 240 === 0) {
+        for (const [px] of l.g.p) if (px > l.x - 50 && px < l.g.ende - 1 && !geprueft.has(px)) {
+          kSprung = Math.max(kSprung, Math.abs(l.g.kruemmung2(px - 1e-7) - l.g.kruemmung2(px + 1e-7)), Math.abs(l.g.steigung(px - 1e-7) - l.g.steigung(px + 1e-7)));
+          geprueft.add(px);
+        }
+        for (const m of l.muscheln) if (!m.geprueft) {
+          m.geprueft = true;
+          let best = Infinity, fx = m.x;
+          for (let x = m.x - 4; x <= m.x + 4; x += 0.05) { const dd = Math.hypot(m.x - x, m.y - l.g.hoehe(x)); if (dd < best) { best = dd; fx = x; } }
+          if (Math.abs(best - K.MUSCHEL_HOEHE) > 0.08) abstandFalsch++;
+          if (-l.g.steigung(fx) < L.MUSCHEL_LINIEN.MIN_STEIGUNG - 0.03) nichtBergab++;
+        }
+      }
+      if (l.boden && l.x > 30 && Math.abs(l.g.steigung(l.x)) < GELAENDE.FLACH_STEIGUNG) { flach += l.x - flachX; } else flach = 0;
+      flachX = l.x;
+      maxFlach = Math.max(maxFlach, flach);
+      if (l.ergebnis && vorher) break;
+    }
+    const name = `${art}/${saat}`;
+    ok(unter === 0 && steht === 0, `${name}: nie im Boden, nie stecken`);
+    ok(nacht === 1 && l.ergebnis === 'nacht', `${name}: Lauf endet genau einmal bei Sonnenuntergang`);
+    ok(marken.every((x, i) => i === 0 || x > marken[i - 1]) && marken.length === l.markeNr && new Set(marken).size === marken.length, `${name}: jede Distanzmarke gibt genau einmal Tageslicht (${marken.length} Marken)`);
+    ok(perfektBonus === perfektEv, `${name}: jede perfekte Landung gibt genau einmal Tageslicht (${perfektEv})`);
+    ok(ueberMax === 0, `${name}: Tageslicht nie über dem Vorrat (${E.MAX} s)`);
+    ok(kSprung < 1e-4, `${name}: Geländeabschnitte schließen glatt aneinander an (Sprung ${kSprung.toExponential(1)})`);
+    ok(maxFlach <= GELAENDE.FLACH_MAX, `${name}: längste fast flache Rutschstrecke am Boden ${maxFlach.toFixed(0)} m`);
+    ok(maxPunkte < 80 && maxMuscheln < 150, `${name}: Speicher bleibt klein (${maxPunkte} Geländepunkte, ${maxMuscheln} Muscheln)`);
+    ok(abstandFalsch === 0 && nichtBergab === 0, `${name}: Muscheln liegen ${K.MUSCHEL_HOEHE} m über echten Abfahrten`);
+    (ergebnisse[art] = ergebnisse[art] || []).push({ zeit: l.zeit, strecke: l.strecke, punkte: l.punkte, perfekt: l.statistik.perfekt });
+  }
+  const mittelWert = (art, k) => ergebnisse[art].reduce((s, e) => s + e[k], 0) / ergebnisse[art].length;
+  const z = (art) => mittelWert(art, 'zeit');
+  console.log('  Mittlere Laufdauer (echte s): ' + ['nie', 'einfach', 'mittel', 'gut'].map(a => `${a} ${z(a).toFixed(0)} s / ${Math.round(mittelWert(a, 'strecke'))} m`).join(', '));
+  ok(z('nie') < z('einfach') && z('einfach') < z('mittel') && z('mittel') < z('gut'), 'besser spielen = länger fliegen (nie < einfach < mittel < gut)');
+  ok(z('nie') < 45, `wer nie drückt, ist schnell im Dunkeln (${z('nie').toFixed(0)} s)`);
+  ok(z('mittel') > 50 && z('mittel') < 150, `normales Spiel: ${z('mittel').toFixed(0)} s – füllt die Zeit nicht unbegrenzt auf`);
+  ok(z('gut') < 400, `auch sehr gutes Spiel endet irgendwann (${z('gut').toFixed(0)} s)`);
+  ok(mittelWert('gut', 'perfekt') > mittelWert('mittel', 'perfekt') * 2, 'gute Landungen machen den Unterschied (deutlich mehr perfekte Landungen)');
 }
 
 console.log('## Abheben hängt von Tempo und Halten ab');

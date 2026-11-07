@@ -8,7 +8,7 @@
 const Speicher = (() => {
   const SCHLUESSEL = 'pixelhafen.sonnenrutsch';
   const VERSION = 1;
-  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false });
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, endlos: { strecke: 0, punkte: 0 } });
   let daten = leer();
 
   function lager() { try { return window.localStorage || null; } catch (e) { return null; } }
@@ -19,6 +19,12 @@ const Speicher = (() => {
     if (typeof roh.ton === 'boolean') d.ton = roh.ton;
     if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
     if (roh.lernGesehen === true) d.lernGesehen = true;
+    // Endlos-Rekord: getrennt von den Streckenbestzeiten
+    if (roh.endlos && typeof roh.endlos === 'object') {
+      const st = Math.floor(Number(roh.endlos.strecke)), pu = Math.floor(Number(roh.endlos.punkte));
+      if (st > 0 && st < 1e7) d.endlos.strecke = st;
+      if (pu > 0 && pu < 1e8) d.endlos.punkte = pu;
+    }
     const f = Math.floor(Number(roh.frei));
     if (f >= 1) d.frei = Math.min(f, STRECKEN.length);
     if (roh.level && typeof roh.level === 'object') {
@@ -65,6 +71,15 @@ const Speicher = (() => {
       if (id + 1 > daten.frei && id < STRECKEN.length) { daten.frei = id + 1; besser.neuFrei = true; }
       sichern();
       return besser;
+    },
+    endlosRekord: () => Object.assign({}, daten.endlos),
+    // Endlos-Lauf beendet: Rekorde nur verbessern
+    endlosErgebnis(strecke, punkte) {
+      const alt = daten.endlos;
+      const neu = { strecke: strecke > alt.strecke, punkte: punkte > alt.punkte };
+      daten.endlos = { strecke: Math.max(alt.strecke, Math.floor(strecke)), punkte: Math.max(alt.punkte, Math.floor(punkte)) };
+      sichern();
+      return neu;
     },
     // Meiste Muscheln einer Fahrt merken (egal ob geschafft)
     muscheln(id, wert) {
