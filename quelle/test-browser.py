@@ -358,7 +358,7 @@ async def main():
         ok(info['marke'] >= 1 and info['text'].endswith(' m') and info['punkte'] == str(info['p']), f'Strecke und Punkte in der Anzeige ({info["text"]}, {info["punkte"]} Punkte)')
         # Himmel/Sonne hängen am Restwert
         abw = await pg.evaluate('''async () => { let m = 0; for (let i = 0; i < 20; i++) { await new Promise(r => requestAnimationFrame(r));
-            const l = window.__sonne.lauf(), h = window.__sonne.himmel(); m = Math.max(m, Math.abs(h.f - (1 - Math.min(1, l.rest / K.ENDLOS.START)))); } return m; }''')
+            const l = window.__sonne.lauf(), h = window.__sonne.himmel(); m = Math.max(m, Math.abs(h.f - (1 - Math.min(1, l.rest / K.ENDLOS.HIMMEL_REF)))); } return m; }''')
         ok(abw < 0.02, f'Himmel und Sonne entsprechen dem verbleibenden Tageslicht (Abweichung {abw:.3f})')
         # Pause hält das Tageslicht an
         await pg.keyboard.press('p')
@@ -396,7 +396,7 @@ async def main():
         await pg.keyboard.press('Enter')
         await pg.wait_for_timeout(300)
         r = await pg.evaluate("(() => { const l = window.__sonne.lauf(); return { z: window.__sonne.zustand(), x: l.x, licht: l.licht, punkte: l.punkte, zeit: l.zeit, muscheln: l.muschelWert, bonus: document.getElementById('bonus').classList.contains('zeigen'), weg: document.getElementById('wegText').textContent }; })()")
-        ok(r['z'] == 'bereit' and r['x'] < 0 and r['licht'] == 30 and r['punkte'] == 0 and r['zeit'] == 0 and r['muscheln'] == 0, f'„Sofort nochmal“ setzt Strecke, Zeit, Punkte und Gelände zurück ({r})')
+        ok(r['z'] == 'bereit' and r['x'] < 0 and r['licht'] == 120 and r['punkte'] == 0 and r['zeit'] == 0 and r['muscheln'] == 0, f'„Sofort nochmal“ setzt Strecke, Zeit, Punkte und Gelände zurück ({r})')
         ok(not pg.fehler, f'Endlosflug: keine Konsolenfehler {pg.fehler[:2]}')
         await pg.reload()
         await pg.wait_for_timeout(500)

@@ -106,14 +106,16 @@ class Gelaende {
 
 // Grenzen für den Streckenbau – zentral, damit Tests und Generator dasselbe meinen
 const GELAENDE = {
-  RUNDUNG: 4.6,          // Krümmung an Kuppen/Tälern ≈ RUNDUNG · Höhe / Länge² (4,93 wäre ein Kosinusbogen)
+  LAENGE: 1.8,           // alle Hügel so viel länger (passend zu den weiten Flügen) …
+  HOEHE: 1.35,           // … und so viel höher als in den Bauplänen angegeben
+  RUNDUNG: 6.5,          // Krümmung an Kuppen/Tälern ≈ RUNDUNG · Höhe / Länge² (4,93 wäre ein Kosinusbogen)
   RUNDUNG_MAX: 9,        // normierte Krümmung je Stück höchstens (ab ~20 würde ein Stück überschwingen)
   HOEHE_MIN: 7,          // kein Hügelstück niedriger als 7 m – keine Mini-Wellen, die Hüpfer auslösen
   NEIGUNG_MIN: 0.32,     // mittlere Neigung (Höhe/Länge) mindestens – sonst wird es eine lange Rutschbahn
   NEIGUNG_MAX: 1.15,     // … und höchstens (steilste Stelle dann etwa 63°)
   TAL_SPIELRAUM: 5,      // Täler liegen höchstens so weit über/unter der Grundlinie – keine Schluchten
   FLACH_STEIGUNG: 0.15,  // als „fast flach“ gilt |Steigung| darunter …
-  FLACH_MAX: 15,         // … und so ein Stück darf höchstens so lang sein (Meter; Start und Zielstrand ausgenommen)
+  FLACH_MAX: 24,         // … und so ein Stück darf höchstens so lang sein (Meter, ≈ 0,25 s bei Reisetempo; Start und Zielstrand ausgenommen)
 };
 
 // --- Gebiete: Aussehen kommt aus 7-grafik.js (THEMEN), hier nur Name und Text ---
@@ -130,21 +132,21 @@ const GEBIETE = [
 // steil: Verhältnis Anstieg/Abhang (kleiner = kürzere, steilere Rampen)
 // wechsel: wie stark Breite und Höhe von Hügel zu Hügel schwanken (0..1)
 // muster: Anteile der Hügelarten klein / gross / rampe (Rest: normal), siehe HUEGELARTEN
-// zeit: Tageslicht in ECHTEN Sekunden (bei K.TEMPO), sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
+// zeit: Tageslicht in ECHTEN Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 21, sterne: [15.3, 9.6], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 28, sterne: [21.5, 15] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 29, sterne: [23.9, 18.9] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 30, sterne: [25.8, 21.6] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 32, sterne: [28.1, 24.1] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 32, sterne: [28.3, 24.6] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 33, sterne: [29.6, 26.1] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 33, sterne: [29.7, 26.4] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 35, sterne: [31.9, 28.7] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 36, sterne: [32.9, 29.8] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 38, sterne: [35, 32.1] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 39, sterne: [36.1, 33.2] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 29, sterne: [22.3, 15.5], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 41, sterne: [33.2, 25.5] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 48, sterne: [40.2, 32.4] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 51, sterne: [44.1, 37.2] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 53, sterne: [46.7, 40.3] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 56, sterne: [49.6, 43.2] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 57, sterne: [51.3, 45.6] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 57, sterne: [51.5, 46] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 62, sterne: [56.2, 50.4] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 67, sterne: [61.3, 55.5] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 70, sterne: [64.7, 59.4] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 72, sterne: [67, 62] },
 ];
 
 
@@ -172,7 +174,7 @@ function stueckGrenzen(hoehe, laenge) {
 function baueStrecke(def) {
   const r = zufall(def.saat * 7919 + 13);
   const pkt = [], taeler = [], kuppen = [];
-  const START_Y = 10 + def.A[0] * 1.2;
+  const START_Y = 10 + def.A[0] * 1.2 * GELAENDE.HOEHE;
   // Startplateau: Kalle sitzt oben auf der ersten Düne
   pkt.push([-120, START_Y], [0, START_Y]);
   let x = 0, y = START_Y;
@@ -181,10 +183,11 @@ function baueStrecke(def) {
   let naechsterAbhang = null;   // Landezone hinter einer Schanze
   let zaehler = 0;
 
-  while (x < def.laenge - 80) {
-    const p = Math.min(1, x / def.laenge);
+  const laenge = def.laenge * GELAENDE.LAENGE;
+  while (x < laenge - 80) {
+    const p = Math.min(1, x / laenge);
     const w = () => 1 + def.wechsel * (r() * 2 - 1) * 0.6;
-    const Lg = mischen(def.L[0], def.L[1], p), Ag = mischen(def.A[0], def.A[1], p);
+    const Lg = mischen(def.L[0], def.L[1], p) * GELAENDE.LAENGE, Ag = mischen(def.A[0], def.A[1], p) * GELAENDE.HOEHE;
     // Hügelart würfeln (die ersten zwei Hügel sind immer normal)
     let art = 'normal';
     const z = r();
@@ -203,7 +206,7 @@ function baueStrecke(def) {
     const [hAb, LAb] = stueckGrenzen(y - ty, Lg * ab[0] * w());
     x += LAb; y -= hAb;
     pkt.push([x, y]); taeler.push([x, y]);
-    if (x >= def.laenge - 80) break;
+    if (x >= laenge - 80) break;
     // Steigung zur nächsten Kuppe (kürzer und steiler als die Abfahrt → Absprung)
     const steil = mischen(def.steil[0], def.steil[1], p) * (art === 'rampe' ? 0.75 : 1);
     const [hAuf, LAuf] = stueckGrenzen(Ag * h.auf[1] * w() * (0.85 + r() * 0.2), Lg * h.auf[0] * steil * w());

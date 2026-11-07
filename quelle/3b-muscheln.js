@@ -14,10 +14,11 @@
 const MUSCHEL_LINIEN = {
   ABSTAND: 4.2,          // Meter zwischen zwei Muscheln entlang der Hangkurve
   ANZAHL: [5, 8],        // Muscheln je Linie
-  VORLAUF: 3,            // Linie beginnt so weit vor der typischen Landestelle
+  VORLAUF: -1,           // Linie beginnt so weit vor der typischen Landestelle (negativ: kurz danach, in der Landezone)
   MIN_STEIGUNG: 0.22,    // nur auf echtem Gefälle (Linie endet, bevor das Tal flach wird)
-  ANTEIL: 0.6,           // so viele der geeigneten Abfahrten bekommen eine Linie
+  ANTEIL: 0.75,          // so viele der geeigneten Abfahrten bekommen eine Linie
   GOLD_JEDE: 3,          // jede dritte Linie endet mit einer goldenen Muschel
+  GLEIT_TEMPO: 140,      // so schnell gleitet eine gute Krabbe nach der Landung (für die Wölbungsregel)
 };
 
 const MUSCHEL_CACHE = new Map();
@@ -54,12 +55,19 @@ function typischeLandungen(def, art = typeof window === 'undefined' ? 'gut' : 's
 
 // Eine Linie auf der Abfahrt bis talX, beginnend kurz vor der Landestelle land.
 // Rückgabe: Fußpunkte (x) entlang der Kurve – leer, wenn dort kein echtes Gefälle ist.
+// Bleibt eine schnell gleitende Krabbe hier am Boden? (Wölbung klein genug, dass sie bei
+// GLEIT_TEMPO mit gedrückter Taste nicht wieder abhebt – dieselbe Regel wie in der Physik)
+function bleibtAmBoden(g, x) {
+  const s = g.steigung(x), n = Math.sqrt(1 + s * s);
+  const kruemmung = -g.kruemmung2(x) / (n * n * n);
+  return kruemmung <= 0 || MUSCHEL_LINIEN.GLEIT_TEMPO ** 2 * kruemmung < K.G * K.SCHWER_BODEN / n;
+}
 function linienPunkte(g, land, talX, anzahl) {
   const ML = MUSCHEL_LINIEN;
   let x = land - ML.VORLAUF;
-  while (x < talX && -g.steigung(x) < ML.MIN_STEIGUNG) x += 0.25;   // erst wo es richtig bergab geht
+  while (x < talX && (-g.steigung(x) < ML.MIN_STEIGUNG || !bleibtAmBoden(g, x))) x += 0.25;   // erst wo es richtig bergab geht und Kalle am Boden bleibt
   const punkte = [];
-  while (punkte.length < anzahl && x < talX && -g.steigung(x) >= ML.MIN_STEIGUNG) {
+  while (punkte.length < anzahl && x < talX && -g.steigung(x) >= ML.MIN_STEIGUNG && bleibtAmBoden(g, x)) {
     punkte.push(x);
     let weg = 0;   // ABSTAND entlang der Kurvenlänge weitergehen
     while (weg < ML.ABSTAND && x < talX) { const sl = g.steigung(x); weg += 0.1 * Math.sqrt(1 + sl * sl); x += 0.1; }
@@ -71,7 +79,10 @@ function berechneMuscheln(def, lauf) {
   const g = lauf.g, ML = MUSCHEL_LINIEN, liste = [];
   const r = zufall(def.saat * 31 + 7);
   const s = baueStrecke(def);
-  const landungen = typischeLandungen(def);
+  // Landestellen von gutem und mittlerem Spiel (offline); im Browser ohne Datei nur der schnelle Bot
+  const landungen = typeof window === 'undefined'
+    ? [...typischeLandungen(def, 'gut'), ...typischeLandungen(def, 'mittel')].sort((a, b) => a - b)
+    : typischeLandungen(def, 'schnell');
   let linie = 0, letzteHatte = false;
   for (const tal of s.taeler) {
     const kuppe = s.kuppen.filter(k => k[0] < tal[0]).pop();

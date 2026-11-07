@@ -22,7 +22,7 @@ class Endlos {
     this.saat = saat >>> 0;
     this.r = zufall(this.saat * 7919 + 13);
     this.rLinie = zufall(this.saat * 31 + 7);
-    const startY = 10 + ENDLOS_ANFANG.A[0] * 1.2;
+    const startY = 10 + ENDLOS_ANFANG.A[0] * 1.2 * GELAENDE.HOEHE;
     this.g = new Gelaende([[-120, startY], [0, startY]]);
     this.x = 0; this.y = startY;
     this.zaehler = 0;
@@ -48,8 +48,8 @@ class Endlos {
     const mitte = (bereich) => (bereich[0] + bereich[1]) / 2;
     const wechsel = mischen(a.wechsel, e.wechsel, p);
     const w = () => 1 + wechsel * (r() * 2 - 1) * 0.6;
-    const Lg = mischen(mitte(a.L), mitte(e.L), p) * (0.85 + r() * 0.3);
-    const Ag = mischen(mitte(a.A), mitte(e.A), p) * (0.85 + r() * 0.3);
+    const Lg = mischen(mitte(a.L), mitte(e.L), p) * (0.85 + r() * 0.3) * GELAENDE.LAENGE;
+    const Ag = mischen(mitte(a.A), mitte(e.A), p) * (0.85 + r() * 0.3) * GELAENDE.HOEHE;
     const m = {};
     for (const k of ['klein', 'gross', 'rampe']) m[k] = mischen(a.muster[k], e.muster[k], p);
     let art = 'normal';

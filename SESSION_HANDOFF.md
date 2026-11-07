@@ -5,6 +5,71 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Sechste Runde (7.11.2026): ruhiger, geschmeidiger, länger
+
+Auftrag: Das Spiel war zu hektisch – Kalle fiel zu schnell, die Sonne ging zu schnell unter, der Hintergrund raste. Die erwähnte Aufnahme lag nicht vor.
+**Die globale Zeitbeschleunigung (`K.TEMPO`) aus Runde 5 ist entfernt.** Boden, Luft, Kamera, Hintergrund und Tageslicht sind jetzt getrennt eingestellt.
+
+**Gefundene Ursachen:**
+- *Schnelles Fallen:* `TEMPO 2` hat jede Beschleunigung vervierfacht. Dazu war die Luftschwerkraft schon von 0,5 auf 1,0 angehoben. Losgelassen wirkten 96 m/s² (erste Version: 12), im Sinkflug 432 m/s². Ein Fall aus 30 m dauerte 0,79 s.
+- *Rasender Hintergrund:* Die Parallax-Verschiebung war `Kameraposition × Zoom × Faktor`. Weit draußen ließ jede kleine Zoomänderung die ganze Küste springen. Gemessen bei 1,6 km: 9,2 px/Bild durch Zoom gegenüber 0,6 px/Bild durch Bewegung, und es wurde mit der Strecke schlimmer.
+- *Schneller Sonnenuntergang:* nur 30 s Startvorrat.
+- *0 perfekte Landungen:* Die feste Grenze von 30 bzw. 48 m/s Aufprall quer zum Hang schloss bei 130–160 m/s Landetempo fast jede Landung aus (Median quer 88 m/s).
+
+**Neue Werte (`1-einstellungen.js`):**
+- Boden: Tempo 2× erste Version (G 96, V_MIN 28, V_MAX 160, Reibung 1,0) → Ø-Tempo ~90–98 m/s wie vorher.
+- Luft: eigene Schwerkraft `G_LUFT` 44 m/s². Fall aus 30 m dauert 1,17 s.
+- Sinkflug: `SCHWER_LUFT` 3,4× nur bei gehaltener Taste. Er setzt in 0,1 s weich ein (`SINKFLUG_ANLAUF`) und endet beim Loslassen sofort. Die Geschwindigkeit bleibt stetig.
+- Luftreibung 0,00025·v².
+- Hügel zentral `GELAENDE.LAENGE` 1,8× und `HOEHE` 1,35×, Rundung 6,5. Die längste fast flache Stelle ist 24 m (≈ 0,25 s bei Reisetempo).
+- Perfekt: auf einer Abfahrt, ≤ 30° zur Rampentangente, Aufprall quer ≤ max(45 m/s, ½ · Tempo), nach echtem Flug. Ergebnis: gut 30 %, mittel 18 % der Landungen.
+
+**Vergleichsversuche** (gleiche Rampe, losgelassen, `node quelle/vergleich.js`):
+
+| Anfahrt | Flugzeit | Gipfel | Weite | Gipfel nach |
+|---|---|---|---|---|
+| 95 m/s | 2,73 s | 30 m | 123 m | 1,17 s |
+| 115 m/s | 3,65 s | 63 m | 216 m | 1,70 s |
+| 135 m/s | 4,57 s | 98 m | 325 m | 2,10 s |
+| 155 m/s | 4,73 s | 136 m | 391 m | 2,47 s |
+
+- Die Beschleunigung ändert sich im Flug höchstens um 0,01 m/s² pro Schritt, also auch am Scheitel kein Ruck.
+- Nur losgelassen landen diese Versuche am nächsten Anstieg (hart). Mit gezieltem Sinkflug landen sie auf der Abfahrt („gut“ bzw. „perfekt“). Das ist die Spielidee.
+- **Kamera:**
+  - Ziel mit Toleranz (Zoom 7 %, Höhe 4 m), weiche Glättung (Zoom 1,4/s, Höhe 2,2/s).
+  - Im Steigflug wird der vorhergesagte Gipfel eingeplant: Die Kamera zoomt vorausschauend heraus. Das Sicherheitsnetz zoomt nur sofort, wenn Kalle sonst hinausflöge.
+  - Die Sonne steht nie hinter der Anzeige.
+- **Hintergrund:**
+  - Eigener Parallax-Zähler `hgX`, der nur mit der Kamerabewegung wächst (7 px/m, unabhängig vom Zoom).
+  - Faktoren `PARALLAXE`: Wolken 0,02–0,04, fern 0,06, nah/Wasser 0,12. Wolken treiben sehr langsam.
+  - Wasserglitzern schwächer, Brandung langsamer, Fahrtwind erst ab 75 % V_MAX, Flugspur 18 statt 50 Punkte.
+  - Bei „weniger Bewegung“ steht der Hintergrund still.
+  - Gemessen bei 2,4 km: ferne Küste 0,56 px/Bild (max. 0,8); mit der alten Formel wären es 4,7 px/Bild (max. 11).
+- **Tageslicht** (`K.ENDLOS`):
+  - Start 120 s, Vorrat höchstens 180 s, 1:1 mit der aktiven Spielzeit.
+  - Marken ab 1500 m, jede weitere 150 m weiter entfernt, je +12 s. Perfekte Landung +3 s.
+  - Der Himmel bleibt hell, solange mehr als 75 s übrig sind (`HIMMEL_REF`).
+  - Gemessen ohne Boni: genau 120,00 s, bei 30, 60 und 144 Bildern/s gleich.
+  - Endlosläufe (Bots):
+
+    | Spielstil | Dauer |
+    |---|---|
+    | nie drücken | 156 s |
+    | Anfänger | 205 s |
+    | mittel | 276–330 s |
+    | gut | 354 s |
+
+- **Muschel-Linien:**
+  - Landestellen von gutem und mittlerem Spiel. Die Linie beginnt 1 m nach der Landestelle (`VORLAUF -1`).
+  - Sie liegt nur dort, wo eine 140 m/s schnelle Krabbe nicht wieder abhebt (`GLEIT_TEMPO`).
+  - Anteil 75 % der geeigneten Abfahrten. Jede Linie wird von gutem oder mittlerem Spiel zu ≥ 70 % eingesammelt (getestet).
+- **Rufe:**
+  - „Juhu!“ ab 70 m im Steigflug.
+  - „Yippie!“ ab 135 m Höhe oder 335 m Weite oder sofort bei vorhergesagten 220 m und 135 m/s.
+  - Endlos: mittel etwa 9 Juhu und 1,5 Yippie pro Minute.
+- Strecken neu kalibriert: Sie dauern jetzt 15–60 s.
+- `sw.js` CACHE `sonnenrutsch-v7`.
+
 ## Fünfte Runde (7.11.2026): doppeltes Tempo und Endlosflug
 
 - **Tempo ×2 (`K.TEMPO` in `1-einstellungen.js`):**
@@ -227,7 +292,7 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 
 ## Geprüft (6.11.2026)
 
-- `test-logik.js`: 502 von 502 bestanden – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
+- `test-logik.js`: 466 von 466 bestanden (Tempo-Tests aus Runde 5 durch Flug- und Tageslicht-Tests ersetzt) – Gelände stetig, 7632 Landungen (Tempo 8–70 m/s, Winkel −80°…+30°) ohne Durchfallen/Feststecken, Bonus moderat, harte Landung bremst, Abheben hängt von Tempo und Halten ab, bergab halten / bergauf loslassen wirkt, gleiche Ergebnisse bei jeder Bildrate, jede Strecke: guter Bot schafft 3 Sterne, mittlerer Bot schafft es in ≥ 3 von 5 Läufen, nie drücken und dauernd drücken scheitern.
 - `test-browser.py`: 149 von 149 in **Chromium und WebKit (Safari-Motor)** – Darstellung bei 360×640, 390×844, 844×390, 768×1024, 1440×900; Kamera während ganzer Bot-Läufe (Kalle, Boden und 25 m Gelände voraus immer im Bild); Eingabe wirkt im nächsten Bild; Maus, Finger, abgebrochene Berührung, Fokusverlust; Pause hält die Sonne an; R und „Sofort nochmal“ (Enter); Sonnenuntergang → Ergebnis; zwei Siege hintereinander → Strecke 3, Freischaltung bleibt nach Neuladen; Geräusche inkl. Juhuu-Stimme ohne Fehler; kaputter/gesperrter Speicher; „weniger Bewegung“; ~60 fps im Testbrowser.
 - Screenshots aller Gebiete, von Tageslicht bis Sonnenuntergang, Hoch- und Querformat angesehen.
 

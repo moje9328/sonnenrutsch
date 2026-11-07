@@ -21,7 +21,7 @@ class Flugrufe {
   }
   // Gipfelhöhe des Flugs über dem Absprung, vorhergesagt aus Höhe und Steiggeschwindigkeit
   static gipfel(l, start) {
-    const g = K.G * K.LEICHT_LUFT;
+    const g = K.G_LUFT;
     return (l.y - start.y) + (l.vy > 0 ? l.vy * l.vy / (2 * g) : 0);
   }
   schritt(l, dt) {

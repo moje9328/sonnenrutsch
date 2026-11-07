@@ -35,7 +35,7 @@ const Bot = (() => {
   }
   // Wie weit kommt Kalle in fester Zeit, wenn er jetzt hält / loslässt?
   // (danach: in der Luft nicht halten, am Boden die Bodenregel)
-  function reichweite(l, halten, dauer = 2.2) {
+  function reichweite(l, halten, dauer = 3) {
     const k = kopie(l);
     let t = 0;
     while (t < dauer) {
@@ -47,7 +47,7 @@ const Bot = (() => {
   }
   function neu(art, saat = 1) {
     const r = zufall(saat);
-    const verzoegerung = art === 'mittel' ? Math.round(0.11 * K.TEMPO / K.SCHRITT) : 0;   // 0,11 s echte Reaktionszeit
+    const verzoegerung = art === 'mittel' ? Math.round(0.11 / K.SCHRITT) : 0;   // 0,11 s Reaktionszeit
     const schlange = [];
     let entscheidung = false, naechste = 0, schritte = 0;
     const vorlauf = art === 'mittel' ? 0.05 : 0.0;

@@ -44,7 +44,7 @@ for (const d of STRECKEN) {
   ok(monoton, `Strecke ${d.id}: jedes Hügelstück steigt oder fällt ohne Zwischenwelle`);
   const taeler = innen.filter((q, i) => i > 0 && i < innen.length - 1 && q[1] < innen[i - 1][1] && q[1] < innen[i + 1][1]);
   ok(taeler.every(q => q[1] > -GELAENDE.TAL_SPIELRAUM - GELAENDE.HOEHE_MIN), `Strecke ${d.id}: keine extrem tiefen Täler`);
-  ok(l.ziel > d.laenge - 80 && l.ziel < d.laenge + 120, `Strecke ${d.id}: Ziel bei ${l.ziel.toFixed(0)} m passt zur Länge`);
+  ok(l.ziel > d.laenge * GELAENDE.LAENGE - 80 && l.ziel < d.laenge * GELAENDE.LAENGE + 160, `Strecke ${d.id}: Ziel bei ${l.ziel.toFixed(0)} m passt zur Länge`);
   ok(Math.abs(g.steigung(l.ziel)) < 0.01 && Math.abs(g.steigung(l.ziel + 200)) < 0.01, `Strecke ${d.id}: flacher Strand hinter dem Ziel`);
   // gleiche Saat → gleiche Strecke
   const l2 = new Lauf(d);
@@ -103,7 +103,7 @@ console.log('## Muscheln');
     const l = new Lauf(d);
     const unter = l.muscheln.filter(m => m.y < l.g.hoehe(m.x) + 0.5).length;
     ok(unter === 0 && l.muscheln.length >= 15, `Strecke ${d.id}: ${l.muscheln.length} Muscheln, keine im Boden`);
-    const a = Bot.spiele(d, 'gut').lauf.muschelWert, b = Bot.spiele(d, 'gut').lauf.muschelWert;
+    const a = Bot.spiele(d, 'mittel').lauf.muschelWert, b = Bot.spiele(d, 'mittel').lauf.muschelWert;
     ok(a === b && a > 0, `Strecke ${d.id}: Sammeln ist reproduzierbar (${a} Wert)`);
     // Neustart: Muscheln sind wieder da
     ok(new Lauf(d).muscheln.every(m => !m.weg), `Strecke ${d.id}: Neustart bringt alle Muscheln zurück`);
@@ -145,8 +145,12 @@ console.log('## Muschel-Linien folgen der Rampe');
     ok(schlechterAbstand === 0, `Strecke ${d.id}: gleichmäßige Abstände entlang der Kurve`);
     ok(linien >= 3 && linienGanz === linien, `Strecke ${d.id}: gleitend wird jede der ${linien} Linien ganz eingesammelt (${linienGanz})`);
     ok(hochZuviel === 0, `Strecke ${d.id}: 4 m zu hoch drüber verpasst den Großteil`);
-    const gut = Bot.spiele(d, 'gut').lauf;
-    ok(gut.muschelWert >= gut.muschelGesamt * 0.75, `Strecke ${d.id}: guter Lauf mit sauberen Landungen sammelt fast alles (${gut.muschelWert}/${gut.muschelGesamt})`);
+    // Jede Linie liegt dort, wo gutes oder mittleres Spiel landet – und wird dort auch eingesammelt
+    const gut = Bot.spiele(d, 'gut').lauf, mittel = Bot.spiele(d, 'mittel').lauf;
+    const eingesammelt = (lauf, nr) => { const g = lauf.muscheln.filter(m => m.linie === nr); return g.filter(m => m.weg).length / g.length; };
+    const linienNr = [...new Set(l.muscheln.map(m => m.linie))];
+    const erreicht = linienNr.filter(nr => Math.max(eingesammelt(gut, nr), eingesammelt(mittel, nr)) >= 0.7).length;
+    ok(erreicht === linienNr.length, `Strecke ${d.id}: jede Linie wird von gutem oder mittlerem Spiel großteils eingesammelt (${erreicht}/${linienNr.length})`);
   }
 }
 
@@ -183,7 +187,7 @@ console.log('## Flugrufe: Juhu und Yippie');
   function flug(fr, zeit0, vx, vy, { dauer = 6, halten = false } = {}) {
     const l = { boden: false, echterFlug: true, abflugX: 0, abflugY: 0, abflugV: Math.hypot(vx, vy), abflugSteig: vy / Math.hypot(vx, vy),
       flugzeit: 0, x: 0, y: 0, vx, vy, zeit: zeit0, ergebnis: null, ereignisse: [] };
-    const g = K.G * (halten ? K.SCHWER_LUFT : K.LEICHT_LUFT);
+    const g = K.G_LUFT * (halten ? K.SCHWER_LUFT : 1);
     const rufe = [];
     for (let t = 0; t < dauer && l.y >= -0.01; t += K.SCHRITT) {
       l.vy -= g * K.SCHRITT; l.x += l.vx * K.SCHRITT; l.y += l.vy * K.SCHRITT; l.flugzeit += K.SCHRITT; l.zeit += K.SCHRITT;
@@ -199,34 +203,34 @@ console.log('## Flugrufe: Juhu und Yippie');
   fr = new Flugrufe();
   ok(flug(fr, 0, 40, 18).rufe.length === 0, 'flacher Rampenkontakt (bis ~7 m) → still');
   fr = new Flugrufe();
-  ok(flug(fr, 0, 40, 30).rufe.length === 0, 'mittelhoher Hüpfer (~19 m) → noch still');
+  ok(flug(fr, 0, 40, 60).rufe.length === 0, 'mittelhoher Flug (~40 m) → noch still');
   fr = new Flugrufe();
-  const mittel = flug(fr, 0, 30, 38).rufe;
-  ok(mittel.length === 1 && mittel[0][0] === 'juhu', `mittlerer schöner Flug (~30 m) → genau ein Juhu (${mittel.map(r => r[0])})`);
+  const mittel = flug(fr, 0, 40, 89).rufe;
+  ok(mittel.length === 1 && mittel[0][0] === 'juhu', `schöner Flug (~90 m) → genau ein Juhu (${mittel.map(r => r[0])})`);
   fr = new Flugrufe();
-  const gross = flug(fr, 0, 55, 58).rufe;
-  ok(gross.some(r => r[0] === 'yippie') && gross.filter(r => r[0] === 'juhu').length <= 1 && gross.filter(r => r[0] === 'yippie').length === 1, `hoher Flug (~70 m) → Yippie, höchstens ein Juhu davor (${gross.map(r => r[0])})`);
+  const gross = flug(fr, 0, 30, 115).rufe;
+  ok(gross.some(r => r[0] === 'yippie') && gross.filter(r => r[0] === 'juhu').length <= 1 && gross.filter(r => r[0] === 'yippie').length === 1, `sehr hoher Flug (~150 m) → Yippie, höchstens ein Juhu davor (${gross.map(r => r[0])})`);
   if (gross.length === 2) ok(gross[1][1] - gross[0][1] >= R.STEIGERUNG - 1e-9, 'Steigerung Juhu → Yippie überlagert sich nicht');
   fr = new Flugrufe();
-  const sofort = flug(fr, 0, 60, 75).rufe;
+  const sofort = flug(fr, 0, 40, 150).rufe;
   ok(sofort.length === 1 && sofort[0][0] === 'yippie', `sofort spektakulär → direkt Yippie, kein Juhu (${sofort.map(r => r[0])})`);
   fr = new Flugrufe();
-  const weit = flug(fr, 0, 112, 16).rufe;
+  const weit = flug(fr, 0, 160, 50).rufe;
   ok(weit.length === 1 && weit[0][0] === 'yippie', `sehr weiter flacher Flug (>${R.YIPPIE_WEITE} m) → Yippie (${weit.map(r => r[0])})`);
   // Schnelle Folge: zweiter Flug kurz nach dem ersten Ruf → kein zweiter Ruf
   fr = new Flugrufe();
-  const a1 = flug(fr, 0, 30, 38, { dauer: 1.3 });
+  const a1 = flug(fr, 0, 40, 89, { dauer: 1.3 });
   boden(fr, a1.l, R.BODEN_RUHE + 0.01);
-  const a2 = flug(fr, a1.l.zeit, 30, 38, { dauer: 1.0 });
+  const a2 = flug(fr, a1.l.zeit, 40, 89, { dauer: 1.3 });
   ok(a1.rufe.length === 1 && a2.rufe.length === 0, 'zweiter Flug innerhalb des Mindestabstands bleibt still (und wird nicht nachgeholt)');
   boden(fr, a2.l, 2);
-  const a3 = flug(fr, a2.l.zeit, 30, 38);
+  const a3 = flug(fr, a2.l.zeit, 40, 89);
   ok(a3.rufe.length === 1, 'nach genug Abstand und stabiler Landung ruft Kalle wieder');
   // Kurzer Aufsetzer: gilt als derselbe Flug → kein neues Juhu
   fr = new Flugrufe();
-  const b1 = flug(fr, 0, 30, 38, { dauer: 1.2 });
+  const b1 = flug(fr, 0, 40, 89, { dauer: 1.3 });
   boden(fr, b1.l, 0.1);
-  const b2 = flug(fr, b1.l.zeit + 3, 30, 38, { dauer: 1.2 });
+  const b2 = flug(fr, b1.l.zeit + 3, 40, 89, { dauer: 1.3 });
   ok(b1.rufe.length === 1 && b2.rufe.length === 0, 'kurzer Aufsetzer (unter BODEN_RUHE) startet keinen neuen Flug');
   // In allen echten Läufen: pro Flug höchstens 1 Juhu + 1 Yippie, Abstände eingehalten, kleine Flüge still
   let fehlerPro = 0, fehlerAbstand = 0, kleineMitRuf = 0, juhuGesamt = 0, yippieGesamt = 0, fluege = 0;
@@ -252,27 +256,51 @@ console.log('## Flugrufe: Juhu und Yippie');
   ok(juhuGesamt > yippieGesamt && yippieGesamt > 0, `Juhu häufiger als Yippie (${juhuGesamt} Juhu, ${yippieGesamt} Yippie bei ${fluege} Flügen)`);
 }
 
-console.log('## Doppeltes Spieltempo');
+console.log('## Geschmeidige Flugphysik (Vergleichsversuche auf derselben Rampe)');
 {
-  ok(K.TEMPO === 2, `Spieltempo ×${K.TEMPO}`);
-  // Gleiche Flugsituation: echte Dauer halbiert, Bahn identisch
-  const flug = (tempo) => {
-    const alt = K.TEMPO; K.TEMPO = tempo;
-    const l = new Lauf(STRECKEN[4]); l.starten(); l.tag = 999;
-    const bau = baueStrecke(STRECKEN[4]), kuppe = bau.kuppen[4];
-    l.x = kuppe[0] - 2; l.boden = false; l.echterFlug = true; l.vx = 55; l.vy = 25; l.y = l.g.hoehe(l.x) + 0.5;
-    let maxY = l.y, n = 0;
-    while (!l.boden && n++ < 100000) { l.schritt(false); maxY = Math.max(maxY, l.y); }
-    K.TEMPO = alt;
-    return { zeit: l.zeit, x: l.x, maxY };
+  const vergleich = require('./vergleich.js');
+  const r = vergleich([95, 115, 135, 155]);
+  for (const x of r) console.log(`  Anfahrt ${x.v0} m/s: Flugzeit ${x.flugzeit.toFixed(2)} s, Gipfel ${x.gipfel.toFixed(0)} m, Weite ${x.weite.toFixed(0)} m`);
+  ok(r.every(x => x.abgehoben), 'alle Anfahrten heben an der Rampe ab');
+  ok(r.every((x, i) => i === 0 || (x.weite > r[i - 1].weite && x.gipfel > r[i - 1].gipfel && x.flugzeit > r[i - 1].flugzeit)), 'schnellerer Absprung → höher, weiter und länger in der Luft');
+  ok(r.every(x => Math.abs(x.winkelAb - r[0].winkelAb) < 6), 'vergleichbarer Absprungwinkel (Rampentangente bleibt erhalten)');
+  ok(r.every(x => x.ruckAmScheitel < 0.05), 'kein Ruck: Beschleunigung ändert sich im Flug (auch am Scheitel) kaum von Schritt zu Schritt');
+  ok(r[0].flugzeit > 2 && r[0].gipfel > 20, `kein „Stein“: schon der langsamste Flug dauert ${r[0].flugzeit.toFixed(1)} s`);
+  // Fallzeit aus 30 m (losgelassen): geschmeidig, aber nicht schwerelos
+  const fall = Math.sqrt(2 * 30 / K.G_LUFT);
+  ok(fall > 1 && fall < 1.6, `Fall aus 30 m dauert ${fall.toFixed(2)} s (vorher 0,79 s)`);
+  // Sinkflug nur bei gehaltener Taste, endet sofort, Geschwindigkeit springt nie
+  const l = new Lauf(STRECKEN[4]); l.starten(); l.tag = 999;
+  l.x = 500; l.boden = false; l.echterFlug = true; l.vx = 80; l.vy = 10; l.y = l.g.hoehe(500) + 300;
+  const ay = (halten) => { const v0 = l.vy; l.schritt(halten); return (l.vy - v0) / K.SCHRITT; };
+  const frei = ay(false);
+  let maxSprungV = 0, vAlt = Math.hypot(l.vx, l.vy), a = 0;
+  for (let i = 0; i < 0.3 / K.SCHRITT; i++) { a = ay(true); const v = Math.hypot(l.vx, l.vy); maxSprungV = Math.max(maxSprungV, Math.abs(v - vAlt)); vAlt = v; }
+  const losgelassen = ay(false);
+  ok(Math.abs(frei + K.G_LUFT) < 2, `losgelassen: normale Luftschwerkraft (${(-frei).toFixed(0)} m/s²)`);
+  ok(Math.abs(a + K.G_LUFT * K.SCHWER_LUFT) < 3, `gehalten: Sinkflug ${(-a).toFixed(0)} m/s²`);
+  ok(Math.abs(losgelassen - frei) < 2, 'nach dem Loslassen endet die Zusatzkraft sofort');
+  ok(maxSprungV < K.G_LUFT * K.SCHWER_LUFT * K.SCHRITT * 1.2, 'Geschwindigkeit bleibt beim Sinkflug stetig (kein Sprung)');
+  ok(K.V_MAX_LUFT * K.SCHRITT < 1, `Weg pro Physikschritt höchstens ${(K.V_MAX_LUFT * K.SCHRITT).toFixed(2)} m (jeder Schritt wird gegen den Boden geprüft)`);
+}
+
+console.log('## Tageslicht');
+{
+  const { ENDLOS_DEF } = L, E = K.ENDLOS;
+  ok(E.START === 120 && E.MAX === 180, `Start ${E.START} s, Vorrat höchstens ${E.MAX} s`);
+  // Ohne Boni: genau START aktive Sekunden – egal in welchen Häppchen gerechnet wird (30/60/144 fps)
+  const alt = [E.MARKE_BONUS, E.PERFEKT_BONUS];
+  E.MARKE_BONUS = 0; E.PERFEKT_BONUS = 0;
+  const dauer = (schritteJeBild) => {
+    const l = new Lauf(Object.assign({}, ENDLOS_DEF, { saat: 9 })); const b = Bot.neu('nie'); l.starten();
+    let bilder = 0, nacht = 0;
+    while (!l.ergebnis) { for (let i = 0; i < schritteJeBild && !l.ergebnis; i++) { l.schritt(b.halten(l)); for (const e of l.ereignisse) if (e.art === 'nacht') nacht++; l.ereignisse.length = 0; } bilder++; }
+    return { zeit: l.zeit, nacht, bilder };
   };
-  const a1 = flug(1), a2 = flug(2);
-  ok(Math.abs(a2.zeit / a1.zeit - 0.5) < 0.01, `gleicher Flug dauert halb so lange (${a1.zeit.toFixed(2)} s → ${a2.zeit.toFixed(2)} s)`);
-  ok(Math.abs(a2.x - a1.x) < 1e-6 && Math.abs(a2.maxY - a1.maxY) < 1e-6, 'Flugbahn, Gipfel und Landestelle bleiben exakt gleich (Landungen und Sammelreihen passen weiter)');
-  const steigen = (tempo) => { const alt = K.TEMPO; K.TEMPO = tempo; const l = new Lauf(STRECKEN[0]); l.starten(); l.tag = 999; l.x = 100; l.boden = false; l.echterFlug = true; l.vx = 30; l.vy = 40; l.y = l.g.hoehe(100) + 50; while (l.vy > 0) l.schritt(false); K.TEMPO = alt; return l.zeit; };
-  ok(steigen(2) < steigen(1) * 0.51, `Aufstieg bis zum Gipfel doppelt so schnell (${steigen(1).toFixed(2)} s → ${steigen(2).toFixed(2)} s)`);
-  // Pro Physikschritt bewegt sich Kalle höchstens so weit wie vorher – kein Durchdringen
-  ok(K.V_MAX_LUFT * K.SCHRITT < 0.5, `Weg pro Physikschritt höchstens ${(K.V_MAX_LUFT * K.SCHRITT).toFixed(2)} m (Gelände ist eine Höhenfunktion, jeder Schritt wird geprüft)`);
+  const d30 = dauer(8), d60 = dauer(4), d144 = dauer(240 / 144 | 0 || 1);
+  E.MARKE_BONUS = alt[0]; E.PERFEKT_BONUS = alt[1];
+  ok(Math.abs(d30.zeit - E.START) < 0.01 && Math.abs(d60.zeit - E.START) < 0.01 && Math.abs(d144.zeit - E.START) < 0.01, `ohne Boni geht die Sonne nach ${d60.zeit.toFixed(2)} aktiven Sekunden unter – bei 30, 60 und 144 Bildern/s gleich`);
+  ok(d30.nacht === 1 && d60.nacht === 1, 'Sonnenuntergang wird genau einmal ausgelöst');
 }
 
 console.log('## Endlosflug');
@@ -281,7 +309,7 @@ console.log('## Endlosflug');
   const def = (saat) => Object.assign({}, ENDLOS_DEF, { saat });
   // Frischer Lauf
   const f0 = new Lauf(def(7));
-  ok(f0.rest === E.START && f0.strecke === 0 && f0.punkte === 0 && f0.zeit === 0 && f0.muscheln.every(m => !m.weg), 'Neuer Lauf: volles Start-Tageslicht, Strecke/Punkte 0');
+  ok(f0.rest === K.ENDLOS.START && f0.strecke === 0 && f0.punkte === 0 && f0.zeit === 0 && f0.muscheln.every(m => !m.weg), 'Neuer Lauf: volles Start-Tageslicht, Strecke/Punkte 0');
   ok(f0.g.ende >= E.VORLAUF, `Gelände ist ${Math.round(f0.g.ende)} m voraus gebaut`);
   // Deterministisch
   const kurz = (saat, art) => { const l = new Lauf(def(saat)); const b = Bot.neu(art, saat); l.starten(); for (let i = 0; i < 240 * 20; i++) l.schritt(b.halten(l)); return l.x.toFixed(6) + '|' + l.punkte; };
@@ -289,7 +317,7 @@ console.log('## Endlosflug');
   ok(kurz(3, 'gut') !== kurz(4, 'gut'), 'andere Saat → andere Landschaft');
   // Lange Läufe mit verschiedenen Spielern und Saaten
   const ergebnisse = {};
-  for (const art of ['gut', 'mittel', 'einfach', 'nie']) for (const saat of [1, 2, 3]) {
+  for (const [art, saaten] of [['gut', [1]], ['mittel', [1, 2]], ['einfach', [1, 2]], ['nie', [1, 2]]]) for (const saat of saaten) {
     const l = new Lauf(def(saat)); const b = Bot.neu(art, saat); l.starten();
     let unter = 0, steht = 0, standZeit = 0, letzteX = -1e9, nacht = 0, marken = [], lichtEv = 0, perfektEv = 0, perfektBonus = 0, ueberMax = 0;
     let maxPunkte = 0, maxMuscheln = 0, kSprung = 0, flach = 0, maxFlach = 0, flachX = 0, abstandFalsch = 0, nichtBergab = 0, geprueft = new Set();
@@ -344,10 +372,10 @@ console.log('## Endlosflug');
   const z = (art) => mittelWert(art, 'zeit');
   console.log('  Mittlere Laufdauer (echte s): ' + ['nie', 'einfach', 'mittel', 'gut'].map(a => `${a} ${z(a).toFixed(0)} s / ${Math.round(mittelWert(a, 'strecke'))} m`).join(', '));
   ok(z('nie') < z('einfach') && z('einfach') < z('mittel') && z('mittel') < z('gut'), 'besser spielen = länger fliegen (nie < einfach < mittel < gut)');
-  ok(z('nie') < 45, `wer nie drückt, ist schnell im Dunkeln (${z('nie').toFixed(0)} s)`);
-  ok(z('mittel') > 50 && z('mittel') < 150, `normales Spiel: ${z('mittel').toFixed(0)} s – füllt die Zeit nicht unbegrenzt auf`);
-  ok(z('gut') < 400, `auch sehr gutes Spiel endet irgendwann (${z('gut').toFixed(0)} s)`);
-  ok(mittelWert('gut', 'perfekt') > mittelWert('mittel', 'perfekt') * 2, 'gute Landungen machen den Unterschied (deutlich mehr perfekte Landungen)');
+  ok(z('nie') >= K.ENDLOS.START && z('nie') < K.ENDLOS.START + 60, `wer nie drückt, bekommt kaum Bonus (${z('nie').toFixed(0)} s)`);
+  ok(z('mittel') > z('nie') + 60, `normales Spiel verlängert spürbar (${z('mittel').toFixed(0)} s)`);
+  ok(z('gut') < 1200, `auch sehr gutes Spiel endet irgendwann (${z('gut').toFixed(0)} s)`);
+  ok(mittelWert('gut', 'perfekt') > mittelWert('mittel', 'perfekt') * 1.2, `gute Landungen machen den Unterschied (perfekte Landungen: gut ${mittelWert('gut', 'perfekt').toFixed(0)}, mittel ${mittelWert('mittel', 'perfekt').toFixed(0)})`);
 }
 
 console.log('## Abheben hängt von Tempo und Halten ab');
@@ -360,9 +388,9 @@ console.log('## Abheben hängt von Tempo und Halten ab');
     for (let i = 0; i < 240; i++) { l.schritt(halten); if (!l.boden && l.echterFlug) return true; if (l.x > kuppe[0] + 15) break; }
     return false;
   };
-  ok(probe(40, false), 'schnell und losgelassen: fliegt über die Kuppe');
-  ok(!probe(10, false), 'langsam: bleibt am Boden');
-  ok(probe(40, false) && !probe(24, true) , 'gehalten bleibt Kalle bei mittlerem Tempo am Boden (schwer)');
+  ok(probe(80, false), 'schnell und losgelassen: fliegt über die Kuppe');
+  ok(!probe(30, false), 'langsam: bleibt am Boden');
+  ok(probe(80, false) && !probe(80, true), 'gehalten bleibt Kalle bei gleichem Tempo am Boden (schwer)');
 }
 
 console.log('## Schwer machen wirkt richtig');

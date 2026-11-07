@@ -427,7 +427,7 @@
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
     const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
     if (aktiv) {
-      rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
+      rest += dt;
       let n = 0;
       while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
         lauf.schritt(zustand === 'lauf' && halten);
@@ -461,8 +461,9 @@
     posenFuerBild = posenSchritt(zustand === 'pause' ? 0 : dt);
     // Himmel und Sonne hängen am selben Restwert wie die Tageslichtanzeige.
     // Nach Sonnenuntergang sinkt die Sonne noch ganz hinter den Horizont.
-    // Endlos: voller Startvorrat = Mittag (blau/türkis), wenig = Gold/Koralle, kurz vor 0 = violett
-    const f = modus === 'endlos' ? 1 - Math.min(1, lauf.rest / K.ENDLOS.START) : Math.min(1, 1 - lauf.rest / lauf.tag);
+    // Endlos: hell, solange mehr als HIMMEL_REF Sekunden übrig sind; darunter allmählich
+    // Gold/Koralle, kurz vor 0 violett. Derselbe Restwert wie Anzeige und Spielende.
+    const f = modus === 'endlos' ? 1 - Math.min(1, lauf.rest / K.ENDLOS.HIMMEL_REF) : Math.min(1, 1 - lauf.rest / lauf.tag);
     const fSonne = lauf.ergebnis === 'nacht' ? 1 + Math.min(0.15, endeZeit * 0.12) : f;
     Grafik.zeichne(lauf, { dt: zustand === 'pause' ? 0 : dt, f, fSonne, figur: Speicher.krabbe(), pose: posenFuerBild, gebiet: def.gebiet });
     hud();
@@ -525,7 +526,7 @@
       vorfuehrBot = Bot.neu('schnell');
       Grafik.neuerLauf();
     }
-    rest += dt * K.TEMPO;   // echte Zeit → Physikzeit
+    rest += dt;
     let n = 0;
     while (rest >= K.SCHRITT && n < K.MAX_SCHRITTE) {
       vorfuehrung.schritt(vorfuehrBot.halten(vorfuehrung)); rest -= K.SCHRITT; n++;

@@ -58,7 +58,14 @@ const THEMEN = [
 const Grafik = (() => {
   let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
   const kam = { x: 0, b: 0, z: 10, bereit: false };
-  let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab   // x = linker Rand, b = unterer Rand (Welt), z = Pixel je Meter
+  let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
+  // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
+  // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
+  // Kameraposition × Zoom ab – dann ließ jede kleine Zoomänderung weit draußen die ganze
+  // Küste hin- und herspringen. Faktoren je Ebene: PARALLAXE.
+  let hgX = 0, letztesKamX = null;
+  const HG_PX_JE_M = 7;
+  const PARALLAXE = { wolken: [0.02, 0.04], fern: 0.06, wahrzeichen: 0.06, nah: 0.12, wasser: 0.12 };   // x = linker Rand, b = unterer Rand (Welt), z = Pixel je Meter
   let zeit = 0;
   const teilchen = [];
   const texte = [];
@@ -92,7 +99,9 @@ const Grafik = (() => {
     let breite = minB + v * K.KAM_VORSCHAU * (hochkant() ? 0.65 : 1);   // hochkant ist der Bildschirm schmal: etwas weniger Vorschau, dafür größer
     const links = l.x - breite * K.KAM_VORAUS;
     const [lo, hi] = l.g.bereich(links, links + breite * 1.15);
-    const oben = Math.max(l.y + K.KAM_RAND_OBEN, hi + 3);
+    // Im Steigflug schon den Gipfel einplanen: die Kamera zoomt vorausschauend und weich heraus
+    const gipfel = !l.boden && l.vy > 0 ? l.y + l.vy * l.vy / (2 * K.G_LUFT) : l.y;
+    const oben = Math.max(gipfel + K.KAM_RAND_OBEN, hi + 3);
     const unten = lo - K.KAM_RAND_UNTEN;
     const hoeheNoetig = oben - unten;
     let z = Math.min(W / breite, (H - randOben * dpr) / hoeheNoetig);
@@ -103,23 +112,35 @@ const Grafik = (() => {
     const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.5 : 0.3), hoeheNoetig * (hochkant() ? 2 : 0.6)) : 0;
     return { z, unten: unten - tiefer, x: l.x };
   }
+  // Ziel mit Toleranz: Kleine Änderungen (Hüpfer, kleine Hügel) verschieben die Kamera nicht,
+  // erst deutliche. Danach wird weich nachgeführt. Steuerung und Physik bleiben unberührt.
+  let zielZ = 0, zielB = 0;
   function kamera(l, dt, sofort) {
     const ziel = kameraZiel(l);
-    if (sofort || !kam.bereit) { kam.z = ziel.z; kam.b = ziel.unten; kam.bereit = true; }
+    if (sofort || !kam.bereit) { kam.z = zielZ = ziel.z; kam.b = zielB = ziel.unten; kam.bereit = true; }
     else {
+      if (Math.abs(ziel.z - zielZ) > zielZ * K.KAM_TOLERANZ_ZOOM || ziel.z < zielZ) zielZ = ziel.z;   // herauszoomen sofort als Ziel, hinein erst bei deutlichem Unterschied
+      if (Math.abs(ziel.unten - zielB) > K.KAM_TOLERANZ_Y) zielB = ziel.unten;
       const kz = 1 - Math.exp(-K.KAM_GLAETTE_ZOOM * dt);
-      // Herauszoomen schneller als hineinzoomen: Landeflächen sind früh im Bild
-      const kzr = ziel.z < kam.z ? Math.min(1, kz * 1.8) : kz;
-      kam.z += (ziel.z - kam.z) * kzr;
+      // Herauszoomen etwas schneller als hineinzoomen: Landeflächen sind früh im Bild
+      const kzr = zielZ < kam.z ? Math.min(1, kz * 1.8) : kz;
+      kam.z += (zielZ - kam.z) * kzr;
       const ky = 1 - Math.exp(-K.KAM_GLAETTE_Y * dt);
-      kam.b += (ziel.unten - kam.b) * ky;
+      kam.b += (zielB - kam.b) * ky;
     }
-    // Kalle muss immer ganz im Bild und unter der Anzeige sein: sonst sofort
-    // herauszoomen (nicht nach oben schieben, damit der Boden sichtbar bleibt)
+    // Sicherheitsnetz: Kalle muss ganz im Bild und unter der Anzeige sein. Wird er knapp,
+    // zoomt die Kamera zügig (aber weich) heraus; nur wenn er sonst hinausflöge, sofort.
     const krabbePx = K.KRABBE_MIN_PIXEL * dpr * 1.1 + 10 * dpr;
     const nutzbar = H - randOben * dpr - krabbePx;
-    if (l.y > kam.b && (l.y - kam.b) * kam.z > nutzbar) kam.z = nutzbar / (l.y - kam.b);
+    if (l.y > kam.b) {
+      const zGrenze = nutzbar / (l.y - kam.b);
+      if (kam.z > zGrenze * 0.9) kam.z += (zGrenze * 0.9 - kam.z) * Math.min(1, 6 * dt);
+      if (kam.z > zGrenze) kam.z = zGrenze;
+    }
     kam.x = l.x - (W / kam.z) * K.KAM_VORAUS;
+    if (letztesKamX === null || sofort) letztesKamX = kam.x;
+    if (!ruhig) hgX += (kam.x - letztesKamX) * HG_PX_JE_M * dpr;   // weniger Bewegung: Hintergrund steht
+    letztesKamX = kam.x;
   }
 
   // ---------------------------------------------------------- Himmel
@@ -142,7 +163,8 @@ const Grafik = (() => {
     // Sonne: wandert vor Kalle zum Horizont hinunter
     const sxp = W * (hochkant() ? 0.7 : 0.76);
     const fs = sonneF;
-    const syp = H * 0.1 + (horizont - H * 0.1) * Math.pow(fs, 1.25) + fs * fs * H * 0.04 + Math.max(0, fs - 1) * H * 0.6;
+    const sonneOben = Math.max(H * 0.1, (randOben + 40) * dpr);   // nie hinter der Anzeige
+    const syp = sonneOben + (horizont - sonneOben) * Math.pow(fs, 1.25) + fs * fs * H * 0.04 + Math.max(0, fs - 1) * H * 0.6;
     const r = Math.min(W, H) * (0.055 + f * 0.03);
     const sf = verlauf(SONNE_FARBE, f);
     const glanz = c.createRadialGradient(sxp, syp, r * 0.6, sxp, syp, r * 4.5);
@@ -153,8 +175,9 @@ const Grafik = (() => {
     c.beginPath(); c.arc(sxp, syp, r, 0, Math.PI * 2); c.fillStyle = sf; c.fill();
     // Wolken
     for (let i = 0; i < 6; i++) {
-      const tempo = 0.012 + hash(i + 7) * 0.02;
-      const wx = ((hash(i) * 1.6 - (kam.x * tempo * kam.z) / W - zeit * 0.004 * (1 + i % 3)) % 1.6 + 1.6) % 1.6 - 0.3;
+      const tempo = PARALLAXE.wolken[0] + hash(i + 7) * (PARALLAXE.wolken[1] - PARALLAXE.wolken[0]);
+      const drift = ruhig ? 0 : zeit * 0.002 * (1 + i % 3);   // sehr langsames Treiben
+      const wx = ((hash(i) * 1.6 - (hgX * tempo) / W - drift) % 1.6 + 1.6) % 1.6 - 0.3;
       const wy = horizont * (0.12 + hash(i + 3) * 0.5);
       wolke(wx * W, wy, Math.min(W, H) * (0.06 + hash(i + 11) * 0.05), f);
     }
@@ -171,8 +194,8 @@ const Grafik = (() => {
       const y = meerOben + 4 * dpr + hash(i + 200) * (H - meerOben) * 0.5;
       const breite = (8 + hash(i + 300) * 26) * dpr * (1 + (y - meerOben) / H);
       const nahSonne = Math.abs(hash(i + 400) - 0.5) < 0.18;
-      const x = nahSonne ? sxp + (hash(i + 500) - 0.5) * r * 3 : ((hash(i + 600) * W - kam.x * kam.z * 0.05 + zeit * 6 * dpr) % W + W) % W;
-      c.globalAlpha = (nahSonne ? 0.55 : 0.22) * (0.6 + 0.4 * Math.sin(zeit * 2 + i));
+      const x = nahSonne ? sxp + (hash(i + 500) - 0.5) * r * 3 : ((hash(i + 600) * W - hgX * PARALLAXE.wasser) % W + W) % W;
+      c.globalAlpha = (nahSonne ? 0.4 : 0.12) * (ruhig ? 0.8 : 0.75 + 0.25 * Math.sin(zeit * 1.2 + i));
       c.fillRect(x - breite / 2, y, breite, 1.5 * dpr);
     }
     c.globalAlpha = 1;
@@ -196,7 +219,7 @@ const Grafik = (() => {
   // ---------------------------------------------------------- Ferne Küste (Parallaxe)
   // Höhenlinie aus Sinuswellen, verschiebt sich langsamer als die Kamera
   function silhouette(horizont, faktor, hoehe, farbe, saat, glatt, inseln) {
-    const versatz = kam.x * kam.z * faktor;
+    const versatz = hgX * faktor;
     c.beginPath();
     c.moveTo(0, horizont + 1);
     const schritt = 8 * dpr;
@@ -216,9 +239,9 @@ const Grafik = (() => {
   function ferneKueste(horizont, f, thema, nr) {
     const dunst = verlauf(HIMMEL_UNTEN, f);
     const hoehe = H * 0.12;
-    silhouette(horizont, 0.06, hoehe, mischFarbe(thema.fern, dunst, 0.45 + f * 0.15), 1 + nr, nr === 0);
+    silhouette(horizont, PARALLAXE.fern, hoehe, mischFarbe(thema.fern, dunst, 0.45 + f * 0.15), 1 + nr, nr === 0);
     // Wahrzeichen in der Ferne
-    const versatz = kam.x * kam.z * 0.06;
+    const versatz = hgX * PARALLAXE.wahrzeichen;
     const abstand = W * 1.3;
     const i0 = Math.floor(versatz / abstand);
     for (let i = i0; i <= i0 + 1; i++) {
@@ -228,10 +251,10 @@ const Grafik = (() => {
     }
     // Nähere Küstenstücke mit Meer dazwischen, darunter ein heller Brandungsstreifen
     const y2 = horizont + H * 0.05;
-    silhouette(y2, 0.14, hoehe * 0.8, mischFarbe(thema.fern2, dunst, 0.22 + f * 0.15), 7 + nr * 3, nr === 0, true);
+    silhouette(y2, PARALLAXE.nah, hoehe * 0.8, mischFarbe(thema.fern2, dunst, 0.22 + f * 0.15), 7 + nr * 3, nr === 0, true);
     c.fillStyle = `rgba(255, 255, 255, ${0.25 - f * 0.12})`;
     for (let i = 0; i < 3; i++) {
-      const wy = y2 + (4 + i * 9) * dpr, ph = zeit * (0.6 + i * 0.2) + i;
+      const wy = y2 + (4 + i * 9) * dpr, ph = ruhig ? i : zeit * (0.3 + i * 0.1) + i;
       c.fillRect(0, wy + Math.sin(ph) * 1.5 * dpr, W, 1.2 * dpr);
     }
   }
@@ -655,8 +678,8 @@ const Grafik = (() => {
     }
     // Fahrtwind-Linien bei hohem Tempo
     const v = l.tempo;
-    if (v > 26 && !ruhig) {
-      const a = Math.min(0.5, (v - 26) / 40);
+    if (v > K.V_MAX * 0.75 && !ruhig) {
+      const a = Math.min(0.3, (v - K.V_MAX * 0.75) / 60);
       c.strokeStyle = `rgba(255, 255, 255, ${a})`;
       c.lineWidth = 2 * dpr; c.lineCap = 'round';
       for (let k = 0; k < 4; k++) {
@@ -751,11 +774,11 @@ const Grafik = (() => {
   function flugSpur(l) {
     if (!l.boden && l.gestartet) spur.push([l.x, l.y + 0.8]);
     else if (spur.length) spur.shift();
-    if (spur.length > 50) spur.shift();
+    if (spur.length > 18) spur.shift();
     if (spur.length < 2 || ruhig) return;
     c.lineCap = 'round';
     for (let i = 1; i < spur.length; i++) {
-      c.strokeStyle = `rgba(255, 255, 255, ${(i / spur.length) * 0.4})`;
+      c.strokeStyle = `rgba(255, 255, 255, ${(i / spur.length) * 0.25})`;
       c.lineWidth = Math.max(2 * dpr, 0.3 * kam.z) * (i / spur.length);
       c.beginPath(); c.moveTo(sx(spur[i - 1][0]), sy(spur[i - 1][1])); c.lineTo(sx(spur[i][0]), sy(spur[i][1])); c.stroke();
     }
@@ -799,7 +822,7 @@ const Grafik = (() => {
       c.fillRect(0, 0, W, H);
     }
   }
-  function neuerLauf() { teilchen.length = 0; texte.length = 0; spur = []; blitz = 0; kam.bereit = false; }
+  function neuerLauf() { teilchen.length = 0; texte.length = 0; spur = []; blitz = 0; kam.bereit = false; letztesKamX = null; }
 
   // Kleines Streckenprofil für die Levelkarten
   function profil(leinw, def) {
@@ -830,7 +853,7 @@ const Grafik = (() => {
     init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
-    get kam() { return kam; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
+    get kam() { return kam; }, get hgX() { return hgX; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
     // Kurzer Schriftzug im Bild (z. B. Distanzmarke erreicht)
     weltText(x, y, inhalt, farbe) { text(x, y, inhalt, farbe, 1); }, get dpr() { return dpr; }, get W() { return W; }, get H() { return H; },
     get cssW() { return cssW; }, get cssH() { return cssH; },

@@ -36,8 +36,8 @@ class Lauf {
     this.vx = 0; this.vy = 0;
     this.boden = true;
     this.gestartet = false;
-    this.zeit = 0;                 // verstrichene Spielzeit in ECHTER Zeit (Tageslicht, Rufe, Ergebnis)
-    this.simZeit = 0;              // verstrichene Physikzeit (= zeit · TEMPO)
+    this.zeit = 0;                 // verstrichene Spielzeit (echte Sekunden)
+    this.sinkflug = 0;             // 0..1: wie weit der Sinkflug gerade wirkt (weicher Anlauf)
     this.tag = def.zeit;           // Tageslicht gesamt
     this.ergebnis = null;          // 'ziel' | 'nacht'
     this.flugzeit = 0;
@@ -104,11 +104,10 @@ class Lauf {
     this.halten = !!halten;
     if (!this.gestartet) return;
     if (!this.ergebnis) {
-      this.simZeit += dt;
-      this.zeit += dt / K.TEMPO;
+      this.zeit += dt;
       if (this.endlos) {
         // Tageslicht läuft nur während aktiver Physikschritte ab (Pause/Tabwechsel: keine Schritte)
-        this.licht -= dt / K.TEMPO;
+        this.licht -= dt;
         if (this.x >= this.marke) {
           this.markeNr++;
           this.ereignisse.push({ art: 'marke', nr: this.markeNr, x: this.marke });
@@ -180,6 +179,7 @@ class Lauf {
       this.abflugV = this.v;
       this.abflugSteig = sin;   // wie steil es nach oben geht (0..1)
       this.maxUeberBoden = 0;
+      this.sinkflug = 0;
       this.hoechstImFlug = this.y;
       this.luftSchritt(dt);
       return;
@@ -189,7 +189,10 @@ class Lauf {
   }
 
   luftSchritt(dt) {
-    const g = K.G * (this.halten ? K.SCHWER_LUFT : K.LEICHT_LUFT);
+    // Sinkflug nur bei gehaltener Taste: weicher Anlauf, beim Loslassen sofort aus.
+    // Die Geschwindigkeit selbst ändert sich nie sprunghaft – nur die Kraft.
+    this.sinkflug = this.halten ? Math.min(1, this.sinkflug + dt / K.SINKFLUG_ANLAUF) : 0;
+    const g = K.G_LUFT * (1 + (K.SCHWER_LUFT - 1) * this.sinkflug);
     const v = Math.hypot(this.vx, this.vy);
     const w = K.LUFTWIDERSTAND_FLUG * v;
     this.vx -= w * this.vx * dt;
@@ -203,7 +206,7 @@ class Lauf {
     this.hoechstImFlug = Math.max(this.hoechstImFlug, this.y);
     const h = this.g.hoehe(this.x);
     this.maxUeberBoden = Math.max(this.maxUeberBoden, this.y - h);
-    if (!this.echterFlug && (this.y - h > 0.35 || this.flugzeit > 0.2)) {
+    if (!this.echterFlug && (this.y - h > 0.35 || this.flugzeit > 0.15)) {
       this.echterFlug = true;
       this.statistik.fluege++;
       this.ereignisse.push({ art: 'abflug', v: this.abflugV, x: this.abflugX, y: this.abflugY, steigt: this.abflugSteig });
@@ -234,7 +237,7 @@ class Lauf {
     const hoch = this.hoechstImFlug - this.g.hoehe(this.abflugX);
     // Perfekt: auf einer Abfahrt, Richtung passt zur Rampentangente, kaum Aufprall quer zur
     // Oberfläche, nach einem echten Flug (nicht nur über eine Unebenheit gestreift)
-    if (s < -K.PERFEKT_MIN_GEFAELLE && winkel < K.PERFEKT_WINKEL && quer < K.PERFEKT_QUER &&
+    if (s < -K.PERFEKT_MIN_GEFAELLE && winkel < K.PERFEKT_WINKEL && quer < Math.max(K.PERFEKT_QUER, K.PERFEKT_QUER_ANTEIL * v) &&
         this.flugzeit > K.PERFEKT_MIN_FLUGZEIT && this.maxUeberBoden > K.PERFEKT_MIN_HOEHE) {
       art = 'perfekt';
       this.kette = Math.min(K.KETTE_MAX, this.kette + 1);

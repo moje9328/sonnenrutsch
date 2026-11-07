@@ -1,4 +1,4 @@
-// Misst jede Strecke mit dem Testbot und schlägt Tageslicht und Sterne vor (echte Sekunden, also schon mit K.TEMPO).
+// Misst jede Strecke mit dem Testbot und schlägt Tageslicht und Sterne vor (echte Sekunden).
 const L = require('./lade-logik.js')();
 const FAKTOR = [1.9, 1.5, 1.45, 1.4, 1.36, 1.33, 1.3, 1.28, 1.26, 1.24, 1.22, 1.2];
 L.STRECKEN.forEach((d, i) => {
