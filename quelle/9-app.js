@@ -339,7 +339,7 @@
   $('weiterLevelKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id + 1); });
 
   // ---------------------------------------------------------- Anzeige
-  let hinweisText = null;
+  let hinweisText = null, stehZeit = 0;
   function hinweis(t) {
     if (t === hinweisText) return;
     hinweisText = t;
@@ -449,7 +449,9 @@
     // Lernhinweise an festen Stellen der Strecke
     if (zustand === 'lauf') {
       const h = lauf.hinweise.find(h => lauf.x >= h.x && lauf.x <= h.bis);
-      hinweis(h ? h.text : null);
+      // Kalle steht (ohne Taste kein Antrieb): kurz zeigen, wie es weitergeht
+      stehZeit = lauf.boden && lauf.tempo < 1 && !halten ? stehZeit + dt : 0;
+      hinweis(h ? h.text : stehZeit > 1 ? 'Halten, damit Kalle weiterkrabbelt.' : null);
       // Warnglocke in den letzten Sekunden
       const r = Math.ceil(lauf.rest);
       if (r > 10) glockeBei = 99;   // nach einem Zeitbonus wieder warnen dürfen

@@ -24,11 +24,11 @@ const K = {
   LUFTWIDERSTAND: 0.0004,   // Bremsung ~ v² am Boden
   LUFTWIDERSTAND_FLUG: 0.00025, // Bremsung ~ v² in der Luft (gering: Vorwärtstempo bleibt weitgehend)
   V_MIN_SCHWER: 10,         // wer bergauf schwer bleibt, wird so langsam
-  KRABBELN: 88,             // losgelassen und langsamer als V_MIN: so schnell krabbelt Kalle wieder hoch (m/s²)
-  V_MIN: 28,                // so schnell krabbelt Kalle mindestens (nie Feststecken)
+  KRABBELN: 88,             // gedrückt und langsamer als V_MIN: so schnell krabbelt Kalle los (m/s²)
+  V_MIN: 28,                // gedrückt krabbelt Kalle mindestens so schnell (nie Feststecken); losgelassen kein Antrieb
   V_MAX: 160,               // Höchstgeschwindigkeit am Boden
   V_MAX_LUFT: 200,          // Sicherheitsgrenze in der Luft (wird im normalen Spiel nicht erreicht)
-  V_START: 28,
+  V_START: 0,               // Kalle steht am Start, bis die Taste gedrückt wird
 
   // Landungen
   PERFEKT_WINKEL: 30,       // perfekt: Flugrichtung höchstens so viele Grad neben der Rampentangente …
@@ -53,15 +53,10 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    JUHU_HOEHE: 70,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
-    JUHU_STEIG: 30,         // … und beim Absprung mindestens so schnell nach oben (m/s)
-    JUHU_MIN_ZEIT: 0.2,    // frühestens so lange nach dem Abheben (kurze Hüpfer sind dann schon vorbei)
-    YIPPIE_HOEHE: 135,      // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
-    YIPPIE_WEITE: 335,     // … oder so weit geflogen (m, waagerecht) …
-    YIPPIE_SOFORT: 220,     // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
-    YIPPIE_SOFORT_TEMPO: 135,//     bei mindestens diesem Absprungtempo (m/s)
-    ABSTAND: 2.5,           // Sekunden (echte Zeit) zwischen Rufen verschiedener Flüge mindestens
-    STEIGERUNG: 0.75,       // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (echte Zeit, Juhu ist dann vorbei)
+    HOEHE: 100,             // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
+    WEITE: 300,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
+    YIPPIE_HOEHE: 140,      // „Yippie!“ statt „Juhu!“, wenn der Gipfel mindestens so hoch ist (m)
+    ABSTAND: 15,            // Sekunden zwischen zwei Rufen mindestens (sonst entfällt der Ruf)
     BODEN_RUHE: 0.25,       // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
   },
 

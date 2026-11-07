@@ -135,18 +135,18 @@ const GEBIETE = [
 // zeit: Tageslicht in ECHTEN Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 29, sterne: [22.3, 15.5], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 41, sterne: [33.2, 25.5] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 48, sterne: [40.2, 32.4] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 51, sterne: [44.1, 37.2] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 53, sterne: [46.7, 40.3] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 56, sterne: [49.6, 43.2] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 57, sterne: [51.3, 45.6] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 57, sterne: [51.5, 46] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 62, sterne: [56.2, 50.4] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 67, sterne: [61.3, 55.5] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 70, sterne: [64.7, 59.4] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 72, sterne: [67, 62] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 29, sterne: [22.4, 15.8], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 41, sterne: [33.4, 25.7] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 48, sterne: [40.4, 32.8] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 51, sterne: [44.4, 37.7] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 54, sterne: [47.4, 40.7] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 56, sterne: [49.7, 43.4] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 58, sterne: [51.9, 45.7] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 60, sterne: [54.1, 48.2] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 62, sterne: [56.2, 50.5] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 67, sterne: [61.3, 55.6] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 71, sterne: [65.4, 59.8] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 72, sterne: [67.1, 62.2] },
 ];
 
 
@@ -225,7 +225,7 @@ function baueStrecke(def) {
   // Hinweise der Lernstrecke an festen Stellen
   const hinweise = [];
   if (def.lern) {
-    hinweise.push({ x: -10, bis: 6, text: 'Halten: Kalle macht sich schwer und rutscht bergab.', art: 'halten' });
+    hinweise.push({ x: -10, bis: 6, text: 'Halten: Kalle läuft los und rutscht schwer bergab.', art: 'halten' });
     if (taeler[0]) hinweise.push({ x: taeler[0][0] - 8, bis: taeler[0][0] + 14, text: 'Vor dem Anstieg loslassen!', art: 'los' });
     if (kuppen[0]) hinweise.push({ x: kuppen[0][0] + 2, bis: kuppen[0][0] + 50, text: 'In der Luft halten: Sinkflug auf den nächsten Abhang.', art: 'luft' });
     if (kuppen[2]) hinweise.push({ x: kuppen[2][0] - 30, bis: kuppen[2][0] + 40, text: 'Lande flach auf dem Abhang: das gibt Schwung.', art: 'perfekt' });

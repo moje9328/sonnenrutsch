@@ -377,7 +377,7 @@
 
 <div id="app">
   <main id="buehne">
-    <canvas id="bild" tabindex="0" role="img" aria-label="Spielfeld von Sonnenrutsch: Kalle die Krabbe rutscht über weiche Hügel an der Küste. Gedrückt halten macht Kalle schwer, loslassen lässt ihn über die Kuppen fliegen. Leertaste, Maus oder Finger."></canvas>
+    <canvas id="bild" tabindex="0" role="img" aria-label="Spielfeld von Sonnenrutsch: Kalle die Krabbe rutscht über weiche Hügel an der Küste. Gedrückt halten lässt Kalle loslaufen und macht ihn schwer, loslassen lässt ihn über die Kuppen fliegen. Leertaste, Maus oder Finger."></canvas>
 
     <div id="hud">
       <div class="hudblock">
@@ -414,7 +414,7 @@
       <h2 id="erklTitel">LERNSTRECKE</h2>
       <p id="erklEndlos" hidden>Flieg dem Sonnenuntergang davon! Erreiche die nächste Distanzmarke und lande sauber, um Tageslicht zu gewinnen.</p>
       <ul id="erklListe">
-        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle macht sich schwer und rutscht schneller bergab.</span></li>
+        <li><i>HALT</i><span><b>Gedrückt halten:</b> Kalle läuft los, macht sich schwer und rutscht schneller bergab. Ohne Drücken trägt ihn nur sein Schwung.</span></li>
         <li><i>LOS</i><span><b>Vor dem Anstieg loslassen:</b> Der Schwung trägt ihn über die Kuppe in die Luft.</span></li>
         <li id="erklZiel"><i>☀</i><span>Erreiche das Ziel, bevor die Sonne untergeht.</span></li>
         <li><i><svg width="22" height="20" aria-hidden="true"><use href="#muschel"/></svg></i><span>Sammle Muscheln – goldene zählen fünffach.</span></li>
@@ -568,11 +568,11 @@ const K = {
   LUFTWIDERSTAND: 0.0004,   // Bremsung ~ v² am Boden
   LUFTWIDERSTAND_FLUG: 0.00025, // Bremsung ~ v² in der Luft (gering: Vorwärtstempo bleibt weitgehend)
   V_MIN_SCHWER: 10,         // wer bergauf schwer bleibt, wird so langsam
-  KRABBELN: 88,             // losgelassen und langsamer als V_MIN: so schnell krabbelt Kalle wieder hoch (m/s²)
-  V_MIN: 28,                // so schnell krabbelt Kalle mindestens (nie Feststecken)
+  KRABBELN: 88,             // gedrückt und langsamer als V_MIN: so schnell krabbelt Kalle los (m/s²)
+  V_MIN: 28,                // gedrückt krabbelt Kalle mindestens so schnell (nie Feststecken); losgelassen kein Antrieb
   V_MAX: 160,               // Höchstgeschwindigkeit am Boden
   V_MAX_LUFT: 200,          // Sicherheitsgrenze in der Luft (wird im normalen Spiel nicht erreicht)
-  V_START: 28,
+  V_START: 0,               // Kalle steht am Start, bis die Taste gedrückt wird
 
   // Landungen
   PERFEKT_WINKEL: 30,       // perfekt: Flugrichtung höchstens so viele Grad neben der Rampentangente …
@@ -597,15 +597,10 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    JUHU_HOEHE: 70,         // „Juhu!“: im Steigflug tatsächlich so hoch über dem Absprung (m) …
-    JUHU_STEIG: 30,         // … und beim Absprung mindestens so schnell nach oben (m/s)
-    JUHU_MIN_ZEIT: 0.2,    // frühestens so lange nach dem Abheben (kurze Hüpfer sind dann schon vorbei)
-    YIPPIE_HOEHE: 135,      // „Yippie!“: tatsächlich so hoch über dem Absprung erreicht (m) …
-    YIPPIE_WEITE: 335,     // … oder so weit geflogen (m, waagerecht) …
-    YIPPIE_SOFORT: 220,     // … oder gleich zu Beginn sicher ein Riesenflug (vorhergesagter Gipfel, m)
-    YIPPIE_SOFORT_TEMPO: 135,//     bei mindestens diesem Absprungtempo (m/s)
-    ABSTAND: 2.5,           // Sekunden (echte Zeit) zwischen Rufen verschiedener Flüge mindestens
-    STEIGERUNG: 0.75,       // „Yippie!“ nach „Juhu!“ im selben Flug frühestens so viel später (echte Zeit, Juhu ist dann vorbei)
+    HOEHE: 100,             // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
+    WEITE: 300,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
+    YIPPIE_HOEHE: 140,      // „Yippie!“ statt „Juhu!“, wenn der Gipfel mindestens so hoch ist (m)
+    ABSTAND: 15,            // Sekunden zwischen zwei Rufen mindestens (sonst entfällt der Ruf)
     BODEN_RUHE: 0.25,       // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug
   },
 
@@ -795,18 +790,18 @@ const GEBIETE = [
 // zeit: Tageslicht in ECHTEN Sekunden, sterne: [Zeit für 2 Sterne, Zeit für 3 Sterne].
 //   Beides gemessen mit kalibriere.js (Testbot) und von test-logik.js geprüft.
 const STRECKEN = [
-  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 29, sterne: [22.3, 15.5], lern: true },
-  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 41, sterne: [33.2, 25.5] },
-  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 48, sterne: [40.2, 32.4] },
-  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 51, sterne: [44.1, 37.2] },
-  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 53, sterne: [46.7, 40.3] },
-  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 56, sterne: [49.6, 43.2] },
-  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 57, sterne: [51.3, 45.6] },
-  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 57, sterne: [51.5, 46] },
-  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 62, sterne: [56.2, 50.4] },
-  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 67, sterne: [61.3, 55.5] },
-  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 70, sterne: [64.7, 59.4] },
-  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 72, sterne: [67, 62] },
+  { id: 1, gebiet: 0, name: 'Lernstrecke', laenge: 1000, L: [42, 50], A: [16, 22], steil: [0.75, 0.65], wechsel: 0.2, muster: { gross: 0.2, rampe: 0.15 }, saat: 11, zeit: 29, sterne: [22.4, 15.8], lern: true },
+  { id: 2, gebiet: 0, name: 'Dünenwellen', laenge: 1500, L: [42, 54], A: [18, 26], steil: [0.7, 0.6], wechsel: 0.3, muster: { klein: 0.15, gross: 0.15, rampe: 0.15 }, saat: 21, zeit: 41, sterne: [33.4, 25.7] },
+  { id: 3, gebiet: 0, name: 'Windkamm', laenge: 1800, L: [44, 58], A: [20, 30], steil: [0.66, 0.56], wechsel: 0.35, muster: { klein: 0.2, gross: 0.15, rampe: 0.18 }, saat: 33, zeit: 48, sterne: [40.4, 32.8] },
+  { id: 4, gebiet: 1, name: 'Palmenbucht', laenge: 2000, L: [44, 62], A: [22, 34], steil: [0.62, 0.52], wechsel: 0.35, muster: { klein: 0.2, gross: 0.18, rampe: 0.2 }, saat: 47, zeit: 51, sterne: [44.4, 37.7] },
+  { id: 5, gebiet: 1, name: 'Kokoshügel', laenge: 2200, L: [46, 66], A: [24, 36], steil: [0.6, 0.5], wechsel: 0.4, muster: { klein: 0.25, gross: 0.2, rampe: 0.18 }, saat: 58, zeit: 54, sterne: [47.4, 40.7] },
+  { id: 6, gebiet: 1, name: 'Lagunensprung', laenge: 2300, L: [48, 70], A: [24, 38], steil: [0.58, 0.48], wechsel: 0.4, muster: { klein: 0.2, gross: 0.15, rampe: 0.3 }, saat: 64, zeit: 56, sterne: [49.7, 43.4] },
+  { id: 7, gebiet: 2, name: 'Klippenpfad', laenge: 2400, L: [48, 72], A: [26, 40], steil: [0.56, 0.46], wechsel: 0.45, muster: { klein: 0.25, gross: 0.22, rampe: 0.2 }, saat: 71, zeit: 58, sterne: [51.9, 45.7] },
+  { id: 8, gebiet: 2, name: 'Brandungsfels', laenge: 2500, L: [50, 76], A: [26, 42], steil: [0.54, 0.45], wechsel: 0.5, muster: { klein: 0.28, gross: 0.22, rampe: 0.2 }, saat: 86, zeit: 60, sterne: [54.1, 48.2] },
+  { id: 9, gebiet: 2, name: 'Möwenkap', laenge: 2600, L: [52, 80], A: [28, 44], steil: [0.52, 0.44], wechsel: 0.5, muster: { klein: 0.25, gross: 0.25, rampe: 0.22 }, saat: 93, zeit: 62, sterne: [56.2, 50.5] },
+  { id: 10, gebiet: 3, name: 'Muschelbank', laenge: 2700, L: [52, 82], A: [28, 46], steil: [0.5, 0.43], wechsel: 0.55, muster: { klein: 0.3, gross: 0.22, rampe: 0.22 }, saat: 105, zeit: 67, sterne: [61.3, 55.6] },
+  { id: 11, gebiet: 3, name: 'Korallenkamm', laenge: 2800, L: [54, 86], A: [30, 48], steil: [0.5, 0.42], wechsel: 0.55, muster: { klein: 0.3, gross: 0.25, rampe: 0.22 }, saat: 117, zeit: 71, sterne: [65.4, 59.8] },
+  { id: 12, gebiet: 3, name: 'Leuchtturmlauf', laenge: 3000, L: [56, 90], A: [30, 50], steil: [0.48, 0.4], wechsel: 0.6, muster: { klein: 0.3, gross: 0.25, rampe: 0.25 }, saat: 125, zeit: 72, sterne: [67.1, 62.2] },
 ];
 
 
@@ -885,7 +880,7 @@ function baueStrecke(def) {
   // Hinweise der Lernstrecke an festen Stellen
   const hinweise = [];
   if (def.lern) {
-    hinweise.push({ x: -10, bis: 6, text: 'Halten: Kalle macht sich schwer und rutscht bergab.', art: 'halten' });
+    hinweise.push({ x: -10, bis: 6, text: 'Halten: Kalle läuft los und rutscht schwer bergab.', art: 'halten' });
     if (taeler[0]) hinweise.push({ x: taeler[0][0] - 8, bis: taeler[0][0] + 14, text: 'Vor dem Anstieg loslassen!', art: 'los' });
     if (kuppen[0]) hinweise.push({ x: kuppen[0][0] + 2, bis: kuppen[0][0] + 50, text: 'In der Luft halten: Sinkflug auf den nächsten Abhang.', art: 'luft' });
     if (kuppen[2]) hinweise.push({ x: kuppen[2][0] - 30, bis: kuppen[2][0] + 40, text: 'Lande flach auf dem Abhang: das gibt Schwung.', art: 'perfekt' });
@@ -896,18 +891,18 @@ function baueStrecke(def) {
 // Vorab berechnete Muscheln je Strecke: [x, y, gold, linie]. NICHT von Hand ändern –
 // erzeugt mit: node quelle/werkzeug-muscheln.js (nach Änderungen an Physik oder Strecken)
 const MUSCHELN = {
-  1: [[561.03,22.39,0,1],[565.06,20.94,0,1],[569.08,19.38,0,1],[572.99,17.80,0,1],[576.90,16.18,0,1],[580.80,14.54,0,1],[809.25,35.32,0,2],[813.29,33.91,0,2],[817.31,32.38,0,2],[821.32,30.78,0,2],[825.23,29.17,0,2],[1121.63,17.35,0,3],[1125.60,15.82,0,3],[1129.56,14.45,0,3],[1133.60,13.28,1,3],[1504.15,32.14,0,4],[1508.17,30.59,0,4],[1512.09,29.00,0,4],[1516.00,27.36,0,4],[1519.90,25.68,0,4],[1523.81,23.98,0,4],[1527.71,22.26,0,4],[1531.61,20.54,0,4]],
-  2: [[281.97,29.30,0,1],[286.12,28.01,0,1],[290.16,26.58,0,1],[294.18,25.02,0,1],[298.09,23.42,0,1],[302.00,21.77,0,1],[305.91,20.08,0,1],[309.81,18.38,0,1],[678.00,25.68,0,2],[682.15,24.45,0,2],[686.18,23.08,0,2],[690.21,21.58,0,2],[694.22,20.01,0,2],[698.13,18.43,0,2],[702.04,16.82,0,2],[1345.44,40.18,0,3],[1349.58,38.87,0,3],[1353.62,37.43,0,3],[1357.64,35.88,0,3],[1361.56,34.28,0,3],[1365.47,32.61,0,3],[1369.37,30.91,0,3],[1373.28,29.18,1,3],[2079.02,37.09,0,4],[2083.17,36.00,0,4],[2087.31,34.74,0,4],[2091.33,33.37,0,4],[2095.35,31.90,0,4],[2099.37,30.36,0,4],[2103.38,28.77,0,4],[2107.28,27.18,0,4],[2637.33,24.31,0,5],[2641.28,22.54,0,5],[2645.11,20.65,0,5],[2648.93,18.64,0,5],[2652.64,16.62,0,5],[2656.34,14.57,0,5],[2660.03,12.54,0,5],[2663.72,10.55,0,5]],
-  3: [[267.97,37.37,0,1],[272.12,36.33,0,1],[276.26,35.10,0,1],[280.29,33.75,0,1],[284.31,32.29,0,1],[288.33,30.76,0,1],[876.01,36.40,0,2],[880.03,34.83,0,2],[883.95,33.20,0,2],[887.86,31.51,0,2],[891.77,29.77,0,2],[895.68,28.00,0,2],[899.58,26.21,0,2],[903.48,24.41,0,2],[1454.29,24.15,0,3],[1458.19,22.51,0,3],[1462.09,20.86,0,3],[1465.99,19.21,0,3],[1469.89,17.57,0,3],[1473.78,15.93,1,3],[2467.67,45.92,0,4],[2471.72,44.50,0,4],[2475.76,42.88,0,4],[2479.69,41.15,0,4],[2483.61,39.31,0,4],[2882.14,32.87,0,5],[2886.29,31.83,0,5],[2890.43,30.60,0,5],[2894.46,29.27,0,5],[2898.48,27.83,0,5]],
-  4: [[395.73,34.85,0,1],[399.78,33.26,0,1],[403.72,31.53,0,1],[407.54,29.72,0,1],[411.36,27.82,0,1],[415.17,25.85,0,1],[418.98,23.84,0,1],[1028.30,49.78,0,2],[1032.35,48.23,0,2],[1036.28,46.55,0,2],[1040.20,44.76,0,2],[1044.02,42.93,0,2],[1047.83,41.04,0,2],[1051.63,39.11,0,2],[1793.17,36.88,0,3],[1797.00,34.94,0,3],[1800.72,32.94,0,3],[1804.43,30.87,0,3],[1808.14,28.74,1,3],[2499.06,6.65,0,4],[2502.95,5.08,0,4],[2506.94,3.54,0,4],[2510.91,2.08,0,4],[2514.88,0.76,0,4],[2518.92,-0.39,0,4],[2783.12,38.17,0,5],[2786.94,36.19,0,5],[2790.75,34.14,0,5],[2794.46,32.10,0,5],[2798.16,30.03,0,5],[2801.87,27.94,0,5],[3091.48,38.65,0,6],[3095.39,37.02,0,6],[3099.30,35.35,0,6],[3103.20,33.65,0,6],[3107.11,31.93,0,6],[3111.01,30.19,0,6],[3114.91,28.44,1,6]],
-  5: [[302.66,40.59,0,1],[306.60,38.95,0,1],[310.53,37.14,0,1],[314.36,35.25,0,1],[318.17,33.27,0,1],[321.98,31.24,0,1],[1365.36,40.87,0,2],[1369.51,39.83,0,2],[1373.65,38.62,0,2],[1377.67,37.31,0,2],[1381.69,35.90,0,2],[1385.71,34.40,0,2],[2227.19,55.89,0,3],[2231.13,54.06,0,3],[2234.95,52.14,0,3],[2238.77,50.12,0,3],[2242.49,48.06,0,3],[2246.20,45.95,0,3],[2249.91,43.79,1,3],[2538.47,15.49,0,4],[2542.49,13.91,0,4],[2546.40,12.31,0,4],[2550.31,10.68,0,4],[2554.21,9.04,0,4],[2558.10,7.41,0,4],[2832.74,26.55,0,5],[2836.54,24.54,0,5],[2840.34,22.54,0,5],[2844.13,20.55,0,5],[2847.93,18.58,0,5],[2851.72,16.65,0,5],[2855.51,14.77,0,5],[2859.29,12.97,0,5],[3154.32,16.67,0,6],[3157.89,14.51,0,6],[3161.54,12.52,0,6],[3165.34,10.81,1,6]],
-  6: [[291.08,48.64,0,1],[294.92,46.77,0,1],[298.75,44.72,0,1],[302.47,42.62,0,1],[306.18,40.45,0,1],[1055.22,40.43,0,2],[1059.37,39.42,0,2],[1063.50,38.25,0,2],[1067.63,36.94,0,2],[1071.65,35.56,0,2],[1075.67,34.10,0,2],[1079.68,32.57,0,2],[1778.09,19.94,0,3],[1781.88,18.08,0,3],[1785.67,16.26,0,3],[1789.56,14.46,0,3],[1793.44,12.72,0,3],[1797.32,11.08,1,3],[2372.96,64.99,0,4],[2376.58,62.79,0,4],[2380.20,60.48,0,4],[2383.81,58.09,0,4],[2387.32,55.71,0,4],[3109.97,38.48,0,5],[3113.60,36.13,0,5],[3117.12,33.72,0,5],[3120.63,31.24,0,5],[3124.13,28.71,0,5],[3127.54,26.24,0,5],[3130.93,23.77,0,5],[3134.43,21.25,0,5],[3828.30,15.36,0,6],[3832.29,13.84,0,6],[3836.27,12.39,0,6],[3840.25,11.02,0,6],[3844.23,9.74,0,6],[3848.29,8.55,0,6],[3852.35,7.51,1,6]],
-  7: [[300.75,25.06,0,1],[304.65,23.44,0,1],[308.55,21.81,0,1],[312.46,20.18,0,1],[316.35,18.54,0,1],[320.25,16.91,0,1],[324.15,15.29,0,1],[589.97,18.48,0,2],[593.57,16.31,0,2],[597.17,14.14,0,2],[600.86,11.92,0,2],[604.56,9.73,0,2],[840.15,9.87,0,3],[844.04,8.27,0,3],[847.93,6.70,0,3],[851.92,5.13,0,3],[855.90,3.63,0,3],[859.88,2.22,1,3],[1342.16,43.16,0,4],[1346.31,41.96,0,4],[1350.34,40.62,0,4],[1354.37,39.15,0,4],[1358.39,37.58,0,4],[1362.30,35.98,0,4],[1366.21,34.32,0,4],[1694.18,49.47,0,5],[1698.32,48.19,0,5],[1702.34,46.81,0,5],[1706.36,45.33,0,5],[1710.38,43.77,0,5],[3239.62,37.97,0,6],[3243.78,36.95,0,6],[3247.92,35.73,0,6],[3251.94,34.41,0,6],[3255.97,32.98,0,6],[3259.98,31.48,1,6],[3760.79,29.80,0,7],[3764.69,28.12,0,7],[3768.58,26.45,0,7],[3772.48,24.79,0,7],[3776.38,23.14,0,7],[3780.27,21.52,0,7],[3784.17,19.91,0,7],[3788.06,18.34,0,7],[4156.03,98.87,0,8],[4160.09,97.37,0,8],[4164.04,95.67,0,8],[4167.88,93.81,0,8],[4171.72,91.77,0,8],[4175.45,89.61,0,8],[4179.07,87.38,0,8],[4182.69,85.02,0,8]],
-  8: [[904.02,62.18,0,1],[907.54,59.69,0,1],[910.96,57.17,0,1],[914.37,54.58,0,1],[917.78,51.93,0,1],[921.18,49.25,0,1],[1703.29,37.81,0,2],[1707.34,36.46,0,2],[1711.38,34.94,0,2],[1715.30,33.32,0,2],[1719.22,31.61,0,2],[2204.02,45.18,0,3],[2208.07,43.56,0,3],[2212.00,41.81,0,3],[2215.82,39.98,0,3],[2219.64,38.06,0,3],[2223.45,36.07,0,3],[2227.26,34.03,0,3],[2230.96,32.02,1,3],[2973.58,75.63,0,4],[2977.73,74.61,0,4],[2981.87,73.41,0,4],[2985.90,72.09,0,4],[2989.93,70.64,0,4],[2993.95,69.08,0,4],[2997.87,67.47,0,4],[3001.78,65.78,0,4],[3487.87,56.53,0,5],[3491.78,54.91,0,5],[3495.68,53.27,0,5],[3499.58,51.63,0,5],[3503.48,49.98,0,5],[3507.38,48.32,0,5],[3511.28,46.66,0,5],[4147.39,39.02,0,6],[4151.29,37.23,0,6],[4155.19,35.44,0,6],[4159.09,33.64,0,6],[4162.99,31.85,0,6],[4166.89,30.06,0,6],[4170.79,28.27,1,6]],
-  9: [[303.36,40.14,0,1],[307.51,38.83,0,1],[311.54,37.36,0,1],[315.57,35.77,0,1],[319.49,34.11,0,1],[323.40,32.38,0,1],[927.02,67.44,0,2],[931.18,66.21,0,2],[935.22,64.80,0,2],[939.26,63.21,0,2],[943.19,61.52,0,2],[1738.30,47.30,0,3],[1742.43,46.30,0,3],[1746.57,45.17,0,3],[1750.69,43.91,0,3],[1754.71,42.59,0,3],[1758.73,41.19,1,3],[2281.33,37.69,0,4],[2285.34,36.12,0,4],[2289.35,34.52,0,4],[2293.25,32.93,0,4],[2297.16,31.33,0,4],[2301.06,29.71,0,4],[3002.83,46.68,0,5],[3006.98,45.67,0,5],[3011.11,44.49,0,5],[3015.24,43.18,0,5],[3019.26,41.81,0,5],[3660.91,85.41,0,6],[3665.06,84.31,0,6],[3669.21,82.99,0,6],[3673.25,81.52,0,6],[3677.18,79.93,0,6],[3681.11,78.22,0,6],[3685.03,76.40,1,6],[4248.91,12.81,0,7],[4252.90,11.30,0,7],[4256.89,9.85,0,7],[4260.87,8.46,0,7],[4264.85,7.15,0,7],[4268.92,5.92,0,7],[4272.99,4.80,0,7],[4581.76,73.52,0,8],[4585.82,72.11,0,8],[4589.77,70.50,0,8],[4593.71,68.70,0,8],[4597.54,66.76,0,8]],
-  10: [[331.70,38.30,0,1],[335.23,35.93,0,1],[338.76,33.40,0,1],[342.17,30.85,0,1],[345.58,28.22,0,1],[348.99,25.55,0,1],[352.29,22.95,0,1],[355.68,20.31,0,1],[673.75,24.01,0,2],[677.78,22.57,0,2],[681.80,21.03,0,2],[685.72,19.45,0,2],[689.62,17.84,0,2],[693.52,16.21,0,2],[1178.75,32.53,0,3],[1182.90,31.27,0,3],[1186.93,29.88,0,3],[1190.95,28.38,0,3],[1194.96,26.81,0,3],[1198.87,25.23,1,3],[1891.81,11.60,0,4],[1895.80,10.01,0,4],[1899.78,8.51,0,4],[1903.74,7.14,0,4],[1907.78,5.95,0,4],[2431.69,41.81,0,5],[2435.83,40.72,0,5],[2439.96,39.48,0,5],[2443.99,38.15,0,5],[2448.00,36.73,0,5],[2452.02,35.24,0,5],[2456.03,33.69,0,5],[2890.15,12.84,0,6],[2894.02,11.14,0,6],[2897.88,9.60,0,6],[2901.83,8.23,0,6],[2905.85,7.09,1,6],[3403.18,63.21,0,7],[3406.71,60.82,0,7],[3410.23,58.30,0,7],[3413.65,55.75,0,7],[3417.06,53.13,0,7],[3420.46,50.46,0,7],[3423.77,47.85,0,7],[3427.07,45.21,0,7],[4104.05,35.50,0,8],[4108.18,34.23,0,8],[4112.20,32.87,0,8],[4116.22,31.43,0,8],[4120.24,29.91,0,8],[4124.25,28.34,0,8],[4662.14,28.51,0,9],[4666.04,26.88,0,9],[4669.94,25.25,0,9],[4673.83,23.64,0,9],[4677.73,22.04,1,9]],
-  11: [[673.04,50.18,0,1],[676.99,48.56,0,1],[680.93,46.73,0,1],[684.76,44.80,0,1],[688.58,42.77,0,1],[692.29,40.70,0,1],[696.00,38.58,0,1],[1555.23,70.82,0,2],[1558.56,68.04,0,2],[1561.78,65.17,0,2],[1564.90,62.27,0,2],[1568.00,59.28,0,2],[1950.10,27.61,0,3],[1954.25,26.47,0,3],[1958.29,25.17,0,3],[1962.31,23.74,0,3],[1966.33,22.22,1,3],[2597.25,8.80,0,4],[2601.20,7.48,0,4],[2605.22,6.39,0,4],[2851.51,43.05,0,5],[2855.41,41.23,0,5],[2859.31,39.40,0,5],[2863.11,37.60,0,5],[2866.92,35.80,0,5],[2870.72,33.99,0,5],[2874.52,32.18,0,5],[3277.84,93.77,0,6],[3281.86,92.36,0,6],[3285.88,90.87,0,6],[3289.89,89.31,0,6],[3293.80,87.73,0,6],[3297.71,86.09,1,6],[4411.32,87.98,0,7],[4415.37,86.39,0,7],[4419.31,84.62,0,7],[4423.15,82.73,0,7],[4426.97,80.69,0,7]],
-  12: [[357.93,46.87,0,1],[362.07,45.86,0,1],[366.21,44.69,0,1],[370.33,43.39,0,1],[374.35,42.02,0,1],[378.37,40.57,0,1],[382.38,39.06,0,1],[386.39,37.50,0,1],[863.98,26.21,0,2],[867.88,24.60,0,2],[871.79,22.98,0,2],[875.69,21.34,0,2],[879.59,19.71,0,2],[883.49,18.07,0,2],[1248.33,45.31,0,3],[1252.28,43.56,0,3],[1256.11,41.68,0,3],[1259.93,39.68,0,3],[1263.64,37.66,0,3],[1267.35,35.58,1,3],[1786.69,14.64,0,4],[1790.25,12.42,0,4],[1793.91,10.36,0,4],[1797.64,8.52,0,4],[1801.45,7.00,0,4],[2232.67,38.91,0,5],[2236.59,37.23,0,5],[2240.50,35.49,0,5],[2244.41,33.69,0,5],[2248.32,31.86,0,5],[2596.18,34.80,0,6],[2600.09,33.19,0,6],[2603.99,31.57,0,6],[2607.89,29.94,0,6],[2611.79,28.30,0,6],[2615.69,26.66,1,6],[3080.69,34.19,0,7],[3084.39,32.14,0,7],[3088.09,30.10,0,7],[3091.79,28.07,0,7],[3095.49,26.05,0,7],[3099.18,24.05,0,7],[3450.18,34.72,0,8],[3453.10,31.54,0,8],[3456.00,28.30,0,8],[3458.90,25.07,0,8],[3461.78,21.92,0,8],[3464.76,18.82,0,8],[3467.82,15.88,0,8],[3723.35,64.84,0,9],[3727.48,63.87,0,9],[3731.60,62.79,0,9],[3735.72,61.60,0,9],[3739.84,60.33,0,9],[3743.86,59.02,1,9],[4568.95,29.03,0,10],[4572.54,26.79,0,10],[4576.14,24.57,0,10],[4579.73,22.40,0,10],[4583.42,20.22,0,10],[4587.10,18.11,0,10],[4590.78,16.09,0,10],[4594.56,14.12,0,10],[5185.04,44.43,0,11],[5189.08,42.84,0,11],[5193.01,41.15,0,11],[5196.93,39.35,0,11],[5200.75,37.51,0,11],[5204.56,35.61,0,11],[5208.37,33.67,0,11],[5212.17,31.69,0,11]],
+  1: [[665.19,27.36,0,1],[669.22,25.92,0,1],[673.24,24.37,0,1],[677.15,22.80,0,1],[681.06,21.20,0,1],[684.96,19.57,0,1],[1221.01,31.27,0,2],[1225.03,29.68,0,2],[1228.94,28.07,0,2],[1232.85,26.43,0,2],[1236.75,24.76,0,2],[1667.47,24.18,0,3],[1671.31,22.35,0,3],[1675.13,20.38,0,3],[1678.84,18.37,0,3],[1682.55,16.32,1,3]],
+  2: [[282.00,29.29,0,1],[286.15,28.00,0,1],[290.19,26.57,0,1],[294.21,25.00,0,1],[298.13,23.40,0,1],[302.03,21.75,0,1],[305.94,20.07,0,1],[309.84,18.37,0,1],[992.53,3.86,0,2],[996.39,2.14,0,2],[1000.32,0.62,0,2],[1004.32,-0.56,0,2],[2081.83,36.38,0,3],[2085.97,35.16,0,3],[2090.00,33.83,0,3],[2094.02,32.40,0,3],[2098.04,30.88,0,3],[2102.05,29.30,0,3],[2105.96,27.72,0,3],[2109.86,26.12,1,3]],
+  3: [[268.07,37.35,0,1],[272.23,36.31,0,1],[276.37,35.07,0,1],[280.40,33.71,0,1],[284.42,32.25,0,1],[288.43,30.72,0,1],[883.71,33.30,0,2],[887.63,31.62,0,2],[891.53,29.88,0,2],[895.44,28.11,0,2],[899.34,26.32,0,2],[903.25,24.52,0,2],[907.15,22.72,0,2],[911.05,20.91,0,2],[1431.00,33.45,0,3],[1435.01,31.97,0,3],[1439.03,30.41,0,3],[1443.04,28.81,0,3],[1446.94,27.21,0,3],[1450.85,25.59,1,3],[2375.36,12.41,0,4],[2379.35,10.98,0,4],[2383.33,9.62,0,4],[2387.31,8.35,0,4],[2391.38,7.15,0,4],[2738.42,23.82,0,5],[2742.45,22.38,0,5],[2746.47,20.86,0,5],[2750.48,19.26,0,5],[2754.39,17.67,0,5],[3065.20,31.57,0,6],[3069.20,29.97,0,6],[3073.11,28.38,0,6],[3077.01,26.77,0,6],[3080.92,25.14,0,6],[3084.82,23.51,0,6],[3088.72,21.87,0,6],[3092.62,20.23,1,6]],
+  4: [[395.73,34.85,0,1],[399.78,33.26,0,1],[403.72,31.53,0,1],[407.54,29.72,0,1],[411.36,27.82,0,1],[415.17,25.85,0,1],[418.97,23.84,0,1],[1028.34,49.77,0,2],[1032.38,48.22,0,2],[1036.31,46.54,0,2],[1040.23,44.74,0,2],[1044.05,42.91,0,2],[1047.86,41.02,0,2],[1051.67,39.09,0,2],[1481.38,33.85,0,3],[1485.43,32.48,0,3],[1489.46,30.93,0,3],[1493.39,29.30,0,3],[1497.30,27.60,1,3],[2033.97,27.71,0,4],[2038.00,26.39,0,4],[2042.03,24.94,0,4],[2046.05,23.40,0,4],[2050.06,21.81,0,4],[2053.96,20.21,0,4],[2057.87,18.59,0,4],[2592.86,38.33,0,5],[2597.01,37.30,0,5],[2601.15,36.08,0,5],[2605.18,34.76,0,5],[2609.20,33.33,0,5],[2613.22,31.82,0,5],[3160.62,9.04,0,6],[3164.59,7.75,0,6],[3168.65,6.59,1,6],[3401.63,50.09,0,7],[3405.79,48.97,0,7],[3409.84,47.66,0,7],[3413.88,46.15,0,7],[3417.82,44.51,0,7],[3421.75,42.73,0,7],[3425.57,40.88,0,7]],
+  5: [[302.94,40.48,0,1],[306.89,38.83,0,1],[310.82,37.00,0,1],[314.64,35.10,0,1],[318.45,33.12,0,1],[322.26,31.08,0,1],[1366.26,40.66,0,2],[1370.40,39.58,0,2],[1374.54,38.34,0,2],[1378.57,37.01,0,2],[1382.59,35.57,0,2],[1386.60,34.06,0,2],[2226.57,56.16,0,3],[2230.50,54.36,0,3],[2234.33,52.47,0,3],[2238.15,50.45,0,3],[2241.87,48.41,0,3],[2245.58,46.31,0,3],[2249.28,44.15,1,3],[2536.06,16.37,0,4],[2540.09,14.86,0,4],[2544.01,13.29,0,4],[2547.92,11.68,0,4],[2551.82,10.04,0,4],[2555.72,8.41,0,4],[2856.69,14.20,0,5],[2860.57,12.38,0,5],[2864.44,10.68,0,5],[2868.40,9.11,0,5],[2872.34,7.76,0,5],[2876.36,6.68,0,5],[3160.04,13.31,0,6],[3163.76,11.47,0,6],[3167.62,10.05,1,6]],
+  6: [[291.11,48.63,0,1],[294.96,46.75,0,1],[298.79,44.70,0,1],[302.50,42.60,0,1],[306.22,40.43,0,1],[746.63,35.14,0,2],[750.67,33.68,0,2],[754.60,32.11,0,2],[758.52,30.43,0,2],[762.44,28.66,0,2],[766.35,26.84,0,2],[770.15,25.03,0,2],[1055.40,40.40,0,3],[1059.54,39.38,0,3],[1063.68,38.20,0,3],[1067.81,36.88,0,3],[1071.83,35.50,0,3],[1075.84,34.03,1,3],[1515.17,42.85,0,4],[1519.31,41.84,0,4],[1523.45,40.66,0,4],[1527.58,39.36,0,4],[1531.60,37.98,0,4],[2001.45,25.63,0,5],[2005.25,23.72,0,5],[2009.04,21.80,0,5],[2012.83,19.93,0,5],[2016.61,18.14,0,5],[2020.47,16.45,0,5],[2024.38,15.02,0,5],[2373.62,64.60,0,6],[2377.24,62.37,0,6],[2380.86,60.04,0,6],[2384.37,57.71,0,6],[2387.88,55.33,0,6],[2391.38,52.91,0,6],[2394.89,50.46,1,6],[3109.93,38.50,0,7],[3113.56,36.16,0,7],[3117.08,33.75,0,7],[3120.59,31.27,0,7],[3124.10,28.74,0,7],[3127.50,26.27,0,7],[3826.65,16.00,0,8],[3830.64,14.46,0,8],[3834.62,12.98,0,8],[3838.61,11.57,0,8],[3842.58,10.25,0,8],[3846.65,9.01,0,8],[3850.72,7.91,0,8]],
+  7: [[416.74,49.00,0,1],[420.89,47.97,0,1],[425.03,46.76,0,1],[429.06,45.43,0,1],[433.09,43.99,0,1],[437.10,42.47,0,1],[441.11,40.89,0,1],[1048.39,13.48,0,2],[1052.32,11.63,0,2],[1056.13,9.75,0,2],[1059.93,7.85,0,2],[1063.73,5.95,0,2],[1067.52,4.09,0,2],[1512.08,54.20,0,3],[1516.24,52.98,0,3],[1520.28,51.59,0,3],[1524.31,50.05,0,3],[1528.23,48.43,0,3],[1532.15,46.72,0,3],[1536.06,44.93,1,3],[2213.66,47.02,0,4],[2217.82,45.74,0,4],[2221.86,44.29,0,4],[2225.89,42.68,0,4],[2229.81,41.00,0,4],[3523.14,38.87,0,5],[3527.30,37.82,0,5],[3531.44,36.58,0,5],[3535.47,35.23,0,5],[3539.49,33.78,0,5],[3543.50,32.25,0,5],[4026.62,10.04,0,6],[4030.69,8.80,0,6],[4034.76,7.69,1,6]],
+  8: [[902.70,63.07,0,1],[906.22,60.64,0,1],[909.64,58.16,0,1],[913.05,55.59,0,1],[916.46,52.96,0,1],[919.87,50.29,0,1],[1623.42,46.15,0,2],[1626.76,43.32,0,2],[1629.98,40.39,0,2],[1633.10,37.40,0,2],[1636.11,34.41,0,2],[1639.12,31.36,0,2],[1642.12,28.29,0,2],[2612.91,34.83,0,3],[2617.07,33.70,0,3],[2621.20,32.39,0,3],[2625.23,30.98,0,3],[2629.25,29.48,1,3],[3280.76,29.21,0,4],[3284.65,27.48,0,4],[3288.55,25.76,0,4],[3292.45,24.05,0,4],[3296.35,22.35,0,4],[3300.24,20.68,0,4],[3304.13,19.02,0,4],[3308.03,17.40,0,4],[3838.76,74.34,0,5],[3842.91,73.33,0,5],[3847.04,72.16,0,5],[3851.17,70.86,0,5],[3855.20,69.47,0,5],[3859.22,67.99,0,5],[3863.23,66.42,0,5],[3867.15,64.83,0,5]],
+  9: [[304.31,39.86,0,1],[308.35,38.53,0,1],[312.39,37.04,0,1],[316.31,35.46,0,1],[320.23,33.79,0,1],[324.14,32.04,0,1],[927.03,67.44,0,2],[931.18,66.21,0,2],[935.23,64.79,0,2],[939.26,63.21,0,2],[943.19,61.52,0,2],[1738.51,47.25,0,3],[1742.64,46.25,0,3],[1746.78,45.11,0,3],[1750.90,43.84,0,3],[1754.92,42.52,0,3],[1758.94,41.11,1,3],[2099.04,21.58,0,4],[2103.19,20.26,0,4],[2107.22,18.80,0,4],[2111.24,17.24,0,4],[2115.15,15.66,0,4],[2119.06,14.04,0,4],[2794.65,18.45,0,5],[2798.53,16.76,0,5],[2802.42,15.14,0,5],[2806.30,13.58,0,5],[2810.28,12.08,0,5],[3334.98,35.69,0,6],[3339.03,34.25,0,6],[3342.96,32.67,0,6],[3346.88,30.99,0,6],[3350.79,29.25,0,6],[3354.70,27.46,0,6],[3358.60,25.66,1,6],[3995.01,43.16,0,7],[3998.51,40.75,0,7],[4002.01,38.35,0,7],[4005.50,35.96,0,7],[4009.00,33.59,0,7],[4012.49,31.25,0,7],[4016.09,28.88,0,7],[4644.70,36.10,0,8],[4648.29,33.78,0,8],[4651.87,31.53,0,8],[4655.46,29.36,0,8],[4659.14,27.23,0,8]],
+  10: [[331.05,38.72,0,1],[334.69,36.31,0,1],[338.21,33.81,0,1],[341.63,31.26,0,1],[345.04,28.64,0,1],[348.44,25.98,0,1],[351.74,23.38,0,1],[355.13,20.73,0,1],[983.41,41.21,0,2],[987.31,39.55,0,2],[991.22,37.89,0,2],[995.12,36.21,0,2],[999.02,34.53,0,2],[1002.92,32.85,0,2],[1369.22,60.97,0,3],[1373.13,59.28,0,3],[1377.04,57.52,0,3],[1380.95,55.72,0,3],[1384.76,53.92,0,3],[1388.57,52.09,1,3],[2088.43,19.94,0,4],[2092.13,17.83,0,4],[2095.82,15.77,0,4],[2099.59,13.75,0,4],[2103.35,11.88,0,4],[2432.63,41.58,0,5],[2436.77,40.45,0,5],[2440.90,39.18,0,5],[2444.92,37.83,0,5],[2448.94,36.39,0,5],[2452.95,34.88,0,5],[2456.96,33.32,0,5],[3004.96,83.82,0,6],[3008.81,81.83,0,6],[3012.54,79.70,0,6],[3016.17,77.47,0,6],[3019.79,75.12,0,6],[3023.30,72.74,0,6],[3026.81,70.29,0,6],[3030.32,67.79,1,6],[3728.10,71.83,0,7],[3732.26,70.70,0,7],[3736.30,69.38,0,7],[3740.34,67.89,0,7],[3744.27,66.30,0,7],[3748.19,64.59,0,7],[4423.84,37.22,0,8],[4427.99,36.19,0,8],[4432.13,34.97,0,8],[4436.16,33.63,0,8],[4440.19,32.19,0,8]],
+  11: [[673.05,50.18,0,1],[677.00,48.55,0,1],[680.94,46.72,0,1],[684.77,44.80,0,1],[688.59,42.76,0,1],[692.30,40.70,0,1],[696.01,38.58,0,1],[1949.89,27.66,0,2],[1954.05,26.53,0,2],[1958.19,25.21,0,2],[1962.21,23.78,0,2],[1966.23,22.26,0,2],[2594.57,9.80,0,3],[2598.53,8.35,0,3],[2602.57,7.07,1,3],[2832.88,51.31,0,4],[2836.79,49.66,0,4],[2840.70,47.95,0,4],[2844.61,46.21,0,4],[2848.51,44.43,0,4],[2852.42,42.62,0,4],[2856.32,40.80,0,4],[3277.83,93.77,0,5],[3281.85,92.36,0,5],[3285.87,90.87,0,5],[3289.88,89.31,0,5],[3293.80,87.73,0,5],[3297.71,86.10,0,5],[4411.38,87.95,0,6],[4415.44,86.36,0,6],[4419.38,84.59,0,6],[4423.21,82.69,0,6],[4427.04,80.66,1,6]],
+  12: [[357.92,46.87,0,1],[362.06,45.86,0,1],[366.19,44.69,0,1],[370.32,43.40,0,1],[374.34,42.03,0,1],[378.36,40.58,0,1],[382.37,39.07,0,1],[386.38,37.51,0,1],[865.81,25.46,0,2],[869.72,23.84,0,2],[873.62,22.21,0,2],[877.52,20.57,0,2],[881.42,18.94,0,2],[885.32,17.31,0,2],[1542.91,30.20,0,3],[1547.06,29.05,0,3],[1551.19,27.73,0,3],[1555.21,26.31,0,3],[1559.23,24.81,0,3],[1563.24,23.24,1,3],[2027.05,36.35,0,4],[2031.18,35.08,0,4],[2035.21,33.72,0,4],[2039.23,32.27,0,4],[2043.24,30.74,0,4],[2047.25,29.16,0,4],[2051.16,27.59,0,4],[2392.02,43.26,0,5],[2396.17,42.24,0,5],[2400.30,41.04,0,5],[2404.33,39.74,0,5],[2408.35,38.33,0,5],[2836.92,67.93,0,6],[2840.43,65.57,0,6],[2843.93,63.20,0,6],[2847.43,60.83,0,6],[2850.93,58.46,0,6],[2854.43,56.09,1,6],[3298.23,21.79,0,7],[3301.93,19.69,0,7],[3305.62,17.61,0,7],[3309.32,15.56,0,7],[3313.01,13.56,0,7],[3316.80,11.56,0,7],[3775.13,47.24,0,8],[3779.03,45.65,0,8],[3782.93,44.05,0,8],[3786.84,42.44,0,8],[3790.74,40.82,0,8],[3794.64,39.19,0,8],[3798.54,37.56,0,8],[4498.43,70.77,0,9],[4502.37,69.11,0,9],[4506.31,67.26,0,9],[4510.13,65.32,0,9],[4513.85,63.31,0,9],[4517.57,61.22,1,9],[5184.38,44.68,0,10],[5188.42,43.12,0,10],[5192.35,41.44,0,10],[5196.27,39.66,0,10],[5200.08,37.83,0,10],[5203.90,35.94,0,10],[5207.70,34.01,0,10],[5211.51,32.03,0,10]],
 };
 
 // ===================================================================
@@ -1007,7 +1002,7 @@ class Lauf {
   starten() {
     if (this.gestartet) return;
     this.gestartet = true;
-    this.v = K.V_START;
+    this.v = K.V_START;   // 0: Kalle steht, bis gedrückt wird
   }
 
   // Ein fester Physikschritt
@@ -1067,15 +1062,16 @@ class Lauf {
     const cos = 1 / n, sin = s / n;
     const g = K.G * (this.halten ? K.SCHWER_BODEN : K.LEICHT_BODEN);
     let a = -g * sin - K.REIBUNG - K.LUFTWIDERSTAND * this.v * this.v;
+    const vorher = this.v;
     this.v += a * dt;
     if (auslauf) {
       this.v = Math.max(0, this.v - (this.ergebnis === 'nacht' ? 14 : 9) * dt);
     } else {
-      // Nie Feststecken: losgelassen krabbelt Kalle zügig zurück aufs Mindesttempo.
-      // Wer bergauf schwer bleibt, wird dagegen richtig langsam.
-      if (this.halten) this.v = Math.max(K.V_MIN_SCHWER, this.v);
-      else if (this.v < K.V_MIN) this.v = Math.min(K.V_MIN, Math.max(K.V_MIN_SCHWER, this.v) + K.KRABBELN * dt);
-      this.v = Math.min(K.V_MAX, this.v);
+      // Kalle läuft nur, solange die Taste gedrückt ist: dann krabbelt er zügig aufs
+      // Mindesttempo (nie Feststecken). Losgelassen gibt es keinen eigenen Antrieb –
+      // nur Schwung und Gefälle; ohne Schwung bleibt er stehen (rutscht nie rückwärts).
+      if (this.halten && this.v < K.V_MIN) this.v = Math.max(this.v, Math.min(K.V_MIN, Math.max(0, vorher) + K.KRABBELN * dt));
+      this.v = Math.max(0, Math.min(K.V_MAX, this.v));
     }
     // Abheben an der Kuppe?
     const y2 = this.g.kruemmung2(this.x);
@@ -1142,7 +1138,7 @@ class Lauf {
       // Nur kurz von der Kuppe abgehoben: still weiterrutschen, kein Ereignis
       this.boden = true;
       this.y = h;
-      this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+      this.v = this.ergebnis ? neu : Math.min(K.V_MAX, neu);
       return;
     }
     const weit = this.x - this.abflugX;
@@ -1177,7 +1173,7 @@ class Lauf {
     }
     this.boden = true;
     this.y = h;
-    this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+    this.v = this.ergebnis ? neu : Math.min(K.V_MAX, neu);
     this.ereignisse.push({ art: 'landung', guete: art, winkel, quer, v: this.v, verlust: v - this.v, x: this.x, y: h, kette: this.kette, flugzeit: this.flugzeit, weit, hoch });
   }
 }
@@ -1293,12 +1289,11 @@ function berechneMuscheln(def, lauf) {
 // ===================================================================
 // 3c · FLUGRUFE (Bewertung)
 // Entscheidet in Weltkoordinaten und Spielzeit, wann Kalle ruft:
-//   „Juhu!“   – schöner mittlerer Flug nach oben
-//   „Yippie!“ – besonders hoher und schneller oder sehr weiter Flug
+//   Nur bei richtig großen Flügen (hoch UND weit) und pro Flug höchstens EIN Ruf:
+//   „Juhu!“ normalerweise, „Yippie!“ wenn der Gipfel besonders hoch ist.
 // Ein Flug beginnt mit dem echten Abheben (Lauf.echterFlug) und endet erst,
 // wenn Kalle BODEN_RUHE Sekunden stabil am Boden war – kurze Aufsetzer
-// zwischendurch starten keinen neuen Flug. Pro Flug höchstens ein „Juhu!“
-// und danach höchstens ein „Yippie!“ als Steigerung. Zwischen zwei Rufen
+// zwischendurch starten keinen neuen Flug. Zwischen zwei Rufen
 // liegen mindestens ABSTAND Sekunden. Es wird nie etwas aufgeschoben: Was
 // nicht sofort passt, entfällt. Ergebnis sind Ereignisse { art: 'ruf', ruf }.
 // ===================================================================
@@ -1328,25 +1323,18 @@ class Flugrufe {
     if (!this.imFlug) {
       this.imFlug = true;
       this.start = { x: l.abflugX, y: l.abflugY, vy: Math.max(0, l.abflugV * l.abflugSteig), v: l.abflugV };
+      this.maxHoehe = 0;
     }
-    if (this.gerufen === 'yippie' || l.ergebnis) return;
-    if (l.flugzeit < R.JUHU_MIN_ZEIT) return;
+    // Pro Flug höchstens EIN Ruf – und nur bei einem richtig großen Flug: tatsächlich hoch
+    // UND weit. „Yippie!“ statt „Juhu!“ nur, wenn der Gipfel besonders hoch wird.
+    if (this.gerufen || l.ergebnis) return;
     const st = this.start;
     const hoehe = l.y - st.y;                      // tatsächlich erreicht
-    const gipfel = Flugrufe.gipfel(l, st);         // vorhergesagt (ohne Halten)
     const weite = l.x - st.x;
-    const sofortYippie = !this.gerufen && gipfel >= R.YIPPIE_SOFORT && st.v >= R.YIPPIE_SOFORT_TEMPO;
-    const yippie = sofortYippie || hoehe >= R.YIPPIE_HOEHE || weite >= R.YIPPIE_WEITE;
-    const juhu = hoehe >= R.JUHU_HOEHE && l.vy > 0 && st.vy >= R.JUHU_STEIG;   // tatsächlich hoch, noch im Steigflug
-    const seitLetztem = l.zeit - this.letzterRuf;
-    if (yippie) {
-      // Steigerung im selben Flug erst, wenn das Juhu vorbei ist; sonst Abstand zum letzten Flug
-      const frei = this.gerufen === 'juhu' ? seitLetztem >= R.STEIGERUNG : seitLetztem >= R.ABSTAND;
-      if (frei) this.rufen(l, 'yippie');
-    } else if (juhu && !this.gerufen) {
-      if (seitLetztem >= R.ABSTAND) this.rufen(l, 'juhu');
-      else this.gerufen = 'verpasst';              // zu kurz nach dem letzten Ruf: entfällt, wird nicht nachgeholt
-    }
+    this.maxHoehe = Math.max(this.maxHoehe, hoehe);
+    if (this.maxHoehe < R.HOEHE || weite < R.WEITE) return;
+    if (l.zeit - this.letzterRuf < R.ABSTAND) { this.gerufen = 'verpasst'; return; }   // entfällt, wird nicht nachgeholt
+    this.rufen(l, Math.max(this.maxHoehe, Flugrufe.gipfel(l, st)) >= R.YIPPIE_HOEHE ? 'yippie' : 'juhu');
   }
   rufen(l, ruf) {
     this.gerufen = ruf;
@@ -1388,7 +1376,8 @@ const Bot = (() => {
   function bodenRegel(l, vorlauf) {
     const s = l.g.steigung(l.x);
     const voraus = l.g.steigung(l.x + l.v * (0.08 + vorlauf));
-    return s < -0.02 && voraus < 0.05;
+    // Ohne Taste kein Antrieb: wer zu langsam ist, hält, damit Kalle weiterkrabbelt
+    return (s < -0.02 && voraus < 0.05) || l.v < K.V_MIN * 0.9;
   }
   // Wie weit kommt Kalle in fester Zeit, wenn er jetzt hält / loslässt?
   // (danach: in der Luft nicht halten, am Boden die Bodenregel)
@@ -1417,7 +1406,7 @@ const Bot = (() => {
         if (art === 'nie') return false;
         if (art === 'immer') return true;
         // 'einfach': so spielt ein Anfänger – bergab halten, beim Fallen halten
-        if (art === 'einfach') { const h = l.boden ? l.g.steigung(l.x) < 0 : l.vy < 0; this.letzte = h; return h; }
+        if (art === 'einfach') { const h = l.boden ? l.g.steigung(l.x) < 0 || l.v < K.V_MIN * 0.9 : l.vy < 0; this.letzte = h; return h; }
         if (schritte >= naechste) {
           naechste = schritte + 6;   // alle 1/40 s neu nachdenken
           if (l.boden) entscheidung = bodenRegel(l, vorlauf);
@@ -1932,14 +1921,12 @@ const Speicher = (() => {
 // ===================================================================
 // 6 · TON
 // Eigene kurze Geräusche mit Web Audio, keine Dateien. Startet erst nach
-// einer Nutzeraktion und ist abschaltbar. Dazu ein leises Rutsch- und
-// Windgeräusch, das mit dem Tempo mitgeht.
+// einer Nutzeraktion und ist abschaltbar. Bewusst ohne Rauschen.
 // ===================================================================
 
 const Ton = (() => {
-  let ctx = null, haupt = null, rauschen = null;
+  let ctx = null, haupt = null;
   let an = true;
-  let rutsch = null;   // { quelle, filter, gain } dauerhaftes Rauschen
 
   function wecke() {
     if (!an) return;
@@ -1959,14 +1946,6 @@ const Ton = (() => {
   }
   const bereit = () => an && ctx && ctx.state === 'running';
 
-  function rauschBuffer() {
-    if (!rauschen) {
-      rauschen = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 1.5), ctx.sampleRate);
-      const d = rauschen.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    }
-    return rauschen;
-  }
   function huelle(g, t, laut, dauer, anstieg = 0.005) {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(Math.max(0.0002, laut), t + anstieg);
@@ -1982,30 +1961,9 @@ const Ton = (() => {
     osc.connect(g).connect(haupt);
     osc.start(t); osc.stop(t + dauer + 0.03);
   }
-  function rausch(dauer, { laut = 0.3, start = 0, typ = 'bandpass', f1 = 1800, f2 = 600, q = 0.9 } = {}) {
-    const t = ctx.currentTime + start;
-    const src = ctx.createBufferSource(); src.buffer = rauschBuffer();
-    const fil = ctx.createBiquadFilter(); fil.type = typ; fil.Q.value = q;
-    fil.frequency.setValueAtTime(f1, t);
-    fil.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t + dauer);
-    const g = ctx.createGain(); huelle(g, t, laut, dauer, 0.003);
-    src.connect(fil).connect(g).connect(haupt);
-    src.start(t, Math.random() * 0.5); src.stop(t + dauer + 0.03);
-  }
   const v = () => 1 + (Math.random() * 2 - 1) * 0.05;
 
   let letzteMuschel = 0, serie = 0;
-
-  // Dauerrauschen für Rutschen und Fahrtwind
-  function rutschStarten() {
-    if (rutsch || !ctx) return;
-    const src = ctx.createBufferSource(); src.buffer = rauschBuffer(); src.loop = true;
-    const fil = ctx.createBiquadFilter(); fil.type = 'bandpass'; fil.Q.value = 0.8; fil.frequency.value = 600;
-    const g = ctx.createGain(); g.gain.value = 0.0001;
-    src.connect(fil).connect(g).connect(haupt);
-    src.start();
-    rutsch = { src, fil, g };
-  }
 
   return {
     wecke,
@@ -2015,24 +1973,15 @@ const Ton = (() => {
       if (an) wecke();
       else if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
     },
-    // Jedes Bild: Lautstärke und Klangfarbe des Rutschens an Tempo anpassen
-    fahrt(tempo, boden, schwer, aktiv) {
-      if (!bereit()) return;
-      rutschStarten();
-      const t = ctx.currentTime;
-      const s = Math.min(1, tempo / 55);
-      const laut = aktiv ? (boden ? 0.025 + s * 0.07 + (schwer ? 0.02 : 0) : 0.012 + s * 0.035) : 0.0001;
-      rutsch.g.gain.setTargetAtTime(Math.max(0.0001, laut), t, 0.06);
-      rutsch.fil.frequency.setTargetAtTime(boden ? 300 + s * 900 : 900 + s * 1600, t, 0.08);
-      rutsch.fil.Q.setTargetAtTime(boden ? 0.9 : 0.5, t, 0.1);
-    },
-    still() { if (rutsch && ctx) rutsch.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); },
+    // Kein Rutsch- oder Windrauschen mehr (Wunsch: Rauschen entfernt). Bleibt als leere
+    // Schnittstelle, damit der restliche Code unverändert bleibt.
+    fahrt() {},
+    still() {},
     // Absprung: kurzes Fahrtwind-„Hui“ (die Stimme kommt aus 6b-rufe.js)
     abflug(tempo) {
       if (!bereit()) return;
       const s = Math.min(1, tempo / 80);
       ton(320 + s * 200, 700 + s * 500, 0.2, { typ: 'sine', laut: 0.07 });
-      rausch(0.25, { laut: 0.05, f1: 600, f2: 2400, q: 0.7 });
     },
     // Für die Rufe: Audio-Kontext und Hauptregler, nur wenn Ton an und schon geweckt
     kontext: () => (bereit() ? { ctx, haupt } : null),
@@ -2044,14 +1993,11 @@ const Ton = (() => {
         ton(basis, basis, 0.09, { typ: 'triangle', laut: 0.2 });
         ton(basis * 1.5, basis * 1.5, 0.16, { typ: 'triangle', laut: 0.18, start: 0.06 });
         ton(basis * 2, basis * 2, 0.2, { typ: 'sine', laut: 0.06, start: 0.12 });
-        rausch(0.12, { laut: 0.06, f1: 1200, f2: 500 });
       } else if (guete === 'hart') {
         ton(150 * v(), 70, 0.16, { typ: 'triangle', laut: 0.3 });
-        rausch(0.18, { laut: 0.16, typ: 'lowpass', f1: 900, f2: 200, q: 0.8 });
         ton(420, 300, 0.12, { typ: 'sine', laut: 0.06, start: 0.06 });
       } else {
         ton(200 * v(), 120, 0.09, { typ: 'sine', laut: 0.16 });
-        rausch(0.09, { laut: 0.08, f1: 900, f2: 300 });
       }
     },
     // Distanzmarke erreicht: helles, freundliches Zwei-Ton-Signal
@@ -3510,7 +3456,7 @@ const Eingabe = (() => {
   $('weiterLevelKnopf').addEventListener('click', () => { Ton.klick(); starteStrecke(def.id + 1); });
 
   // ---------------------------------------------------------- Anzeige
-  let hinweisText = null;
+  let hinweisText = null, stehZeit = 0;
   function hinweis(t) {
     if (t === hinweisText) return;
     hinweisText = t;
@@ -3620,7 +3566,9 @@ const Eingabe = (() => {
     // Lernhinweise an festen Stellen der Strecke
     if (zustand === 'lauf') {
       const h = lauf.hinweise.find(h => lauf.x >= h.x && lauf.x <= h.bis);
-      hinweis(h ? h.text : null);
+      // Kalle steht (ohne Taste kein Antrieb): kurz zeigen, wie es weitergeht
+      stehZeit = lauf.boden && lauf.tempo < 1 && !halten ? stehZeit + dt : 0;
+      hinweis(h ? h.text : stehZeit > 1 ? 'Halten, damit Kalle weiterkrabbelt.' : null);
       // Warnglocke in den letzten Sekunden
       const r = Math.ceil(lauf.rest);
       if (r > 10) glockeBei = 99;   // nach einem Zeitbonus wieder warnen dürfen

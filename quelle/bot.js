@@ -31,7 +31,8 @@ const Bot = (() => {
   function bodenRegel(l, vorlauf) {
     const s = l.g.steigung(l.x);
     const voraus = l.g.steigung(l.x + l.v * (0.08 + vorlauf));
-    return s < -0.02 && voraus < 0.05;
+    // Ohne Taste kein Antrieb: wer zu langsam ist, hält, damit Kalle weiterkrabbelt
+    return (s < -0.02 && voraus < 0.05) || l.v < K.V_MIN * 0.9;
   }
   // Wie weit kommt Kalle in fester Zeit, wenn er jetzt hält / loslässt?
   // (danach: in der Luft nicht halten, am Boden die Bodenregel)
@@ -60,7 +61,7 @@ const Bot = (() => {
         if (art === 'nie') return false;
         if (art === 'immer') return true;
         // 'einfach': so spielt ein Anfänger – bergab halten, beim Fallen halten
-        if (art === 'einfach') { const h = l.boden ? l.g.steigung(l.x) < 0 : l.vy < 0; this.letzte = h; return h; }
+        if (art === 'einfach') { const h = l.boden ? l.g.steigung(l.x) < 0 || l.v < K.V_MIN * 0.9 : l.vy < 0; this.letzte = h; return h; }
         if (schritte >= naechste) {
           naechste = schritte + 6;   // alle 1/40 s neu nachdenken
           if (l.boden) entscheidung = bodenRegel(l, vorlauf);

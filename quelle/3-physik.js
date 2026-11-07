@@ -95,7 +95,7 @@ class Lauf {
   starten() {
     if (this.gestartet) return;
     this.gestartet = true;
-    this.v = K.V_START;
+    this.v = K.V_START;   // 0: Kalle steht, bis gedrückt wird
   }
 
   // Ein fester Physikschritt
@@ -155,15 +155,16 @@ class Lauf {
     const cos = 1 / n, sin = s / n;
     const g = K.G * (this.halten ? K.SCHWER_BODEN : K.LEICHT_BODEN);
     let a = -g * sin - K.REIBUNG - K.LUFTWIDERSTAND * this.v * this.v;
+    const vorher = this.v;
     this.v += a * dt;
     if (auslauf) {
       this.v = Math.max(0, this.v - (this.ergebnis === 'nacht' ? 14 : 9) * dt);
     } else {
-      // Nie Feststecken: losgelassen krabbelt Kalle zügig zurück aufs Mindesttempo.
-      // Wer bergauf schwer bleibt, wird dagegen richtig langsam.
-      if (this.halten) this.v = Math.max(K.V_MIN_SCHWER, this.v);
-      else if (this.v < K.V_MIN) this.v = Math.min(K.V_MIN, Math.max(K.V_MIN_SCHWER, this.v) + K.KRABBELN * dt);
-      this.v = Math.min(K.V_MAX, this.v);
+      // Kalle läuft nur, solange die Taste gedrückt ist: dann krabbelt er zügig aufs
+      // Mindesttempo (nie Feststecken). Losgelassen gibt es keinen eigenen Antrieb –
+      // nur Schwung und Gefälle; ohne Schwung bleibt er stehen (rutscht nie rückwärts).
+      if (this.halten && this.v < K.V_MIN) this.v = Math.max(this.v, Math.min(K.V_MIN, Math.max(0, vorher) + K.KRABBELN * dt));
+      this.v = Math.max(0, Math.min(K.V_MAX, this.v));
     }
     // Abheben an der Kuppe?
     const y2 = this.g.kruemmung2(this.x);
@@ -230,7 +231,7 @@ class Lauf {
       // Nur kurz von der Kuppe abgehoben: still weiterrutschen, kein Ereignis
       this.boden = true;
       this.y = h;
-      this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+      this.v = this.ergebnis ? neu : Math.min(K.V_MAX, neu);
       return;
     }
     const weit = this.x - this.abflugX;
@@ -265,7 +266,7 @@ class Lauf {
     }
     this.boden = true;
     this.y = h;
-    this.v = this.ergebnis ? neu : Math.max(K.V_MIN, Math.min(K.V_MAX, neu));
+    this.v = this.ergebnis ? neu : Math.min(K.V_MAX, neu);
     this.ereignisse.push({ art: 'landung', guete: art, winkel, quer, v: this.v, verlust: v - this.v, x: this.x, y: h, kette: this.kette, flugzeit: this.flugzeit, weit, hoch });
   }
 }

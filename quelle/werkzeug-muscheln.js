@@ -2,9 +2,11 @@
 // Nach jeder Änderung an Physik oder Strecken ausführen: node quelle/werkzeug-muscheln.js
 const fs = require('fs'), path = require('path');
 const L = require('./lade-logik.js')({ ohneMuscheldatei: true });
+const probe = require('./muschel-probe.js');
 const zeilen = L.STRECKEN.map(d => {
-  const lauf = new L.Lauf(d, { ohneMuscheln: true });
-  const liste = L.berechneMuscheln(d, lauf).map(m => `[${m.x.toFixed(2)},${m.y.toFixed(2)},${m.gold ? 1 : 0},${m.linie}]`);
+  const { muscheln: roh, entfernt } = probe(L, d);
+  if (entfernt) console.log(`Strecke ${d.id}: ${entfernt} Linie(n) ohne sicheres Einsammeln entfernt`);
+  const liste = roh.map(m => `[${m.x.toFixed(2)},${m.y.toFixed(2)},${m.gold ? 1 : 0},${m.linie}]`);
   return `  ${d.id}: [${liste.join(',')}],`;
 });
 const text = `// Vorab berechnete Muscheln je Strecke: [x, y, gold, linie]. NICHT von Hand ändern –

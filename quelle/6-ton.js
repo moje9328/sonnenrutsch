@@ -1,14 +1,12 @@
 // ===================================================================
 // 6 · TON
 // Eigene kurze Geräusche mit Web Audio, keine Dateien. Startet erst nach
-// einer Nutzeraktion und ist abschaltbar. Dazu ein leises Rutsch- und
-// Windgeräusch, das mit dem Tempo mitgeht.
+// einer Nutzeraktion und ist abschaltbar. Bewusst ohne Rauschen.
 // ===================================================================
 
 const Ton = (() => {
-  let ctx = null, haupt = null, rauschen = null;
+  let ctx = null, haupt = null;
   let an = true;
-  let rutsch = null;   // { quelle, filter, gain } dauerhaftes Rauschen
 
   function wecke() {
     if (!an) return;
@@ -28,14 +26,6 @@ const Ton = (() => {
   }
   const bereit = () => an && ctx && ctx.state === 'running';
 
-  function rauschBuffer() {
-    if (!rauschen) {
-      rauschen = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 1.5), ctx.sampleRate);
-      const d = rauschen.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    }
-    return rauschen;
-  }
   function huelle(g, t, laut, dauer, anstieg = 0.005) {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(Math.max(0.0002, laut), t + anstieg);
@@ -51,30 +41,9 @@ const Ton = (() => {
     osc.connect(g).connect(haupt);
     osc.start(t); osc.stop(t + dauer + 0.03);
   }
-  function rausch(dauer, { laut = 0.3, start = 0, typ = 'bandpass', f1 = 1800, f2 = 600, q = 0.9 } = {}) {
-    const t = ctx.currentTime + start;
-    const src = ctx.createBufferSource(); src.buffer = rauschBuffer();
-    const fil = ctx.createBiquadFilter(); fil.type = typ; fil.Q.value = q;
-    fil.frequency.setValueAtTime(f1, t);
-    fil.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t + dauer);
-    const g = ctx.createGain(); huelle(g, t, laut, dauer, 0.003);
-    src.connect(fil).connect(g).connect(haupt);
-    src.start(t, Math.random() * 0.5); src.stop(t + dauer + 0.03);
-  }
   const v = () => 1 + (Math.random() * 2 - 1) * 0.05;
 
   let letzteMuschel = 0, serie = 0;
-
-  // Dauerrauschen für Rutschen und Fahrtwind
-  function rutschStarten() {
-    if (rutsch || !ctx) return;
-    const src = ctx.createBufferSource(); src.buffer = rauschBuffer(); src.loop = true;
-    const fil = ctx.createBiquadFilter(); fil.type = 'bandpass'; fil.Q.value = 0.8; fil.frequency.value = 600;
-    const g = ctx.createGain(); g.gain.value = 0.0001;
-    src.connect(fil).connect(g).connect(haupt);
-    src.start();
-    rutsch = { src, fil, g };
-  }
 
   return {
     wecke,
@@ -84,24 +53,15 @@ const Ton = (() => {
       if (an) wecke();
       else if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
     },
-    // Jedes Bild: Lautstärke und Klangfarbe des Rutschens an Tempo anpassen
-    fahrt(tempo, boden, schwer, aktiv) {
-      if (!bereit()) return;
-      rutschStarten();
-      const t = ctx.currentTime;
-      const s = Math.min(1, tempo / 55);
-      const laut = aktiv ? (boden ? 0.025 + s * 0.07 + (schwer ? 0.02 : 0) : 0.012 + s * 0.035) : 0.0001;
-      rutsch.g.gain.setTargetAtTime(Math.max(0.0001, laut), t, 0.06);
-      rutsch.fil.frequency.setTargetAtTime(boden ? 300 + s * 900 : 900 + s * 1600, t, 0.08);
-      rutsch.fil.Q.setTargetAtTime(boden ? 0.9 : 0.5, t, 0.1);
-    },
-    still() { if (rutsch && ctx) rutsch.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); },
+    // Kein Rutsch- oder Windrauschen mehr (Wunsch: Rauschen entfernt). Bleibt als leere
+    // Schnittstelle, damit der restliche Code unverändert bleibt.
+    fahrt() {},
+    still() {},
     // Absprung: kurzes Fahrtwind-„Hui“ (die Stimme kommt aus 6b-rufe.js)
     abflug(tempo) {
       if (!bereit()) return;
       const s = Math.min(1, tempo / 80);
       ton(320 + s * 200, 700 + s * 500, 0.2, { typ: 'sine', laut: 0.07 });
-      rausch(0.25, { laut: 0.05, f1: 600, f2: 2400, q: 0.7 });
     },
     // Für die Rufe: Audio-Kontext und Hauptregler, nur wenn Ton an und schon geweckt
     kontext: () => (bereit() ? { ctx, haupt } : null),
@@ -113,14 +73,11 @@ const Ton = (() => {
         ton(basis, basis, 0.09, { typ: 'triangle', laut: 0.2 });
         ton(basis * 1.5, basis * 1.5, 0.16, { typ: 'triangle', laut: 0.18, start: 0.06 });
         ton(basis * 2, basis * 2, 0.2, { typ: 'sine', laut: 0.06, start: 0.12 });
-        rausch(0.12, { laut: 0.06, f1: 1200, f2: 500 });
       } else if (guete === 'hart') {
         ton(150 * v(), 70, 0.16, { typ: 'triangle', laut: 0.3 });
-        rausch(0.18, { laut: 0.16, typ: 'lowpass', f1: 900, f2: 200, q: 0.8 });
         ton(420, 300, 0.12, { typ: 'sine', laut: 0.06, start: 0.06 });
       } else {
         ton(200 * v(), 120, 0.09, { typ: 'sine', laut: 0.16 });
-        rausch(0.09, { laut: 0.08, f1: 900, f2: 300 });
       }
     },
     // Distanzmarke erreicht: helles, freundliches Zwei-Ton-Signal

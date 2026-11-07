@@ -5,6 +5,34 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Siebte Runde (7.11.2026): Rauschen weg, kein Selbstlauf, seltene Rufe
+
+**1. Rauschen entfernt** („entferne das rauschen im spiel“). In `6-ton.js` sind entfernt:
+- das Dauerrauschen beim Rutschen und Fliegen (`fahrt()` und `still()` sind jetzt leere Funktionen, damit sich die Aufrufer nicht ändern),
+- die kurzen Rausch-Stöße beim Abheben und bei allen Landungen,
+- der Rausch-Puffer selbst.
+
+Die Töne und die Stimme bleiben. Die Stimme enthält weiter einen 30–50 ms kurzen Hauch als Konsonant.
+
+**2. Kein Vorwärtslaufen ohne Taste** („darf sich nicht automatisch vorwärts bewegen, wenn nicht die Leertaste gedrückt wird“):
+- `V_START` ist 0: Nach dem Start steht Kalle, bis gedrückt wird.
+- Das Krabbeln aufs Mindesttempo (`KRABBELN`/`V_MIN`) gibt es nur noch bei gedrückter Taste. Gedrückt schafft das Krabbeln auch steile Anstiege trotz Schwere (Antrieb wird vor der Schwerkraft berechnet).
+- Losgelassen gibt es nur Schwung und Gefälle. Ohne Schwung bleibt Kalle stehen und rutscht nie rückwärts. Landungen haben kein Mindesttempo mehr.
+- Steht Kalle länger als 1 s, erscheint der Hinweis „Halten, damit Kalle weiterkrabbelt.“ Anleitung und Lernhinweis sind angepasst.
+- Die Bots halten am Boden zusätzlich, wenn sie langsamer als 0,9·V_MIN sind. Bot-Zeiten bleiben wie vorher: gut 499 s, mittel 530 s, einfach 655 s über alle 12 Strecken. Alle Bots schaffen alle Strecken.
+- Zeiten und Sterne sind neu kalibriert. Das Tageslicht wurde nie gekürzt (Maximum aus alt und neu).
+- Der Bot `nie` bleibt jetzt am Start stehen (Endlos: genau 120 s, 0 m).
+
+**3. Flugrufe nur bei richtig großen Flügen** („Juhu und Yippie auf Dauer zu nervig“):
+- Pro Flug höchstens **ein** Ruf, nur wenn Kalle wirklich ≥ `RUF.HOEHE` 100 m über dem Absprung war **und** ≥ `RUF.WEITE` 300 m weit geflogen ist.
+- „Yippie!“ statt „Juhu!“ nur bei einem Gipfel ≥ 140 m.
+- Zwischen zwei Rufen liegen mindestens `ABSTAND` 15 s, sonst entfällt der Ruf.
+- Gemessen: gut 0,5, mittel 0,7, einfach 2,2 Rufe pro Minute (vorher etwa 10).
+
+**4. Muschel-Werkzeug mit Probeflug:** `werkzeug-muscheln.js` fliegt jede Linie mit dem guten und dem mittleren Bot ab. Linien, die keiner zu ≥ 70 % einsammelt, werden entfernt (diesmal 1 auf Strecke 11).
+
+Service-Worker-Cache ist jetzt `sonnenrutsch-v8`. Noch offen: Hochladen nur nach OK. Live ist weiter die Version vom 6.11.
+
 ## Sechste Runde (7.11.2026): ruhiger, geschmeidiger, länger
 
 Auftrag: Das Spiel war zu hektisch – Kalle fiel zu schnell, die Sonne ging zu schnell unter, der Hintergrund raste. Die erwähnte Aufnahme lag nicht vor.
@@ -302,5 +330,5 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 - Ton nur im Code geprüft (headless Browser spielen nichts hörbar ab).
 - Echte 120-Hz-Displays nicht getestet (Physik ist bildratenunabhängig, sollte also passen).
 - Wie die Juhuu-Stimme klingt, konnte ich nicht hören – bitte am Gerät beurteilen (Tonhöhe in `abflug()` in `6-ton.js`).
-- Bei Updates: `sw.js` CACHE (`sonnenrutsch-v1`) hochzählen, committen, pushen. In `~/spiele-seite` nur gezielt stagen – Hafenlotse und Bewertungen liegen dort uncommittet und dürfen nicht mit hoch.
+- Bei Updates: `sw.js` CACHE (zurzeit `sonnenrutsch-v8`) hochzählen, committen, pushen. In `~/spiele-seite` nur gezielt stagen – Hafenlotse und Bewertungen liegen dort uncommittet und dürfen nicht mit hoch.
 - Ideen für später: Freundes-Rangliste per Link wie bei Steinbrecher, leise Musik, Geist-Kalle der Bestzeit.
