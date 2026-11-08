@@ -207,6 +207,10 @@
     const r = Speicher.endlosRekord();
     $('endlosRekordStart').hidden = !r.strecke;
     $('startRekord').textContent = `${r.strecke} m · ${r.punkte} Punkte`;
+    // Alte Rekorde (vor Sprungflächen und neuer Wertung) bleiben als Erinnerung sichtbar, zählen aber nicht mehr
+    const alt = Speicher.endlosRekordAlt();
+    $('endlosRekordAlt').hidden = !alt.strecke;
+    $('startRekordAlt').textContent = `${alt.strecke} m · ${alt.punkte} Punkte`;
   }
 
   function krabbenWahl() {
@@ -472,6 +476,11 @@
       const h = lauf.hinweise.find(h => lauf.x >= h.x && lauf.x <= h.bis);
       // Kalle steht (ohne Taste kein Antrieb): kurz zeigen, wie es weitergeht
       stehZeit = lauf.boden && lauf.tempo < 1 && !halten ? stehZeit + dt : 0;
+      // Erste Sprungfläche in Sicht (nur einmal je Gerät): kurze Meldung oben, die die Rampe nicht verdeckt
+      if (!Speicher.mattenGesehen() && lauf.matten.length) {
+        const m = lauf.matten.find(m => m.x1 > lauf.x && m.x0 < lauf.x + 140);
+        if (m && lauf.x > m.x0 - 120 && lauf.x < m.x0 - 25) { Grafik.meldung('Hafenpolster: drüberfahren gibt Extra-Sprung', '#9ff3ea', 1, 3.2); Speicher.setzeMattenGesehen(); }
+      }
       hinweis(h ? h.text : stehZeit > 1 ? 'Halten, damit Kalle weiterkrabbelt.' : null);
       // Warnglocke in den letzten Sekunden
       const r = Math.ceil(lauf.rest);
@@ -503,14 +512,16 @@
       pose.jubelZeit = e.ruf === 'yippie' ? 0.9 : 0.6;
       pose.yippie = e.ruf === 'yippie' ? 0.9 : 0;
     }
+    else if (e.art === 'matte') { Ton.boing(e.v); pose.platt = 0.9; pose.jubelZeit = 0.4; }
+    else if (e.art === 'reihe') Ton.reihe();
     else if (e.art === 'landung') {
-      Ton.landung(e.guete, e.kette);
-      pose.platt = e.guete === 'hart' ? 1 : e.guete === 'perfekt' ? 0.4 : 0.6;
+      if (e.guete !== 'matte') Ton.landung(e.guete, e.kette);
+      pose.platt = e.guete === 'hart' ? 1 : e.guete === 'perfekt' ? 0.4 : e.guete === 'matte' ? 0.2 : 0.6;
       if (e.guete === 'perfekt') pose.jubelZeit = 0.5;
       if (e.guete === 'hart') pose.verdutztZeit = 0.7;
       const k = $('kette');
       if (e.kette > 1) { k.hidden = false; k.textContent = `PERFEKT ×${e.kette}`; }
-      else if (e.guete !== 'perfekt') k.hidden = true;
+      else if (e.guete !== 'perfekt' && e.guete !== 'matte') k.hidden = true;
     } else if (e.art === 'licht') {
       // Zeitgewinn kurz und verständlich anzeigen (gerundet auf halbe Sekunden)
       const plus = Math.round(e.plus * 2) / 2;
@@ -564,7 +575,7 @@
   // ---------------------------------------------------------- Start
   Grafik.init(leinwand);
   // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
-  function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6); }
+  function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6, Math.max(0, r.right - b.left)); }
   window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
   // Beim Drehen melden manche Handys die neue Größe erst nach dem resize-Ereignis. Darum
   // prüft die Spielschleife die Größe jedes Bild (siehe rahmen) – nie mehr gestauchtes Bild.

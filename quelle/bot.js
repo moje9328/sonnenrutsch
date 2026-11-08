@@ -16,6 +16,8 @@ const Bot = (() => {
     k.ereignisse = [];
     k.statistik = Object.assign({}, l.statistik);
     k.vorschau = true;   // Vorschau darf keine Muscheln einsammeln
+    k.rufe = Object.assign(Object.create(Flugrufe.prototype), l.rufe);   // eigene Rufe-Zähler (nichts am echten Lauf ändern)
+    k.bahn = l.bahn.slice();
     return k;
   }
   // Fliegt mit fester Haltung bis zur Landung; Ergebnis: Tempo danach
@@ -88,5 +90,5 @@ const Bot = (() => {
     l.tag = tagAlt;
     return { zeit, lauf: l, stat: l.statistik };
   }
-  return { neu, spiele, kopie };
+  return { neu, spiele, kopie, bodenRegel };
 })();

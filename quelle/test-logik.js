@@ -98,9 +98,13 @@ console.log('## Muscheln');
   const frisch = require('./lade-logik.js')({ ohneMuscheldatei: true });
   for (const d of STRECKEN) {
     const gespeichert = new Lauf(d).muscheln;
-    const neu = require('./muschel-probe.js')(frisch, d).muscheln;
-    const gleich = gespeichert.length === neu.length && gespeichert.every((m, i) => Math.abs(m.x - neu[i].x) < 0.06 && Math.abs(m.y - neu[i].y) < 0.06 && m.gold === neu[i].gold);
+    const plan = frisch.planeStrecke(d);
+    frisch.MATTEN_PLAN[d.id] = plan.matten.map(m => [m.x0, m.x1, m.kraft]);
+    const neu = require('./muschel-probe.js')(frisch, d, plan.luft).muscheln;
+    const gleich = gespeichert.length === neu.length && gespeichert.every((m, i) => Math.abs(m.x - neu[i].x) < 0.06 && Math.abs(m.y - neu[i].y) < 0.06 && m.gold === neu[i].gold && !!m.luft === !!neu[i].luft);
     ok(gleich, `Strecke ${d.id}: gespeicherte Muscheln passen zur Physik (sonst: node quelle/werkzeug-muscheln.js)`);
+    const gesp = new Lauf(d).matten;
+    ok(gesp.length === plan.matten.length && gesp.every((m, i) => Math.abs(m.x0 - plan.matten[i].x0) < 0.02 && m.kraft === plan.matten[i].kraft), `Strecke ${d.id}: gespeicherte Sprungflächen passen zur Physik`);
     const l = new Lauf(d);
     const unter = l.muscheln.filter(m => m.y < l.g.hoehe(m.x) + 0.5).length;
     ok(unter === 0 && l.muscheln.length >= 15, `Strecke ${d.id}: ${l.muscheln.length} Muscheln, keine im Boden`);
@@ -118,7 +122,7 @@ console.log('## Muschel-Linien folgen der Rampe');
     const l = new Lauf(d), g = l.g;
     let abstandFalsch = 0, nichtBergab = 0, schlechterAbstand = 0, linienGanz = 0, linien = 0, hochZuviel = 0;
     const gruppen = {};
-    for (const m of l.muscheln) (gruppen[m.linie] = gruppen[m.linie] || []).push(m);
+    for (const m of l.muscheln) if (!m.luft) (gruppen[m.linie] = gruppen[m.linie] || []).push(m);   // Luft-Reihen: eigener Abschnitt
     for (const gr of Object.values(gruppen)) {
       linien++;
       for (const m of gr) {
@@ -149,7 +153,7 @@ console.log('## Muschel-Linien folgen der Rampe');
     // Jede Linie liegt dort, wo gutes oder mittleres Spiel landet – und wird dort auch eingesammelt
     const gut = Bot.spiele(d, 'gut').lauf, mittel = Bot.spiele(d, 'mittel').lauf;
     const eingesammelt = (lauf, nr) => { const g = lauf.muscheln.filter(m => m.linie === nr); return g.filter(m => m.weg).length / g.length; };
-    const linienNr = [...new Set(l.muscheln.map(m => m.linie))];
+    const linienNr = [...new Set(l.muscheln.filter(m => !m.luft).map(m => m.linie))];
     const erreicht = linienNr.filter(nr => Math.max(eingesammelt(gut, nr), eingesammelt(mittel, nr)) >= 0.7).length;
     ok(erreicht === linienNr.length, `Strecke ${d.id}: jede Linie wird von gutem oder mittlerem Spiel großteils eingesammelt (${erreicht}/${linienNr.length})`);
   }
@@ -269,22 +273,228 @@ console.log('## Geschmeidige Flugphysik (Vergleichsversuche auf derselben Rampe)
   ok(hoch.flugzeit < 4 && hoch.weite / hoch.flugzeit > 90, `hoher Flug schwebt nicht: ${hoch.flugzeit.toFixed(2)} s in der Luft, vorwärts ${(hoch.weite / hoch.flugzeit).toFixed(0)} m/s (vorher 4,73 s, 83 m/s)`);
   ok(r[0].flugzeit > 2 && r[0].gipfel > 20, `kein „Stein“: schon der langsamste Flug dauert ${r[0].flugzeit.toFixed(1)} s`);
   // Fallzeit aus 30 m (losgelassen): geschmeidig, aber nicht schwerelos
-  const fall = Math.sqrt(2 * 30 / K.G_LUFT);
+  const fall = Math.sqrt(2 * 30 / (K.G_LUFT * (1 + K.FALL_EXTRA * 0.6)));   // mit dem weichen Fall-Zusatz
   ok(fall > 1 && fall < 1.6, `Fall aus 30 m dauert ${fall.toFixed(2)} s (vorher 0,79 s)`);
   // Sinkflug nur bei gehaltener Taste, endet sofort, Geschwindigkeit springt nie
   const l = new Lauf(STRECKEN[4]); l.starten(); l.tag = 999;
   l.x = 500; l.boden = false; l.echterFlug = true; l.flugzeit = 2; l.vx = 80; l.vy = -10; l.y = l.g.hoehe(500) + 300;
-  const gHoch = K.G_LUFT * (1 + K.HOEHE_SCHWER_EXTRA);   // weit über dem Boden zieht die Schwerkraft stärker
+  const fallF = (vy) => { const t = Math.max(0, Math.min(1, -vy / K.FALL_ANLAUF)); return 1 + K.FALL_EXTRA * t * t * (3 - 2 * t); };
+  const gBasis = K.G_LUFT * (1 + K.TEMPO.LUFT_PLUS * l.tempoGrad) * (1 + K.HOEHE_SCHWER_EXTRA);   // weit über dem Boden zieht die Schwerkraft stärker
+  let gHoch = gBasis * fallF(l.vy);
   const ay = (halten) => { const v0 = l.vy; l.schritt(halten); return (l.vy - v0) / K.SCHRITT; };
   const frei = ay(false);
+  const gFrei = gHoch;
+  let vyVor = l.vy;
   let maxSprungV = 0, vAlt = Math.hypot(l.vx, l.vy), a = 0;
-  for (let i = 0; i < 0.3 / K.SCHRITT; i++) { a = ay(true); const v = Math.hypot(l.vx, l.vy); maxSprungV = Math.max(maxSprungV, Math.abs(v - vAlt)); vAlt = v; }
-  const losgelassen = ay(false);
-  ok(Math.abs(frei + gHoch) < 2, `losgelassen hoch oben: Luftschwerkraft ${(-frei).toFixed(0)} m/s²`);
+  for (let i = 0; i < 0.3 / K.SCHRITT; i++) { vyVor = l.vy; a = ay(true); const v = Math.hypot(l.vx, l.vy); maxSprungV = Math.max(maxSprungV, Math.abs(v - vAlt)); vAlt = v; }
+  const vyLos = l.vy, losgelassen = ay(false);
+  gHoch = gBasis * fallF(vyVor);
+  ok(Math.abs(frei + gFrei) < 2, `losgelassen hoch oben: Luftschwerkraft ${(-frei).toFixed(0)} m/s²`);
   ok(Math.abs(a + gHoch * K.SCHWER_LUFT) < 4, `gehalten: Sinkflug ${(-a).toFixed(0)} m/s²`);
-  ok(Math.abs(losgelassen - frei) < 2, 'nach dem Loslassen endet die Zusatzkraft sofort');
+  ok(Math.abs(losgelassen + gBasis * fallF(vyLos)) < 5, 'nach dem Loslassen endet die Zusatzkraft sofort');
   ok(maxSprungV < gHoch * K.SCHWER_LUFT * K.SCHRITT * 1.2, 'Geschwindigkeit bleibt beim Sinkflug stetig (kein Sprung)');
   ok(K.V_MAX_LUFT * K.SCHRITT < 1, `Weg pro Physikschritt höchstens ${(K.V_MAX_LUFT * K.SCHRITT).toFixed(2)} m (jeder Schritt wird gegen den Boden geprüft)`);
+}
+
+console.log('## Sprungflächen (Hafenpolster)');
+{
+  const M = K.MATTE;
+  let gesamt = 0;
+  const alle = [];
+  for (const d of STRECKEN) {
+    const l = new Lauf(d);
+    const ms = l.matten;
+    gesamt += ms.length;
+    ms.forEach(m => alle.push({ d, m }));
+    ok(!d.lern || ms.length === 0, `Strecke ${d.id}: Lernstrecke bleibt ohne Sprungflächen`);
+    const sortiert = ms.every((m, i) => i === 0 || m.x0 > ms[i - 1].x1 + 100);
+    ok(sortiert, `Strecke ${d.id}: wenige Sprungflächen, sortiert und weit auseinander (${ms.length})`);
+    ok(ms.every(m => Math.abs(m.x1 - m.x0 - M.BREITE) < 0.01 && M.STOSS.includes(m.kraft)), `Strecke ${d.id}: Breite und Stoßstärke wie konfiguriert`);
+    // Auf Rampen mit passender Neigung, nicht auf der Kuppe
+    const bau = baueStrecke(d);
+    ok(ms.every(m => { for (let x = m.x0; x <= m.x1; x += 1) { const s = l.g.steigung(x); if (s < M.STEIGUNG[0] - 1e-6 || s > M.STEIGUNG[1] + 1e-6) return false; } return !!bau.kuppen.find(k => k[0] > m.x1 + 10); }), `Strecke ${d.id}: jede Fläche liegt auf einer Rampe mit passender Neigung vor einer Kuppe`);
+    // Sprungflächen blockieren keine Muscheln und liegen im Gelände (nicht darunter)
+    ok(ms.every(m => l.g.hoehe(m.x0) > -50 && m.x0 > 0 && m.x1 < l.ziel), `Strecke ${d.id}: Flächen liegen innerhalb der Strecke`);
+  }
+  ok(gesamt >= 8, `insgesamt ${gesamt} Sprungflächen auf den 12 Strecken (≥ 8)`);
+
+  // Hilfsfunktion: Kalle rollt mit Tempo v auf die Fläche zu
+  const rolle = (d, nr, v, { luft = false, hoehe = 0, vy = 0 } = {}) => {
+    const l = new Lauf(d); l.starten(); l.tag = 999;
+    const m = l.matten[nr];
+    l.x = m.x0 - 6; l.y = l.g.hoehe(l.x);
+    if (luft) { l.boden = false; l.y += hoehe; l.vx = v; l.vy = vy; l.echterFlug = true; l.abflugX = l.x - 30; l.abflugY = l.y; l.hoechstImFlug = l.y; l.flugzeit = 1; }
+    else { l.boden = true; l.v = v; }
+    return { l, m };
+  };
+  const ersteStrecke = STRECKEN.find(d => new Lauf(d).matten.length > 0);
+  const lauefe = (l, bis, halten = false) => {
+    const ev = [];
+    let t = 0;
+    while (t < bis) { l.schritt(halten); t += K.SCHRITT; for (const e of l.ereignisse) ev.push(e); l.ereignisse.length = 0; }
+    return ev;
+  };
+  {
+    // Bodenkontakt bei Tempo: genau ein Absprung, Vorwärtsschwung bleibt, Tempo begrenzt
+    for (const v of [60, 100, 140]) {
+      const { l, m } = rolle(ersteStrecke, 0, v);
+      const vor = v;
+      const ev = lauefe(l, 0.4);
+      const matte = ev.filter(e => e.art === 'matte');
+      ok(matte.length === 1, `Tempo ${v}: Überfahren löst genau einen Absprung aus (${matte.length})`);
+      ok(matte.length === 1 && matte[0].v <= M.V_MAX + 1e-6, `Tempo ${v}: Gesamttempo nach dem Absprung ${matte[0] ? matte[0].v.toFixed(0) : '–'} ≤ ${M.V_MAX}`);
+      ok(!l.boden || l.statistik.matten === 1, `Tempo ${v}: danach in der Luft`);
+      ok(l.vx > 0.8 * vor * Math.cos(Math.atan(l.g.steigung(m.x0))) * M.ERHALT, `Tempo ${v}: Vorwärtsschwung bleibt weitgehend erhalten (vx ${l.vx.toFixed(0)})`);
+    }
+    // Mehr Anflugtempo → weiterer Sprung
+    const weite = (v) => { const { l } = rolle(ersteStrecke, 0, v); let t = 0; while (l.boden && t < 2) { l.schritt(false); t += K.SCHRITT; } const x0 = l.x; t = 0; while (!l.boden && t < 6) { l.schritt(false); t += K.SCHRITT; } return l.x - x0; };
+    const w1 = weite(70), w2 = weite(110), w3 = weite(150);
+    ok(w1 < w2 && w2 < w3, `Mehr Anflugtempo, mehr Reichweite (${w1.toFixed(0)} < ${w2.toFixed(0)} < ${w3.toFixed(0)} m)`);
+    // Zu langsam: kein Absprung
+    { const { l } = rolle(ersteStrecke, 0, M.V_MIN - 8); const ev = lauefe(l, 0.4); ok(ev.every(e => e.art !== 'matte'), 'zu langsam: die Fläche federt nicht ab'); }
+    // Darüberfliegen löst nichts aus
+    { const { l, m } = rolle(ersteStrecke, 0, 100, { luft: true, hoehe: 60, vy: 0 }); const ev = []; let t = 0; while (l.x < m.x1 + 15 && t < 3) { l.schritt(false); t += K.SCHRITT; for (const e of l.ereignisse) ev.push(e); l.ereignisse.length = 0; }
+      ok(ev.every(e => e.art !== 'matte') && l.statistik.matten === undefined, 'Darüberfliegen löst keinen Sprung aus'); }
+    // Landen auf der Fläche löst aus – und endet den Flug als Landung „matte“
+    { const { l } = rolle(ersteStrecke, 0, 110, { luft: true, hoehe: 5, vy: -15 }); l.x = l.matten[0].x0 + 2; l.y = l.g.hoehe(l.x) + 5;
+      const ev = lauefe(l, 0.6);
+      ok(ev.filter(e => e.art === 'matte').length === 1, 'Landen auf der Fläche löst genau einen Sprung aus');
+      ok(ev.some(e => e.art === 'landung' && e.guete === 'matte'), 'der Flug endet als Landung „matte“'); }
+    // Kein mehrfaches Auslösen durch mehrere Kontaktmeldungen; erst nach Verlassen wieder frei
+    { const { l, m } = rolle(ersteStrecke, 0, 100); lauefe(l, 0.25);
+      ok(l.matteSperre === m, 'nach dem Absprung ist die Fläche gesperrt');
+      let n = 0; for (let i = 0; i < 50; i++) { l.boden = true; l.y = l.g.hoehe(l.x); l.v = 100; l.x = (m.x0 + m.x1) / 2; const vorher = l.statistik.matten; l.schritt(false); n += l.statistik.matten - vorher; l.ereignisse.length = 0; }
+      ok(n === 0, 'erneuter Kontakt auf der gesperrten Fläche löst nichts aus (50 Versuche)');
+      l.boden = true; l.x = m.x1 + M.SPERRE + 2; l.y = l.g.hoehe(l.x); l.v = 100; l.schritt(false);
+      ok(l.matteSperre === null, 'weit genug weg: Sperre aufgehoben');
+      l.x = m.x0 + 3; l.y = l.g.hoehe(l.x); l.boden = true; l.v = 100; const vorher = l.statistik.matten; l.schritt(false);
+      ok(l.statistik.matten === vorher + 1, 'neuer gültiger Kontakt löst wieder aus'); }
+    // Absprung ist über Bildraten gleich (feste Physikschritte): zweimal gleich
+    { const a = rolle(ersteStrecke, 0, 100), b = rolle(ersteStrecke, 0, 100); lauefe(a.l, 2); lauefe(b.l, 2); ok(a.l.x === b.l.x && a.l.y === b.l.y, 'Absprung und Flug sind reproduzierbar'); }
+  }
+  // Mit den Testbots: Nach jedem Sprung von einer Fläche landet gutes Spiel nicht hart; Flächen werden benutzt
+  let benutzt = 0, hart = 0, sprueche = 0;
+  for (const d of STRECKEN) {
+    if (!new Lauf(d).matten.length) continue;
+    const l = new Lauf(d), b = Bot.neu('gut'); l.starten(); l.tag = 999;
+    let nachMatte = false, n = 0;
+    while (!l.ergebnis && n++ < 240 * 400) {
+      l.schritt(b.halten(l));
+      for (const e of l.ereignisse) {
+        if (e.art === 'matte') { benutzt++; nachMatte = true; }
+        else if (e.art === 'landung' && nachMatte && e.guete !== 'matte') { nachMatte = false; sprueche++; if (e.guete === 'hart') hart++; }
+      }
+      l.ereignisse.length = 0;
+    }
+  }
+  ok(benutzt >= 6, `gutes Spiel nutzt die Sprungflächen (${benutzt} Sprünge)`);
+  ok(hart === 0 && sprueche > 0, `nach Sprungflächen landet gutes Spiel nie hart (${sprueche} Landungen, ${hart} hart)`);
+}
+
+console.log('## Luft-Sammelreihen');
+{
+  const LF = K.LUFT;
+  let reihenGesamt = 0, altGesamt = 0, bonusGesamt = 0;
+  for (const d of STRECKEN) {
+    const l = new Lauf(d);
+    const luft = l.muscheln.filter(m => m.luft);
+    const gruppen = {};
+    for (const m of luft) (gruppen[m.linie] = gruppen[m.linie] || []).push(m);
+    const nrn = Object.keys(gruppen);
+    ok(!d.lern || nrn.length === 0, `Strecke ${d.id}: Lernstrecke bleibt frei von Luft-Reihen`);
+    let imBoden = 0, abstandFalsch = 0, kurz = 0;
+    for (const gr of Object.values(gruppen)) {
+      if (gr.length < 4) kurz++;
+      for (const m of gr) if (m.y - l.g.hoehe(m.x) < LF.ABSTAND_BODEN_MATTE - 0.05) imBoden++;
+      for (let i = 1; i < gr.length; i++) { const dd = Math.hypot(gr[i].x - gr[i - 1].x, gr[i].y - gr[i - 1].y); if (Math.abs(dd - LF.ABSTAND) > 1.2) abstandFalsch++; }
+    }
+    ok(imBoden === 0, `Strecke ${d.id}: keine Luft-Muschel im oder knapp über dem Boden`);
+    ok(abstandFalsch === 0 && kurz === 0, `Strecke ${d.id}: Luft-Reihen mit gleichmäßigem Abstand (${LF.ABSTAND} m) und mindestens 4 Muscheln`);
+    // Erreichbarkeit: gutes Spiel sammelt jede (hohe) Reihe zu ≥ 85 %; die niedrige Alternative mit Halten von Anfang an
+    const gut = Bot.spiele(d, 'gut').lauf;
+    const anteil = (lauf, nr) => { const g = lauf.muscheln.filter(m => m.linie === nr); return g.filter(m => m.weg).length / g.length; };
+    const hoch = nrn.filter(nr => !gruppen[nr][0].alt), alt = nrn.filter(nr => gruppen[nr][0].alt);
+    const schlecht = hoch.filter(nr => anteil(gut, Number(nr)) < 0.85).length;
+    ok(schlecht === 0, `Strecke ${d.id}: alle ${hoch.length} Luft-Reihen sind vom guten Spiel erreichbar (${schlecht} nicht)`);
+    if (alt.length) {
+      const bot = Bot.neu('gut'), k = new Lauf(d); k.starten(); k.tag = 999;
+      const ziele = alt.map(nr => gruppen[nr][0].abX);
+      let n = 0;
+      while (!k.ergebnis && n++ < 240 * 400) { let h = bot.halten(k); if (!k.boden && ziele.some(x => Math.abs(x - k.abflugX) < 6)) h = true; k.schritt(h); k.ereignisse.length = 0; }
+      const schlecht2 = alt.filter(nr => anteil(k, Number(nr)) < 0.8).length;
+      ok(schlecht2 === 0, `Strecke ${d.id}: ${alt.length} niedrige Alternativlinie(n) sind mit Halten von Anfang an erreichbar (${schlecht2} nicht)`);
+      // niedrige Linie liegt wirklich tiefer als die hohe
+      for (const nr of alt) {
+        const tief = gruppen[nr], hochG = gruppen[Number(nr) - 1] || [];
+        const mx = tief[Math.floor(tief.length / 2)];
+        const nah = hochG.reduce((b, m) => (!b || Math.abs(m.x - mx.x) < Math.abs(b.x - mx.x) ? m : b), null);
+        ok(!nah || nah.y - mx.y >= 3, `Strecke ${d.id}: niedrige Linie ${nr} liegt unter der hohen`);
+      }
+    }
+    // Rhythmus: nicht jeder Flug ist bestückt, es gibt freie Abschnitte
+    ok(hoch.length <= Math.max(1, Math.ceil(gut.statistik.fluege * 0.8)), `Strecke ${d.id}: Rhythmus – ${hoch.length} Reihen bei ${gut.statistik.fluege} Flügen (es bleiben freie Abschnitte)`);
+    reihenGesamt += hoch.length; altGesamt += alt.length;
+    bonusGesamt += hoch.filter(nr => gruppen[nr].some(m => m.gold)).length;
+    // Gesamtwert: die niedrige Linie zählt nicht zusätzlich
+    ok(l.muschelGesamt === l.muscheln.filter(m => !m.alt).reduce((s, m) => s + (m.gold ? K.GOLD_WERT : 1), 0), `Strecke ${d.id}: Muschel-Gesamtwert ohne Alternativlinien`);
+  }
+  ok(reihenGesamt >= 30, `insgesamt ${reihenGesamt} Luft-Reihen (≥ 30)`);
+  ok(bonusGesamt >= 5, `davon ${bonusGesamt} mit goldener Schlussmuschel (≥ 5)`);
+  console.log(`  (Info: ${altGesamt} Strecken-Flüge mit zwei Linien)`);
+  // Jede Muschel zählt nur einmal
+  { const d = STRECKEN[4]; const lauf = Bot.spiele(d, 'gut').lauf; const wert = lauf.muscheln.filter(m => m.weg).reduce((s, m) => s + (m.gold ? K.GOLD_WERT : 1), 0); ok(lauf.muschelWert === wert, 'jede eingesammelte Muschel zählt genau einmal'); }
+}
+
+console.log('## Punkte, Reihen-Bonus und Kombo');
+{
+  const d = STRECKEN[5];
+  const l = new Lauf(d); l.starten(); l.tag = 999;
+  // Eine Bodenreihe komplett einsammeln
+  const nr = l.muscheln.find(m => !m.luft).linie, reihe = l.muscheln.filter(m => m.linie === nr);
+  let ev = [];
+  for (const m of reihe.slice(0, -1)) { l.x = m.x; l.y = m.y - K.KRABBE_MITTE; l.boden = false; l.vx = 30; l.vy = 0; l.sammeln(); }
+  ok(l.bonusPunkte === 0, 'unvollständige Reihe gibt keinen Reihen-Bonus');
+  const m = reihe[reihe.length - 1]; l.x = m.x; l.y = m.y - K.KRABBE_MITTE; l.sammeln(); ev = l.ereignisse.filter(e => e.art === 'reihe');
+  ok(ev.length === 1 && l.bonusPunkte === K.PUNKTE.REIHE, `volle Reihe: genau ein Bonus von ${K.PUNKTE.REIHE} Punkten (${l.bonusPunkte})`);
+  l.sammeln(); ok(l.ereignisse.filter(e => e.art === 'reihe').length === 1, 'derselbe Bonus kommt nicht zweimal');
+  ok(l.punkte === l.muschelWert * K.ENDLOS.PUNKTE_MUSCHEL + l.statistik.perfekt * K.ENDLOS.PUNKTE_PERFEKT + l.bonusPunkte, 'Punkte = Muscheln + Perfekt + Bonus');
+  // Kombo: begrenzt und läuft nach dem Fenster aus
+  const k = new Lauf(d); k.starten(); k.tag = 999;
+  let letzteStufe = 0, maxPlus = 0;
+  for (let i = 0; i < 12; i++) { k.ereignisse.length = 0; k.erfolg(0, 0); const e = k.ereignisse.find(z => z.art === 'kombo'); if (e) { letzteStufe = e.stufe; maxPlus = Math.max(maxPlus, e.plus); } k.zeit += 2; }
+  ok(letzteStufe <= K.PUNKTE.KOMBO_MAX && maxPlus <= K.PUNKTE.KOMBO_SCHRITT * (K.PUNKTE.KOMBO_MAX - 1), `Kombo ist begrenzt (Stufe ≤ ${K.PUNKTE.KOMBO_MAX}, Bonus ≤ ${K.PUNKTE.KOMBO_SCHRITT * (K.PUNKTE.KOMBO_MAX - 1)})`);
+  k.zeit += K.PUNKTE.KOMBO_FENSTER + 1; k.ereignisse.length = 0; k.erfolg(0, 0);
+  ok(k.kombo === 1 && !k.ereignisse.some(z => z.art === 'kombo'), 'nach dem Zeitfenster beginnt die Kombo neu');
+  // Harte Landung beendet die Kombo
+  { const q = new Lauf(d); q.starten(); q.tag = 999; q.kombo = 3; q.boden = false; q.echterFlug = true; q.flugzeit = 1; q.abflugX = 10; q.hoechstImFlug = 50; q.maxUeberBoden = 20; q.x = 700; q.y = q.g.hoehe(700) - 0.1; q.vx = 20; q.vy = -150; q.landen(q.g.hoehe(700)); ok(q.kombo === 0, 'harte Landung beendet die Kombo'); }
+  // Supersprung: nur bei sehr hohem, sauber beendetem Flug
+  { const q = new Lauf(d); q.starten(); q.tag = 999; q.boden = false; q.echterFlug = true; q.flugzeit = 3; q.abflugX = 10; q.abflugY = 10; q.hoechstImFlug = 10 + K.PUNKTE.SUPER_GIPFEL + 5; q.x = 500; q.y = q.g.hoehe(500); q.landungMelden('gut', { winkel: 5, quer: 5, v: 100, verlust: 0 });
+    ok(q.ereignisse.some(e => e.art === 'super') && q.bonusPunkte === K.PUNKTE.SUPERSPRUNG, 'Supersprung nach sehr hohem Flug gibt einmal Bonus');
+    const r = new Lauf(d); r.starten(); r.tag = 999; r.boden = false; r.echterFlug = true; r.flugzeit = 3; r.abflugX = 10; r.abflugY = 10; r.hoechstImFlug = 30; r.x = 500; r.y = r.g.hoehe(500); r.landungMelden('gut', { winkel: 5, quer: 5, v: 100, verlust: 0 });
+    ok(!r.ereignisse.some(e => e.art === 'super'), 'kleiner Flug: kein Supersprung'); }
+}
+
+console.log('## Tempo-Anstieg mit der Strecke');
+{
+  for (const d of [STRECKEN[1], STRECKEN[8]]) {
+    const l = new Lauf(d);
+    let vorher = 0, maxSprung = 0, monoton = true;
+    for (let x = 0; x <= l.ziel; x += 0.25) { l.x = x; const t = l.tempoGrad; maxSprung = Math.max(maxSprung, Math.abs(t - vorher)); if (t < vorher - 1e-12) monoton = false; vorher = t; }
+    l.x = 0; const a = l.tempoGrad; l.x = l.ziel; const b = l.tempoGrad;
+    ok(a === 0 && Math.abs(b - 1) < 1e-9, `Strecke ${d.id}: Tempo-Anstieg von 0 bis 1 (${a.toFixed(2)} → ${b.toFixed(2)})`);
+    ok(monoton && maxSprung < 0.01, `Strecke ${d.id}: Anstieg stetig, ohne Sprung (größter Schritt ${maxSprung.toFixed(4)} je 0,25 m)`);
+  }
+  // Das Tempo bleibt begrenzt: gutes Spiel überschreitet nie die Grenzen
+  let vmaxBoden = 0, vmaxLuft = 0;
+  for (const d of STRECKEN) {
+    const l = new Lauf(d), b = Bot.neu('gut'); l.starten(); l.tag = 999; let n = 0;
+    while (!l.ergebnis && n++ < 240 * 400) { l.schritt(b.halten(l)); if (l.boden) vmaxBoden = Math.max(vmaxBoden, l.v); else vmaxLuft = Math.max(vmaxLuft, Math.hypot(l.vx, l.vy)); l.ereignisse.length = 0; }
+  }
+  ok(vmaxBoden <= K.V_MAX + 1e-6 && vmaxLuft <= K.V_MAX_LUFT + 1e-6, `Höchsttempo begrenzt (Boden ${vmaxBoden.toFixed(0)} ≤ ${K.V_MAX}, Luft ${vmaxLuft.toFixed(0)} ≤ ${K.V_MAX_LUFT})`);
+  // Weiche Schwerkraft beim Sinken: am Gipfel kein Ruck
+  { const l = new Lauf(STRECKEN[2]); l.starten(); l.tag = 999; l.boden = false; l.x = 100; l.y = 200; l.vx = 80; l.vy = 40; l.echterFlug = true; l.abflugX = 90; l.abflugY = 190; l.hoechstImFlug = 200;
+    let vyAlt = l.vy, aAlt = null, maxRuck = 0, n = 0; while (!l.boden && n++ < 240 * 6) { l.schritt(false); const a = (l.vy - vyAlt) / K.SCHRITT; if (aAlt !== null) maxRuck = Math.max(maxRuck, Math.abs(a - aAlt)); aAlt = a; vyAlt = l.vy; l.ereignisse.length = 0; }
+    ok(maxRuck < 1, `Übergang vom Steigen zum Sinken ohne Ruck (größte Änderung ${maxRuck.toFixed(3)} m/s²)`); }
 }
 
 console.log('## Tageslicht');
@@ -348,6 +558,7 @@ console.log('## Endlosflug');
         }
         for (const m of l.muscheln) if (!m.geprueft) {
           m.geprueft = true;
+          if (m.luft) continue;   // Luft-Reihen folgen der Flugbahn, nicht dem Hang
           let best = Infinity, fx = m.x;
           for (let x = m.x - 4; x <= m.x + 4; x += 0.05) { const dd = Math.hypot(m.x - x, m.y - l.g.hoehe(x)); if (dd < best) { best = dd; fx = x; } }
           if (Math.abs(best - K.MUSCHEL_HOEHE) > 0.08) abstandFalsch++;

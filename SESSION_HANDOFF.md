@@ -5,6 +5,52 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Zehnte Runde (8.11.2026): Sprungflächen, Luft-Reihen, mehr Abwechslung
+
+Wunsch (ausführlich): schnelleres, schwungvolleres Fluggefühl; mehr Muscheln auf den Hügeln; Sammelreihen in der Luft;
+Sprungflächen („Hafenpolster“); mehr Abwechslung; Punkte, Kombo und kurze Rückmeldungen; ruhiger Hintergrund; alte
+Funktionen (Tageslicht, Pause, Speicher, Steuerung) bleiben.
+
+**1. Fluggefühl (`1-einstellungen.js`, `3-physik.js`)**
+- **Tempo-Anstieg** `K.TEMPO` (weich, `Lauf.tempoGrad` 0→1 über die Strecke bzw. `TEMPO.WEG` 2600 m im Endlosflug): Bodenschwerkraft bis +7 %, Luftschwerkraft bis +6 %, Krabbel-Mindesttempo bis +8 m/s. Der Start bleibt wie vorher flott, nichts springt. Tageslicht und Zeit sind unberührt.
+- **Zügiger Fall:** `FALL_EXTRA` 0,3 / `FALL_ANLAUF` 32 – beim Sinken wächst die Schwerkraft weich (Smoothstep über das Sinktempo), am Gipfel ist der Zusatz 0. Kein Ruck (Test: größte Änderung der Beschleunigung < 1 m/s²). Flugzeit gemessen (`node quelle/vergleich.js`): 95 m/s 2,57 s (vorher 2,65), 115 m/s 2,92 s (3,23), 135 m/s 3,19 s (3,41), 155 m/s 3,55 s (3,68). Gipfel und Absprung unverändert, Weite 3–8 % kürzer.
+- Gute Landungen geben weiter Schwung (`PERFEKT_BONUS`, `KETTEN_BONUS`), harte kosten etwas (`HART_FAKTOR`), gedrückt gilt weiter das Mindesttempo – nichts bremst dauerhaft. Höchsttempo wie vorher (`V_MAX` 160 Boden, 200 Luft als Sicherheitsgrenze).
+
+**2. Sprungflächen „Hafenpolster“** (`K.MATTE`, `Lauf.mattePruefen/matteAusloesen`, `matten()` in `7-grafik.js`)
+- Gültig nur bei echtem Bodenkontakt (überfahren) oder Landung auf der Fläche; Darüberfliegen löst nichts aus. Langsamer als `V_MIN` 32 m/s federt sie nur.
+- Absprung = Tempo entlang der Oberfläche × `ERHALT` + Stoß (24/36/50 m/s) in Richtung „Oberflächennormale gemischt mit 52° vorwärts/aufwärts“; Gesamttempo ≤ `V_MAX` 155, Mindestwinkel 8°.
+- Eine Fläche ist danach gesperrt (`matteSperre`), bis Kalle `SPERRE` 4 m von ihr weg war. Ein Flug, der auf der Fläche endet, wird als Landung „matte“ gemeldet (zählt für Statistik und Rufe).
+- Darstellung: türkis-gelbes Polster, folgt dem Gelände, Pfeil in Sprungrichtung, sanft pulsierender Rand; beim Kontakt gedämpftes Zusammendrücken und Zurückfedern (bei „weniger Bewegung“ nur ein kurzes Eindrücken). Ton `Ton.boing`. Einmalige kurze Erklärung beim ersten Mal (`mattenGesehen` im Speicher).
+- **Wohin die Flächen kommen:** nur auf Rampen (Anstieg vor einer Kuppe, Neigung 0,2–1,6), nie auf der Kuppe, nie auf der Lernstrecke, nie in zwei aufeinanderfolgenden Tälern. Erste Idee (Talboden, Abfahrt) wurde verworfen: Der Gegenhang fängt Kalle nach 0,3 s ab, auf Abfahrten ist der Hüpfer bei 140–160 m/s länger als die Abfahrt.
+- **Planung statt Zufall (`3e-luft.js`, Klasse `Planer`):** Ein Testpilot fährt die Strecke ab. Vor jedem Tal werden bis zu 3 Stellen × 3 Stärken durchgerechnet, jeweils mit Anflugtempo 0,8 / 1,0 / 1,1, Loslassen und Halten. Bei Tempo ≥ 1,0 muss eine saubere Landung auf einer Abfahrt (nicht am Gegenhang) möglich sein, bei 0,8 mindestens keine harte. Sonst entsteht keine Fläche. Ergebnis: 13 Flächen auf 12 Strecken (0–2 je Strecke).
+
+**3. Mehr Muscheln**
+- Bodenreihen: `ANZAHL` 6–10 (vorher 5–8), `ANTEIL` 0,9 (0,75), `MIN_STEIGUNG` 0,12 (0,22: laufen bis in den Übergang zum Tal). Enden vor einer Fläche.
+- **Luft-Reihen** (`K.LUFT`): Muscheln liegen auf der Bahn, die Kalles Mitte beim Flug des Testpiloten wirklich genommen hat (gleiche Abstände entlang der Bahn, mindestens 4 m über dem Gelände, 2,6 m nach Flächen). Große Flüge (Gipfel ≥ 65 m) und Flüge von Flächen bekommen die Bonusreihe (bis 9 Muscheln, goldener Abschluss). Bei etwa jedem dritten großen Flug gibt es zwei Linien: hoch (losgelassen) und niedrig (von Anfang an gehalten, ≥ 7 m darunter, höchstens so lang wie die hohe). Die niedrige Linie zählt nicht zum Gesamtwert.
+- **Rhythmus:** Nach einem bestückten Flug folgt ein freier, kleine Hüpfer (< 14 m Gipfel) bleiben leer, die ersten 90 m und die Lernstrecke bleiben ruhig. Auf den 12 Strecken: 73 Luft-Reihen, 9 Alternativlinien, 110 Bodenreihen.
+- **Erreichbarkeit geprüft:** Die hohen Reihen werden vom guten Bot zu ≥ 85 % eingesammelt (in den Tests: alle), die niedrigen von einem Piloten, der im passenden Flug von Anfang an hält, zu ≥ 80 %. Reihen, die das nicht schaffen, fliegen beim Planen raus.
+- Endlosflug plant live mit demselben Code (Testpilot 900 m voraus, `Endlos.pflege`).
+
+**4. Punkte und Rückmeldung** (`K.PUNKTE`)
+- Muscheln zählen einmal. Volle Reihe: +30. Kombo: Perfekte Landung, volle Reihe oder Sprungfläche innerhalb von 9 s nach dem letzten Erfolg; Bonus 5 × (Stufe − 1), Stufe höchstens 5; harte Landung beendet sie. Supersprung (Gipfel ≥ 95 m, nicht hart gelandet): +40.
+- Der Bonus macht im Endlosflug rund ein Drittel der Punkte aus (gemessen mit dem guten Bot, 3 Läufe à 180 s).
+- Kurze Meldungen oben (`Grafik.meldung`: „Boing!“, „Muschelserie!“, „Kombo ×n“, „Supersprung!“), klein, höchstens eine, wichtigere ersetzt weniger wichtige, verdeckt die Anzeige nicht (richtet sich nach deren Breite). „Perfekt!“ bleibt wie bisher.
+- Flugrufe unverändert (100 m hoch und 300 m weit, höchstens alle 15 s, ein Sprung von einer Fläche zählt als neuer Flug).
+
+**5. Ruhiger Hintergrund und Kamera:** Parallaxe und Kamera sind unverändert (waren schon langsam und weich). Fahrtwind-Linien nur noch ab 90 % des Höchsttempos, höchstens 2 Linien, Deckkraft ≤ 0,1; Flugspur halb so deckend. Kein Wackeln, keine Zoomsprünge.
+
+**6. Rekordversion:** `Speicher` ist jetzt Version 2. Alte Daten (Version 1) bleiben: Sterne, Bestzeiten, Freischaltung, Krabbe, Ton. Der alte Endlos-Rekord wandert nach `endlosV1` (Startmenü zeigt „Rekord vor dem Update“), die neuen Endlos-Rekorde (Strecke, Punkte) beginnen bei null, weil Tempo und Wertung sich geändert haben.
+
+**7. Kalibrierung:** `node quelle/kalibriere.js` neu gemessen. Die Bots sind nur wenig schneller geworden. Tageslicht (`zeit`) wurde nie gekürzt (Maximum aus alt und neu: Strecke 2 38 s, Strecke 6 54 s, Strecke 10 60 s, alle anderen unverändert), die Sterne-Zeiten sind neu.
+
+**8. Service-Worker-Cache:** `sonnenrutsch-v11`.
+
+**Neue Dateien/Werkzeuge:** `3e-luft.js` (Planer, `planeStrecke`), `2b-muscheln.js` enthält jetzt `MUSCHELN` (5. Wert = Art 0/1/2) und `MATTEN`. `node quelle/werkzeug-muscheln.js` plant alle Strecken parallel (~1,5 Minuten); `node quelle/werkzeug-muscheln.js 5` plant nur Strecke 5 und schreibt nichts. **Nach jeder Änderung an Physik oder Strecken: erst `werkzeug-muscheln.js`, dann `baue.py`, dann `kalibriere.js` (Zeiten/Sterne), dann Tests.**
+
+**Tests (8.11.2026):** Logik 574 von 575 im vollen Lauf; die eine Abweichung war ein zu enger Sollwert in meinem Physiktest (Luftwiderstand), nach der Korrektur lief nur der Abschnitt „Geschmeidige Flugphysik“ erneut (12/12), der volle Lauf wurde nicht wiederholt. Browser: Chromium 172/172, WebKit 172/172. Neu geprüft: Sprungflächen (genau ein Absprung, Sperre, Darüberfliegen, Landen darauf, langsam, Tempo ≤ 155, Reichweite wächst mit Tempo, gutes Spiel landet danach nie hart), Luft-Reihen (nie im Boden, Abstände, Erreichbarkeit hoch/niedrig, Rhythmus), Punkte/Kombo/Supersprung, Tempo-Anstieg stetig, Rekordversion im Browser, Sprungfläche im Browser (auch „weniger Bewegung“).
+**Nicht geprüft:** echtes Handy, Ton hörbar (Boing, Reihen-Funkeln nur im Code), Spielgefühl durch einen Menschen (Zeiten und Flächen beruhen auf Bots), echte 120-Hz-Displays. Im Endlosflug gibt es beim Planen einer Fläche einen Rechenspitz von bis zu ~45 ms (der Testpilot hatte vorher schon Spitzen um 100 ms); auf einem langsamen Handy nicht gemessen.
+**Offen:** Hochladen nur nach OK. Beschreibung und Screenshots von Sonnenrutsch in `~/spiele-seite` zeigen die Neuerungen noch nicht.
+
 ## Neunte Runde (7.11.2026): Nur Querformat, kein gestauchtes Bild
 
 Wunsch: „In der Handy-Version passt das Bildformat nicht, es ist gequetscht. Man soll das Spiel nur im Querformat spielen können.“

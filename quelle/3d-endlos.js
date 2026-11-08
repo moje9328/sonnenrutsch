@@ -29,11 +29,13 @@ class Endlos {
     this.naechsterAbhang = null;
     this.kuppen = []; this.taeler = [];
     this.muscheln = [];
+    this.matten = [];               // Sprungflächen (gemeinsame Liste für Spieler und Testpilot)
     this.linie = 0;
     this.entschieden = new Map();   // Abfahrt (x des Tals) → Linie ja/nein
     this.letzteHatte = false;
     this.erweitern(K.ENDLOS.VORLAUF);
-    this.geist = new Lauf({ id: 'geist', saat }, { gelaende: this.g });
+    this.planer = new Planer({ g: this.g, taeler: this.taeler, kuppen: this.kuppen, matten: this.matten, muscheln: this.muscheln, saat, positionen: [0.45, 0.9] });
+    this.geist = new Lauf({ id: 'geist', saat }, { gelaende: this.g, matten: this.matten, bahnMerken: true });
     this.geist.vorschau = true;     // sammelt nichts, ruft nicht
     this.geist.tag = 1e9;
     this.geist.starten();
@@ -90,8 +92,12 @@ class Endlos {
     let n = 0;
     while (gst.x < l.x + E.GEIST_VORLAUF && n++ < 600) {
       this.erweitern(gst.x + E.VORLAUF * 0.6);
+      this.planer.vor(gst);
       gst.schritt(this.geistBot.halten(gst));
-      for (const e of gst.ereignisse) if (e.art === 'landung') this.landung(e.x);
+      for (const e of gst.ereignisse) {
+        if (e.art === 'landung' && e.guete !== 'matte') this.landung(e.x);
+        this.planer.ereignis(gst, e);
+      }
       gst.ereignisse.length = 0;
     }
     // Hinten aufräumen: Gelände, Hügellisten, Muscheln
@@ -103,6 +109,7 @@ class Endlos {
     while (raus < this.muscheln.length && this.muscheln[raus].x < weg) raus++;
     if (raus) { this.muscheln.splice(0, raus); l.muschelIndex = Math.max(0, l.muschelIndex - raus); }
     for (const [tx] of this.entschieden) { if (tx < weg) this.entschieden.delete(tx); else break; }
+    this.planer.aufraeumen(weg);
   }
 
   // Der Testpilot ist auf einer Abfahrt gelandet → dort eventuell eine Muschel-Linie
@@ -113,15 +120,18 @@ class Endlos {
     const ML = MUSCHEL_LINIEN, r = this.rLinie;
     // Pausen wie bei den Strecken: nicht jede Abfahrt, nie zwei Linien direkt hintereinander
     const wuerfel = r(), anzahl = ML.ANZAHL[0] + Math.floor(r() * (ML.ANZAHL[1] - ML.ANZAHL[0] + 1));
-    const punkte = !this.letzteHatte && wuerfel <= ML.ANTEIL && x > 40 ? linienPunkte(this.g, x, tal[0], anzahl) : [];
+    const pad = this.matten.find(m => Math.abs(m.x1 - tal[0]) < K.MATTE.BREITE);
+    const punkte = !this.letzteHatte && wuerfel <= ML.ANTEIL && x > 40 ? linienPunkte(this.g, x, pad ? pad.x0 - 2 : tal[0], anzahl) : [];
     const ja = punkte.length > 0;
     this.entschieden.set(tal[0], ja);
     this.letzteHatte = ja;
     if (!ja) return;
     this.linie++;
-    punkte.forEach((px, k) => {
+    const neu = punkte.map((px, k) => {
       const q = ueberBoden(this.g, px, K.MUSCHEL_HOEHE);
-      this.muscheln.push({ x: q.x, y: q.y, gold: k === punkte.length - 1 && this.linie % ML.GOLD_JEDE === 0, linie: this.linie, weg: false });
+      return { x: q.x, y: q.y, gold: k === punkte.length - 1 && this.linie % ML.GOLD_JEDE === 0, linie: this.linie, weg: false };
     });
+    for (const m of neu) einsortieren(this.muscheln, m);
+    verknuepfeReihen(neu);
   }
 }

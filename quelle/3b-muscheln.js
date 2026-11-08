@@ -13,10 +13,10 @@
 
 const MUSCHEL_LINIEN = {
   ABSTAND: 4.2,          // Meter zwischen zwei Muscheln entlang der Hangkurve
-  ANZAHL: [5, 8],        // Muscheln je Linie
+  ANZAHL: [6, 10],       // Muscheln je Linie (länger: sie laufen bis in den Übergang zum Tal)
   VORLAUF: -1,           // Linie beginnt so weit vor der typischen Landestelle (negativ: kurz danach, in der Landezone)
-  MIN_STEIGUNG: 0.22,    // nur auf echtem Gefälle (Linie endet, bevor das Tal flach wird)
-  ANTEIL: 0.75,          // so viele der geeigneten Abfahrten bekommen eine Linie
+  MIN_STEIGUNG: 0.12,    // nur auf Gefälle (Linie endet erst im Übergang zum Tal)
+  ANTEIL: 0.9,           // so viele der geeigneten Abfahrten bekommen eine Linie
   GOLD_JEDE: 3,          // jede dritte Linie endet mit einer goldenen Muschel
   GLEIT_TEMPO: 140,      // so schnell gleitet eine gute Krabbe nach der Landung (für die Wölbungsregel)
 };
@@ -26,9 +26,12 @@ function legeMuscheln(def, lauf) {
   // Einmal pro Strecke, danach nur kopieren (Neustart ohne Wartezeit)
   if (!MUSCHEL_CACHE.has(def.id)) {
     const fertig = typeof MUSCHELN !== 'undefined' && MUSCHELN[def.id];
-    MUSCHEL_CACHE.set(def.id, fertig ? fertig.map(([x, y, gold, linie]) => ({ x, y, gold: !!gold, linie: linie || 0, weg: false })) : berechneMuscheln(def, lauf));
+    // Format: [x, y, gold, linie, art] – art: 0 Boden, 1 Luft, 2 niedrige Alternativlinie
+    MUSCHEL_CACHE.set(def.id, fertig ? fertig.map(([x, y, gold, linie, art, abX]) => ({ x, y, gold: !!gold, linie: linie || 0, luft: art >= 1, alt: art === 2, abX, weg: false })) : berechneMuscheln(def, lauf));
   }
-  return MUSCHEL_CACHE.get(def.id).map(m => Object.assign({}, m));
+  const kopie = MUSCHEL_CACHE.get(def.id).map(m => Object.assign({}, m));
+  verknuepfeReihen(kopie);   // eigene Reihen-Zähler je Lauf
+  return kopie;
 }
 
 // Punkt auf der Oberfläche plus Abstand entlang der Normalen
@@ -39,15 +42,15 @@ function ueberBoden(g, x, abstand) {
 
 // Wo landet ein guter Spieler auf welcher Abfahrt? (x der Landungen)
 // Vorab mit dem guten Bot berechnet; fehlt die Datei im Browser, nimmt der schnellere Bot.
-function typischeLandungen(def, art = typeof window === 'undefined' ? 'gut' : 'schnell') {
-  const probe = new Lauf(def, { ohneMuscheln: true });
+function typischeLandungen(def, art = typeof window === 'undefined' ? 'gut' : 'schnell', matten = null) {
+  const probe = new Lauf(def, { ohneMuscheln: true, matten });
   probe.starten(); probe.tag = 999;
   const bot = Bot.neu(art);
   const landungen = [];
   let schritte = 0;
   while (!probe.ergebnis && schritte++ < 240 * 300) {
     probe.schritt(bot.halten(probe));
-    for (const e of probe.ereignisse) if (e.art === 'landung') landungen.push(e.x);
+    for (const e of probe.ereignisse) if (e.art === 'landung' && e.guete !== 'matte') landungen.push(e.x);
     probe.ereignisse.length = 0;
   }
   return landungen;
@@ -81,8 +84,8 @@ function berechneMuscheln(def, lauf) {
   const s = baueStrecke(def);
   // Landestellen von gutem und mittlerem Spiel (offline); im Browser ohne Datei nur der schnelle Bot
   const landungen = typeof window === 'undefined'
-    ? [...typischeLandungen(def, 'gut'), ...typischeLandungen(def, 'mittel')].sort((a, b) => a - b)
-    : typischeLandungen(def, 'schnell');
+    ? [...typischeLandungen(def, 'gut', lauf.matten), ...typischeLandungen(def, 'mittel', lauf.matten)].sort((a, b) => a - b)
+    : typischeLandungen(def, 'schnell', lauf.matten);
   let linie = 0, letzteHatte = false;
   for (const tal of s.taeler) {
     const kuppe = s.kuppen.filter(k => k[0] < tal[0]).pop();
@@ -94,7 +97,9 @@ function berechneMuscheln(def, lauf) {
     if (letzteHatte || r() > ML.ANTEIL) { letzteHatte = false; continue; }
     // Start: kurz vor der typischen Landestelle
     const anzahl = ML.ANZAHL[0] + Math.floor(r() * (ML.ANZAHL[1] - ML.ANZAHL[0] + 1));
-    const punkte = linienPunkte(g, land, tal[0], anzahl);
+    // Liegt am Tal eine Sprungfläche, endet die Linie davor (die Fläche bleibt frei)
+    const pad = lauf.matten.find(m => Math.abs(m.x1 - tal[0]) < K.MATTE.BREITE);
+    const punkte = linienPunkte(g, land, pad ? pad.x0 - 2 : tal[0], anzahl);
     if (!punkte.length) continue;   // zu kurz – lieber keine Linie
     linie++;
     letzteHatte = true;

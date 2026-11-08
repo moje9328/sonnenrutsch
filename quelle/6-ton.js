@@ -80,6 +80,20 @@ const Ton = (() => {
         ton(200 * v(), 120, 0.09, { typ: 'sine', laut: 0.16 });
       }
     },
+    // Sprungfläche: federndes „Boing!“ (Ton fällt kurz, steigt dann wippend an)
+    boing(tempo) {
+      if (!bereit()) return;
+      const s = Math.min(1, (tempo || 80) / 140);
+      ton(170, 330 + s * 90, 0.07, { typ: 'sine', laut: 0.18 });
+      ton(330 + s * 90, 760 + s * 160, 0.16, { typ: 'sine', laut: 0.17, start: 0.06 });
+      ton(760 + s * 160, 420, 0.14, { typ: 'sine', laut: 0.08, start: 0.2 });
+      ton(1020, 1500, 0.1, { typ: 'triangle', laut: 0.04, start: 0.05 });
+    },
+    // Reihe vollständig: kleines aufsteigendes Dreiklang-Funkeln
+    reihe() {
+      if (!bereit()) return;
+      [1319, 1568, 2093].forEach((f, i) => ton(f, f, 0.11, { typ: 'triangle', laut: 0.1, start: i * 0.06 }));
+    },
     // Distanzmarke erreicht: helles, freundliches Zwei-Ton-Signal
     marke() {
       if (!bereit()) return;

@@ -59,6 +59,7 @@ const Grafik = (() => {
   let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
   const kam = { x: 0, b: 0, z: 10, bereit: false };
   let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
+  let randLinks = 0;       // so viele CSS-Pixel von links deckt die Anzeige ab (für kurze Meldungen daneben)
   // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
   // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
   // Kameraposition × Zoom ab – dann ließ jede kleine Zoomänderung weit draußen die ganze
@@ -553,6 +554,65 @@ const Grafik = (() => {
     }
   }
 
+  // ---------------------------------------------------------- Sprungflächen (Hafenpolster)
+  // Türkis-gelbes Polster, das dem Gelände folgt. Pfeile zeigen die Sprungrichtung. Beim Kontakt drückt es
+  // sich kurz zusammen und federt zurück (gedämpfte Schwingung). Bei „weniger Bewegung“ ohne Pulsieren.
+  function sprungRichtung(g, x) {
+    const M = K.MATTE, s = g.steigung(x), n = Math.sqrt(1 + s * s), rw = M.RICHTUNG * Math.PI / 180;
+    let dx = (-s / n) * (1 - M.MISCHUNG) + Math.cos(rw) * M.MISCHUNG, dy = (1 / n) * (1 - M.MISCHUNG) + Math.sin(rw) * M.MISCHUNG;
+    const dl = Math.hypot(dx, dy);
+    return [dx / dl, dy / dl];
+  }
+  function matten(l, f) {
+    if (!l.matten || !l.matten.length) return;
+    const g = l.g, x0 = kam.x - 20, x1 = kam.x + W / kam.z + 20;
+    for (const m of l.matten) {
+      if (m.x1 < x0) continue;
+      if (m.x0 > x1) break;
+      const t = l.zeit - (l.matteKontakt.has(m) ? l.matteKontakt.get(m) : -9);
+      // Zusammendrücken: 0 = voll, 1 = ganz flach; schwingt in etwa 0,5 s aus
+      const druck = t >= 0 && t < 0.7 && !ruhig ? Math.exp(-t * 8) * Math.cos(t * 26) : t >= 0 && t < 0.3 ? 0.5 * (1 - t / 0.3) : 0;
+      const dicke = Math.max(0.95 * kam.z, 8 * dpr) * (1 - 0.55 * druck) / kam.z;   // in Metern
+      const schritt = Math.max(0.5, 5 * dpr / kam.z);
+      const punkt = (x, h) => { const s = g.steigung(x), n = Math.sqrt(1 + s * s); return [sx(x - (s / n) * h), sy(g.hoehe(x) + h / n)]; };
+      // Körper
+      c.beginPath();
+      for (let x = m.x0; x <= m.x1 + 1e-6; x += schritt) { const p = punkt(x, dicke); if (x === m.x0) c.moveTo(p[0], p[1]); else c.lineTo(p[0], p[1]); }
+      { const p = punkt(m.x1, dicke); c.lineTo(p[0], p[1]); }
+      for (let x = m.x1; x >= m.x0 - 1e-6; x -= schritt) { const p = punkt(x, -0.25); c.lineTo(p[0], p[1]); }
+      c.closePath();
+      const licht = verlauf(LICHT, f);
+      c.fillStyle = mischFarbe('#24d6cd', licht, 0.18);
+      c.fill();
+      // gelbe Schrägstreifen (mit der Oberfläche verankert)
+      c.save(); c.clip();
+      c.fillStyle = mischFarbe('#ffd35a', licht, 0.18);
+      for (let x = m.x0 - 3; x < m.x1 + 3; x += 3.2) {
+        const a = punkt(x, 0), b = punkt(x + 1.3, 0), a2 = punkt(x + 1.6, dicke * 1.4), b2 = punkt(x + 2.9, dicke * 1.4);
+        c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(b2[0], b2[1]); c.lineTo(a2[0], a2[1]); c.closePath(); c.fill();
+      }
+      c.restore();
+      // Rand (leuchtet sanft)
+      const puls = ruhig ? 0.8 : 0.65 + 0.35 * Math.sin(zeit * 4 + m.x0);
+      c.strokeStyle = `rgba(255, 244, 190, ${puls})`;
+      c.lineWidth = Math.max(2 * dpr, 0.2 * kam.z); c.lineJoin = 'round';
+      c.beginPath();
+      for (let x = m.x0; x <= m.x1 + 1e-6; x += schritt) { const p = punkt(x, dicke); if (x === m.x0) c.moveTo(p[0], p[1]); else c.lineTo(p[0], p[1]); }
+      c.stroke();
+      // Pfeil in Sprungrichtung über der Fläche (pulsiert nach vorn)
+      const mx = (m.x0 + m.x1) / 2, [dx, dy] = sprungRichtung(g, mx);
+      const pm = punkt(mx, dicke), as = Math.max(1.3 * kam.z, 12 * dpr);
+      const ph = ruhig ? 0 : ((zeit * 1.6 + m.x0) % 1) * 0.35;
+      c.save();
+      c.translate(pm[0] + dx * as * (0.9 + ph), pm[1] - dy * as * (0.9 + ph));
+      c.rotate(-Math.atan2(dy, dx));
+      c.fillStyle = '#fff4b0'; c.strokeStyle = '#10243a'; c.lineWidth = Math.max(1.5 * dpr, as * 0.1); c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(as * 0.7, 0); c.lineTo(0, as * 0.55); c.lineTo(0, as * 0.2); c.lineTo(-as * 0.7, as * 0.2); c.lineTo(-as * 0.7, -as * 0.2); c.lineTo(0, -as * 0.2); c.lineTo(0, -as * 0.55); c.closePath();
+      c.fill(); c.stroke();
+      c.restore();
+    }
+  }
+
   let sonneF = 0;
   // Distanzmarke im Endlosflug: Pfosten mit Schild und Wimpel
   function distanzMarke(l, mx, erreicht) {
@@ -678,12 +738,12 @@ const Grafik = (() => {
     }
     // Fahrtwind-Linien bei hohem Tempo
     const v = l.tempo;
-    if (v > K.V_MAX * 0.75 && !ruhig) {
-      const a = Math.min(0.3, (v - K.V_MAX * 0.75) / 60);
+    if (v > K.V_MAX * 0.9 && !ruhig) {
+      const a = Math.min(0.1, (v - K.V_MAX * 0.9) / 160);   // nur ein Hauch – keine starken Geschwindigkeitsspuren
       c.strokeStyle = `rgba(255, 255, 255, ${a})`;
       c.lineWidth = 2 * dpr; c.lineCap = 'round';
-      for (let k = 0; k < 4; k++) {
-        const ph = (zeit * 9 + k * 0.37) % 1;
+      for (let k = 0; k < 2; k++) {
+        const ph = (zeit * 5 + k * 0.5) % 1;
         const lx = px - breite * (0.6 + ph * 1.4), ly = py - breite * (0.15 + k * 0.17);
         c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx - breite * (0.5 + a), ly + Math.tan(winkel) * breite * 0.5); c.stroke();
       }
@@ -724,7 +784,44 @@ const Grafik = (() => {
     } else if (e.art === 'muschel') {
       funken(e.x, e.y - 1, e.gold ? 14 : 5);
       if (e.gold) text(e.x, e.y + 2.5, '+5', '#ffd35a', 0.9);
+    } else if (e.art === 'matte') {
+      staub(e.x, e.y, 8, '#9ff3ea', 0.8);
+      funken(e.x, e.y, 6);
+      meldung('Boing!', '#9ff3ea', 1);
+    } else if (e.art === 'reihe') {
+      meldung('Muschelserie!', '#ffd35a', 2);
+    } else if (e.art === 'super') {
+      meldung('Supersprung!', '#ffffff', 4);
+    } else if (e.art === 'kombo') {
+      meldung(`Kombo ×${e.stufe}`, '#ffb36b', 3);
     }
+  }
+  // Eine kurze Meldung oben in der Bildmitte (unter der Anzeige, klein, höchstens eine zugleich).
+  // Die wichtigere ersetzt die weniger wichtige; Gleichwertiges ersetzt Älteres.
+  const aktuelleMeldung = { text: '', farbe: '#fff', alt: 9, rang: 0, dauer: 1.3 };
+  const MELDUNG_DAUER = 1.3;
+  function meldung(text, farbe, rang, dauer = MELDUNG_DAUER) {
+    if (aktuelleMeldung.alt < aktuelleMeldung.dauer * 0.6 && aktuelleMeldung.rang > rang) return;
+    Object.assign(aktuelleMeldung, { text, farbe, alt: 0, rang, dauer });
+  }
+  function meldungZeichnen(dt) {
+    const m = aktuelleMeldung;
+    m.alt += dt;
+    if (m.alt >= m.dauer) return;
+    const a = Math.min(1, (m.dauer - m.alt) * 3, 0.4 + m.alt * 8);
+    const groesse = Math.round(Math.max(11 * dpr, Math.min(W, H) * 0.028));
+    c.globalAlpha = a;
+    c.font = `${groesse}px 'Press Start 2P', monospace`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    // Mitte des Bildes, aber nie über der Anzeige links und nie über den Knöpfen rechts
+    const tw = c.measureText(m.text).width;
+    const y = randOben * dpr + groesse * 1.6;
+    let x = Math.max(W * 0.5, (randLinks * dpr) + tw / 2 + 14 * dpr);
+    x = Math.min(x, W - tw / 2 - 8 * dpr);
+    c.lineWidth = groesse * 0.3; c.strokeStyle = '#10243a'; c.lineJoin = 'round';
+    c.strokeText(m.text, x, y);
+    c.fillStyle = m.farbe; c.fillText(m.text, x, y);
+    c.globalAlpha = 1;
   }
   function effekte(dt, l) {
     for (let i = teilchen.length - 1; i >= 0; i--) {
@@ -778,7 +875,7 @@ const Grafik = (() => {
     if (spur.length < 2 || ruhig) return;
     c.lineCap = 'round';
     for (let i = 1; i < spur.length; i++) {
-      c.strokeStyle = `rgba(255, 255, 255, ${(i / spur.length) * 0.25})`;
+      c.strokeStyle = `rgba(255, 255, 255, ${(i / spur.length) * 0.12})`;
       c.lineWidth = Math.max(2 * dpr, 0.3 * kam.z) * (i / spur.length);
       c.beginPath(); c.moveTo(sx(spur[i - 1][0]), sy(spur[i - 1][1])); c.lineTo(sx(spur[i][0]), sy(spur[i][1])); c.stroke();
     }
@@ -798,10 +895,12 @@ const Grafik = (() => {
     ferneKueste(horizont, f, thema, gebiet);
     startZiel(l, f);
     gelaende(l, thema, f, gebiet);
+    matten(l, f);
     muscheln(l);
     flugSpur(l);
     krabbe(l, figur, pose);
     effekte(dt, l);
+    meldungZeichnen(dt);
     // Kurzer warmer Schein nach perfekter Landung
     if (blitz > 0) {
       c.fillStyle = `rgba(255, 236, 160, ${blitz * 0.18})`;
@@ -822,7 +921,7 @@ const Grafik = (() => {
       c.fillRect(0, 0, W, H);
     }
   }
-  function neuerLauf() { teilchen.length = 0; texte.length = 0; spur = []; blitz = 0; kam.bereit = false; letztesKamX = null; }
+  function neuerLauf() { aktuelleMeldung.alt = 9; teilchen.length = 0; texte.length = 0; spur = []; blitz = 0; kam.bereit = false; letztesKamX = null; }
 
   // Kleines Streckenprofil für die Levelkarten
   function profil(leinw, def) {
@@ -850,7 +949,7 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, setzeRandOben(px) { randOben = px; },
+    init, groesse, zeichne, meldung, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
     get kam() { return kam; }, get hgX() { return hgX; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },

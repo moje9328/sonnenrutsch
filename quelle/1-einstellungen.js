@@ -25,6 +25,8 @@ const K = {
   HOEHE_SCHWER_AB: 35,      // ab so viel Metern über dem Boden zieht die Schwerkraft zunehmend stärker …
   HOEHE_SCHWER_BIS: 110,    // … bis sie ab dieser Höhe …
   HOEHE_SCHWER_EXTRA: 0.6,  // … um so viel stärker ist (×1,6) – kein endloses Schweben am Gipfel
+  FALL_EXTRA: 0.3,          // beim Sinken wächst die Schwerkraft weich um bis zu diesen Anteil (schneller, zügiger Fall) …
+  FALL_ANLAUF: 32,          // … voll erreicht bei so vielem Sinktempo (m/s); am Gipfel (vy = 0) ist der Zusatz 0 – kein Ruck
   SINKFLUG_ANLAUF: 0.1,     // … setzt in so vielen Sekunden weich ein und endet beim Loslassen sofort
 
   REIBUNG: 1.0,             // gleichmäßige Bremsung am Boden (m/s²)
@@ -53,6 +55,61 @@ const K = {
   KETTE_MAX: 5,
   HART_FAKTOR: 0.82,        // harte Landung am Gegenhang: zusätzlicher Tempoverlust
 
+  // Tempo-Anstieg mit der Strecke (0 am Start, 1 nach TEMPO.WEG Metern bzw. am Ziel; weich, nie ein Sprung).
+  // Es wächst nur die Bodenschwerkraft und das Krabbel-Mindesttempo; die Luftschwerkraft wächst
+  // mit, damit Flüge bei höherem Tempo nicht länger schweben. Tageslicht und Zeit bleiben unberührt.
+  TEMPO: {
+    WEG: 2600,              // Endlosflug: so viele Meter bis zum vollen Tempo-Anstieg
+    G_PLUS: 0.07,           // Bodenschwerkraft am Ende um so viel Anteil größer (bergab schneller)
+    LUFT_PLUS: 0.06,        // Luftschwerkraft am Ende um so viel Anteil größer (Flüge bleiben dynamisch)
+    V_MIN_PLUS: 8,          // Krabbel-Mindesttempo am Ende um so viel größer (m/s)
+  },
+
+  // Sprungflächen (Hafenpolster) auf Rampen. Gültig nur bei echtem Bodenkontakt (überfahren oder
+  // darauf gelandet). Der Absprung folgt der Oberfläche (Tempo entlang des Hangs bleibt) plus einem
+  // Stoß in Richtung „Oberflächennormale gemischt mit einer festen Vorwärts-/Aufwärtsrichtung“.
+  MATTE: {
+    BREITE: 15,             // Länge der Fläche (m)
+    V_MIN: 32,              // langsamer als so (m/s) federt sie nur, ohne zu springen
+    ERHALT: 0.96,           // so viel vom Tempo entlang der Oberfläche bleibt
+    RICHTUNG: 52,           // feste Stoßrichtung (Grad über der Waagerechten, nach vorn) …
+    MISCHUNG: 0.5,          // … zur Hälfte mit der Oberflächennormalen gemischt
+    STOSS: [24, 36, 50],    // Stoßstärke (m/s): die Planung wählt die erste Stärke mit sicherer Landung
+    V_MAX: 155,             // Gesamttempo nach dem Absprung höchstens (Sicherheitsgrenze)
+    WINKEL_MIN: 8,          // Absprung mindestens so steil (Grad), damit es nie flach über die Fläche streift
+    SPERRE: 4,              // erst wieder auslösbar, wenn Kalle so weit (m) von der Fläche weg war
+    STEIGUNG: [0.2, 1.6], // Flächen liegen nur auf Rampen mit dieser Neigung (Höhe/Länge)
+    LANDE_MIN_FLUGZEIT: 0.8,  // Planung: der Sprung muss mindestens so lange dauern …
+    LANDE_MIN_HOEHE: 6,       // … und so hoch gehen (m über der Fläche)
+    LANDE_TEMPI: [0.8, 1.0, 1.1], // … und bei diesen Anteilen des Anflugtempos nicht hart landen (bei 1,0 und mehr sauber auf einer Abfahrt)
+  },
+
+  // Luft-Sammelreihen (aus echten Flugbahnen des Testpiloten, siehe 3e-luft.js)
+  LUFT: {
+    ABSTAND: 5.2,           // Meter zwischen zwei Muscheln entlang der Flugbahn
+    ANZAHL: [5, 9],
+    MIN_GIPFEL: 14,         // Flüge unter so vielen Metern Gipfelhöhe bekommen keine Reihe (nach Sprungflächen: MIN_GIPFEL_MATTE)
+    MIN_GIPFEL_MATTE: 5,
+    MIN_ZEIT: 0.9,          // … und unter so vielen Sekunden Flugzeit auch nicht
+    MIN_ZEIT_MATTE: 0.7,
+    BONUS_GIPFEL: 65,       // ab dieser Gipfelhöhe gibt es die höhere Bonusreihe (golden endend)
+    ZWEI_LINIEN: 0.35,      // Anteil der großen Flüge mit niedriger und hoher Alternativlinie
+    ABSTAND_BODEN: 4,       // mindestens so hoch über dem Gelände (m), damit nichts im Boden steckt
+    ABSTAND_BODEN_MATTE: 2.6,  // … nach Sprungflächen (flachere Hüpfer)
+    MIN_TRENNUNG: 7,        // niedrige und hohe Linie mindestens so weit auseinander (m)
+    PAUSE: 1,               // nach so vielen bestückten Abschnitten folgt ein freier Abschnitt
+  },
+
+  // Punkte für Reihen und Kombos (zusätzlich zu Muscheln und perfekten Landungen)
+  PUNKTE: {
+    REIHE: 30,              // vollständig gesammelte Reihe
+    KOMBO_FENSTER: 9,       // Sekunden bis zum nächsten Erfolg, damit die Kombo weiterläuft
+    KOMBO_SCHRITT: 5,       // Bonus je Kombo-Stufe (ab Stufe 2) …
+    KOMBO_MAX: 5,           // … bis höchstens diese Stufe (also höchstens 40 Punkte je Erfolg)
+    SUPERSPRUNG: 40,        // Landung nach einem Flug mit mindestens SUPER_GIPFEL Metern Gipfel
+    SUPER_GIPFEL: 95,
+  },
+
   MUSCHEL_RADIUS: 1.8,      // Sammelbereich: Abstand Kalles Mitte ↔ Muschel (Sensor, kein Stoß)
   MUSCHEL_HOEHE: 1.1,       // Muscheln schweben so weit über dem Boden (entlang der Normalen)
   KRABBE_MITTE: 1.0,        // Kalles Mitte liegt so weit über seinen Füßen
@@ -60,8 +117,8 @@ const K = {
 
   // Flugrufe (Spiellogik in 3c-flugrufe.js, Stimme in 6b-rufe.js). Alles in Weltkoordinaten.
   RUF: {
-    HOEHE: 90,              // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
-    WEITE: 290,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
+    HOEHE: 85,              // gerufen wird nur, wenn Kalle wirklich so hoch über dem Absprung war (m) …
+    WEITE: 255,             // … UND schon so weit geflogen ist (m, waagerecht). Pro Flug höchstens ein Ruf.
     YIPPIE_HOEHE: 105,      // „Yippie!“ statt „Juhu!“, wenn der Gipfel mindestens so hoch ist (m)
     ABSTAND: 15,            // Sekunden zwischen zwei Rufen mindestens (sonst entfällt der Ruf)
     BODEN_RUHE: 0.25,       // erst nach so langer stabiler Bodenzeit beginnt ein neuer Flug

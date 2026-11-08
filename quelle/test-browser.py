@@ -456,6 +456,42 @@ async def main():
         ok(not pg.fehler, f'Endlos Handy: keine Konsolenfehler {pg.fehler[:2]}')
         await ctx.close()
 
+        # Rekordversion: alte Daten (Version 1) bleiben erhalten, die neuen Endlos-Rekorde beginnen bei null
+        alt = '{"version":1,"ton":false,"krabbe":"kalle","frei":4,"level":{"1":{"sterne":3,"zeit":14.2,"weit":1,"muscheln":18},"2":{"sterne":2,"zeit":30.1,"weit":1}},"lernGesehen":true,"endlos":{"strecke":4321,"punkte":987}}'
+        ctx, pg = await neue_seite(b, 844, 390, init="try { if (!localStorage.getItem('pixelhafen.sonnenrutsch.test')) { localStorage.setItem('pixelhafen.sonnenrutsch.test', '1'); localStorage.setItem('pixelhafen.sonnenrutsch', '" + alt + "'); } } catch (e) {}")
+        r = await pg.evaluate("({ neu: window.__sonne.speicher.endlosRekord(), alt: window.__sonne.speicher.endlosRekordAlt(), s1: window.__sonne.speicher.sterne(1), s2: window.__sonne.speicher.level(2), frei: window.__sonne.speicher.hoechsteFreie(), ton: window.__sonne.speicher.tonAn(), zeigeAlt: !document.getElementById('endlosRekordAlt').hidden, text: document.getElementById('startRekordAlt').textContent, zeigeNeu: !document.getElementById('endlosRekordStart').hidden })")
+        ok(r['neu'] == {'strecke': 0, 'punkte': 0}, f'Version 1: neue Endlos-Rekorde beginnen bei null ({r["neu"]})')
+        ok(r['alt'] == {'strecke': 4321, 'punkte': 987}, f'Version 1: alter Endlos-Rekord bleibt erhalten ({r["alt"]})')
+        ok(r['s1'] == 3 and r['s2'] and r['s2']['zeit'] == 30.1 and r['frei'] == 4 and r['ton'] is False, 'Version 1: Sterne, Bestzeiten, Freischaltung und Tonwahl bleiben')
+        ok(r['zeigeAlt'] and '4321' in r['text'] and not r['zeigeNeu'], 'Startmenü zeigt den alten Rekord als Erinnerung, nicht als aktuellen')
+        # Neuer Rekord wird getrennt gespeichert, der alte bleibt
+        await pg.evaluate('window.__sonne.speicher.endlosErgebnis(100, 50)')
+        await pg.reload(); await pg.wait_for_timeout(400)
+        r = await pg.evaluate("({ neu: window.__sonne.speicher.endlosRekord(), alt: window.__sonne.speicher.endlosRekordAlt(), v: JSON.parse(localStorage.getItem('pixelhafen.sonnenrutsch')).version })")
+        ok(r['neu'] == {'strecke': 100, 'punkte': 50} and r['alt'] == {'strecke': 4321, 'punkte': 987} and r['v'] == 2, f'Nach dem Speichern: Version 2, neuer und alter Rekord getrennt ({r})')
+        ok(not pg.fehler, f'Rekordversion: keine Konsolenfehler {pg.fehler[:2]}')
+        await ctx.close()
+
+        # Sprungfläche im Browser: sichtbar, löst genau einmal aus, Meldung und Ton ohne Fehler, Hinweis nur einmal
+        for bewegung in ['no-preference', 'reduce']:
+            ctx, pg = await neue_seite(b, 844, 390, touch=True, bewegung=bewegung)
+            sid = await pg.evaluate("(() => { const d = STRECKEN.find(s => new Lauf(s).matten.length > 0); return d.id; })()")
+            await pg.evaluate(f'window.__sonne.starte({sid})')
+            await pg.evaluate("document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))")
+            await pg.wait_for_timeout(150)
+            await pg.evaluate("document.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))")
+            await pg.evaluate("(() => { const l = window.__sonne.lauf(); const m = l.matten[0]; l.x = m.x0 - 70; l.y = l.g.hoehe(l.x); l.boden = true; l.v = 110; l.tag = 999; })()")
+            await pg.screenshot(path=str(BILDER / f'matte-anflug-{bewegung}.png'))
+            ok(await warte(pg, "window.__sonne.lauf().statistik.matten === 1", 6000), f'Sprungfläche löst im Browser aus ({bewegung})')
+            await pg.wait_for_timeout(250)
+            await pg.screenshot(path=str(BILDER / f'matte-absprung-{bewegung}.png'))
+            await pg.wait_for_timeout(2500)
+            n = await pg.evaluate('window.__sonne.lauf().statistik.matten')
+            ok(n == 1, f'genau ein Sprung von der Fläche, nicht mehrfach ({n})')
+            ok(await pg.evaluate("window.__sonne.speicher.mattenGesehen()"), 'Hinweis zur Sprungfläche wurde einmal gezeigt und gemerkt')
+            ok(not pg.fehler, f'Sprungfläche ({bewegung}): keine Konsolenfehler {pg.fehler[:2]}')
+            await ctx.close()
+
         # Weniger Bewegung
         ctx, pg = await neue_seite(b, 1280, 720, bewegung='reduce')
         await pg.evaluate('window.__sonne.starte(4)')

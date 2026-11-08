@@ -7,23 +7,32 @@
 
 const Speicher = (() => {
   const SCHLUESSEL = 'pixelhafen.sonnenrutsch';
-  const VERSION = 1;
-  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, endlos: { strecke: 0, punkte: 0 } });
+  // Version 2 (Sprungflächen, Luft-Reihen, Bonuspunkte, Tempo-Anstieg): Endlos-Rekorde sind mit Version 1 nicht
+  // vergleichbar. Die alten Rekorde bleiben unter endlosV1 erhalten, die neuen Rekorde beginnen bei null.
+  const VERSION = 2;
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, mattenGesehen: false, endlos: { strecke: 0, punkte: 0 }, endlosV1: { strecke: 0, punkte: 0 } });
+  const zahl = (v, max) => { const n = Math.floor(Number(v)); return n > 0 && n < max ? n : 0; };
   let daten = leer();
 
   function lager() { try { return window.localStorage || null; } catch (e) { return null; } }
 
   function pruefe(roh) {
     const d = leer();
-    if (!roh || typeof roh !== 'object' || roh.version !== VERSION) return d;
+    if (!roh || typeof roh !== 'object' || (roh.version !== VERSION && roh.version !== 1)) return d;
+    const alt = roh.version === 1;   // Stand vor dem Update: alles bleibt, nur die Endlos-Rekorde ziehen um
     if (typeof roh.ton === 'boolean') d.ton = roh.ton;
     if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
     if (roh.lernGesehen === true) d.lernGesehen = true;
+    if (roh.mattenGesehen === true) d.mattenGesehen = true;
     // Endlos-Rekord: getrennt von den Streckenbestzeiten
+    const endlosZiel = alt ? d.endlosV1 : d.endlos;
     if (roh.endlos && typeof roh.endlos === 'object') {
-      const st = Math.floor(Number(roh.endlos.strecke)), pu = Math.floor(Number(roh.endlos.punkte));
-      if (st > 0 && st < 1e7) d.endlos.strecke = st;
-      if (pu > 0 && pu < 1e8) d.endlos.punkte = pu;
+      endlosZiel.strecke = zahl(roh.endlos.strecke, 1e7);
+      endlosZiel.punkte = zahl(roh.endlos.punkte, 1e8);
+    }
+    if (!alt && roh.endlosV1 && typeof roh.endlosV1 === 'object') {
+      d.endlosV1.strecke = zahl(roh.endlosV1.strecke, 1e7);
+      d.endlosV1.punkte = zahl(roh.endlosV1.punkte, 1e8);
     }
     const f = Math.floor(Number(roh.frei));
     if (f >= 1) d.frei = Math.min(f, STRECKEN.length);
@@ -58,6 +67,8 @@ const Speicher = (() => {
     setzeKrabbe(n) { if (KRABBEN[n]) { daten.krabbe = n; sichern(); } },
     lernGesehen: () => daten.lernGesehen,
     setzeLernGesehen() { daten.lernGesehen = true; sichern(); },
+    mattenGesehen: () => daten.mattenGesehen,
+    setzeMattenGesehen() { daten.mattenGesehen = true; sichern(); },
     level: (id) => daten.level[id] || null,
     sterne: (id) => (daten.level[id] && daten.level[id].sterne) || 0,
     sterneGesamt: () => Object.values(daten.level).reduce((s, e) => s + (e.sterne || 0), 0),
@@ -73,6 +84,7 @@ const Speicher = (() => {
       return besser;
     },
     endlosRekord: () => Object.assign({}, daten.endlos),
+    endlosRekordAlt: () => Object.assign({}, daten.endlosV1),   // Rekord vor dem Update (Version 1), nur zur Erinnerung
     // Endlos-Lauf beendet: Rekorde nur verbessern
     endlosErgebnis(strecke, punkte) {
       const alt = daten.endlos;
