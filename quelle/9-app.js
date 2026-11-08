@@ -184,6 +184,24 @@
   $('krabbeWahlKnopf').addEventListener('click', () => { Ton.klick(); krabbenWahl(); });
   $('krabbenFertig').addEventListener('click', () => { Ton.klick(); zeige('fStart'); startKrabbe(); });
 
+  // ---------------------------------------------------------- Freunde herausfordern
+  // Geteilt wird der weiteste Endlosflug in Metern.
+  const duell = PixelDuell.erstelle({
+    spiel: 'Sonnenrutsch',
+    adresse: 'https://moje9328.github.io/sonnenrutsch/',
+    schluessel: 'pixelhafen.sonnenrutsch.freunde',
+    stand: () => ({ punkte: Speicher.endlosRekord().strecke }),
+    einheit: 'Meter',
+    levelWort: '',
+    erklaerung: 'Gezählt wird dein weitester Endlosflug in Metern.',
+  });
+  if (duell.offen) {
+    $('startDuell').textContent = duell.startText() + ' (im Endlosflug)';
+    $('startDuell').hidden = false;
+  }
+  $('freundeKnopf').addEventListener('click', () => { Ton.klick(); duell.oeffne(); });
+  $('endlosFreunde').addEventListener('click', () => { Ton.klick(); duell.oeffne(); });
+
   function startKrabbe() {
     krabbeInLeinwand($('startKrabbe'), { figur: Speicher.krabbe(), mund: 'lachen', schereAuf: true, schereHoch: true });
     const r = Speicher.endlosRekord();
@@ -329,6 +347,7 @@
     $('enRekord').textContent = r.strecke + ' m';
     $('enRekordPunkte').textContent = r.punkte;
     $('enNeu').hidden = !(neu.strecke || neu.punkte);
+    $('enDuell').textContent = duell.endText(strecke);
     $('enNeu').textContent = neu.strecke && neu.punkte ? 'NEUER REKORD: STRECKE UND PUNKTE!' : neu.strecke ? 'NEUER STRECKENREKORD!' : 'NEUER PUNKTEREKORD!';
     zeige('fEndlos');
     ansage(`Die Sonne ist untergegangen. ${strecke} Meter, ${punkte} Punkte.${neu.strecke ? ' Neuer Rekord.' : ''}`);

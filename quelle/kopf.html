@@ -225,6 +225,7 @@
       <h1 data-titel>SONNEN-<br>RUTSCH</h1>
       <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
       <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
+      <p class="duell" id="startDuell" hidden></p>
       <div class="knoepfe">
         <button class="btn main" id="spielenKnopf" type="button">Strecken</button>
         <button class="btn main" id="endlosKnopf" type="button">Endlosflug</button>
@@ -233,7 +234,10 @@
           <button class="btn klein" id="krabbeWahlKnopf" type="button">Krabbe wählen</button>
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
         </div>
-        <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
+        <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein" id="freundeKnopf" type="button">Freunde herausfordern</button>
+          <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
+        </div>
       </div>
     </section>
 
@@ -304,8 +308,10 @@
         <div><dt>Rekord Punkte</dt><dd id="enRekordPunkte">0</dd></div>
       </dl>
       <p class="hervor" id="enNeu" hidden>NEUER REKORD!</p>
+      <p class="hinweistext" id="enDuell"></p>
       <div class="knoepfe">
         <button class="btn main" id="endlosNochmal" type="button">Sofort nochmal</button>
+        <button class="btn klein" id="endlosFreunde" type="button">Freunde herausfordern</button>
         <button class="btn klein" id="endlosMenue" type="button">Zum Menü</button>
       </div>
     </section>
