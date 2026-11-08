@@ -380,6 +380,24 @@
     #erklaerung li { font-size: 14px; }
     #kette { top: 80px; }
   }
+  /* Flache Handy-Bildschirme (Querformat): Anzeige kompakt, damit mehr vom Spiel zu sehen ist und die Kamera näher heranzoomt.
+     Name oben, Tageslicht und Strecke nebeneinander, Punkte/Rekord klein darunter. */
+  @media (orientation: landscape) and (max-height: 500px) {
+    #hud { top: 4px; left: 6px; right: 6px; gap: 6px; }
+    .hudblock { max-width: 460px; grid-template-columns: 1fr 1fr; column-gap: 10px; row-gap: 3px; padding: 4px 8px 5px; }
+    #hudName, #hudEndlos { grid-column: 1 / -1; font-size: 11px; line-height: 1.1; }
+    .hudzeile { grid-template-columns: 16px 1fr auto; gap: 5px; }
+    .hudzeile .ico { width: 16px; height: 16px; }
+    .hudzeile .ico svg { width: 16px; height: 16px; }
+    .hudzeile b { font-size: 9px; min-width: 32px; }
+    .balken { height: 9px; border-radius: 5px; }
+    #wegKrabbe { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
+    #hudEndlos { font-size: 10px; }
+    #hudEndlos b { font-size: 9px; }
+    .hudrechts { gap: 4px; }
+    #bonus { top: 66px; left: 8px; }
+    #kette { top: 62px; }
+  }
 </style>
 </head>
 <body>
@@ -576,7 +594,8 @@ const K = {
   SCHRITT: 1 / 240,         // feste Physik-Schrittweite in Physikzeit (unabhängig von der Bildrate)
   // Physik läuft in echter Zeit. Bodentempo, Luftschwerkraft, Kamera, Hintergrund und
   // Tageslicht sind getrennt eingestellt (keine pauschale Zeitbeschleunigung mehr).
-  MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
+  MAX_SCHRITTE: 60,         // höchstens so viele Schritte je Bild (60 × 1/240 s = 0,25 s: auch auf langsamen Handys läuft das Spiel in Echtzeit, nach langen Hängern wird nicht endlos nachgeholt)
+  MAX_BILDZEIT: 0.25,       // längste Bildzeit, die in einem Rutsch nachgerechnet wird (s)
 
   // Boden: flottes Vorwärtstempo (2 × so schnell wie die erste Version, Kräfte 2² ×)
   G: 96,                    // Schwerkraft entlang der Hänge (am Boden)
@@ -718,8 +737,8 @@ const K = {
   KAM_BREITE_MIN: 58,       // so viele Meter sieht man mindestens nach vorn/hinten (Querformat)
   KAM_BREITE_MIN_HOCH: 54,  // … hochkant
   KAM_VORSCHAU: 0.95,       // Sekunden Vorschau: so viel Weg voraus ist mindestens zu sehen
-  KAM_RAND_OBEN: 7,         // Meter Luft über Kalle
-  KAM_RAND_UNTEN: 4,
+  KAM_RAND_OBEN: 4,         // Meter Luft über Kalle
+  KAM_RAND_UNTEN: 2,
   KAM_GLAETTE_ZOOM: 1.4,    // je größer, desto schneller folgt der Zoom (weich, kein Pumpen)
   KAM_GLAETTE_Y: 2.2,       // Höhe folgt weich
   KAM_TOLERANZ_ZOOM: 0.07,  // Zoom-Ziel ändert sich erst ab 7 % Unterschied (kein Nachregeln bei jedem Hüpfer)
@@ -2786,6 +2805,7 @@ const Grafik = (() => {
   let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
   const kam = { x: 0, b: 0, z: 10, bereit: false };
   let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
+  let dprMax = 2;          // höchste Bildauflösung (Pixel je CSS-Pixel); sinkt, wenn das Gerät nicht mitkommt
   let randLinks = 0;       // so viele CSS-Pixel von links deckt die Anzeige ab (für kurze Meldungen daneben)
   // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
   // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
@@ -2810,7 +2830,7 @@ const Grafik = (() => {
   function groesse() {
     const r = leinwand.getBoundingClientRect();
     cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);   // mehr sieht man kaum, kostet auf dem Handy aber viel Bildrate
+    dpr = Math.min(window.devicePixelRatio || 1, dprMax);   // scharf auf guten Handys; wird bei niedriger Bildrate schrittweise gesenkt (siehe aufloesungSenken)
     W = Math.round(cssW * dpr); H = Math.round(cssH * dpr);
     if (leinwand.width !== W || leinwand.height !== H) { leinwand.width = W; leinwand.height = H; }
   }
@@ -3676,7 +3696,10 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, meldung, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
+    init, groesse, zeichne, meldung,
+    // Gerät kommt nicht mit: Auflösung in Schritten senken (nie unter 1), das Bild bleibt gleich groß
+    aufloesungSenken() { if (dprMax <= 1.001) return false; dprMax = Math.max(1, dprMax - 0.25); groesse(); return true; },
+    get dprMax() { return dprMax; }, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
     get kam() { return kam; }, get hgX() { return hgX; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
@@ -4530,11 +4553,23 @@ const PixelDuell = (() => {
   }
 
   // ---------------------------------------------------------- Game Loop
+  // Schwaches Handy: Läuft die Bildrate länger deutlich unter 25 fps, wird die Auflösung stufenweise gesenkt
+  // (das Spiel selbst rechnet immer in Echtzeit). Pausen und Menüs zählen nicht.
+  let langsamZeit = 0, bildSumme = 0, bildAnzahl = 0;
+  function bildzeitPruefen(dt) {
+    if (!lauf || zustand !== 'lauf' || dt <= 0) { bildSumme = 0; bildAnzahl = 0; return; }
+    bildSumme += dt; bildAnzahl++;
+    if (bildSumme < 1.5) return;
+    const schnitt = bildSumme / bildAnzahl;
+    bildSumme = 0; bildAnzahl = 0;
+    if (schnitt > 0.04) { langsamZeit += 1; if (langsamZeit >= 1) { Grafik.aufloesungSenken(); langsamZeit = 0; } } else langsamZeit = 0;
+  }
   function rahmen(t) {
     requestAnimationFrame(rahmen);
     groesseAktuell();
-    const dt = Math.min(0.1, Math.max(0, (t - letzte) / 1000));
+    const dt = Math.min(K.MAX_BILDZEIT, Math.max(0, (t - letzte) / 1000));
     letzte = t;
+    bildzeitPruefen(dt);
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
     const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
     if (aktiv) {

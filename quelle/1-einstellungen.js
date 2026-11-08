@@ -8,7 +8,8 @@ const K = {
   SCHRITT: 1 / 240,         // feste Physik-Schrittweite in Physikzeit (unabhängig von der Bildrate)
   // Physik läuft in echter Zeit. Bodentempo, Luftschwerkraft, Kamera, Hintergrund und
   // Tageslicht sind getrennt eingestellt (keine pauschale Zeitbeschleunigung mehr).
-  MAX_SCHRITTE: 24,         // höchstens so viele Schritte je Bild (nach Hängern kein Nachholen ohne Ende)
+  MAX_SCHRITTE: 60,         // höchstens so viele Schritte je Bild (60 × 1/240 s = 0,25 s: auch auf langsamen Handys läuft das Spiel in Echtzeit, nach langen Hängern wird nicht endlos nachgeholt)
+  MAX_BILDZEIT: 0.25,       // längste Bildzeit, die in einem Rutsch nachgerechnet wird (s)
 
   // Boden: flottes Vorwärtstempo (2 × so schnell wie die erste Version, Kräfte 2² ×)
   G: 96,                    // Schwerkraft entlang der Hänge (am Boden)
@@ -150,8 +151,8 @@ const K = {
   KAM_BREITE_MIN: 58,       // so viele Meter sieht man mindestens nach vorn/hinten (Querformat)
   KAM_BREITE_MIN_HOCH: 54,  // … hochkant
   KAM_VORSCHAU: 0.95,       // Sekunden Vorschau: so viel Weg voraus ist mindestens zu sehen
-  KAM_RAND_OBEN: 7,         // Meter Luft über Kalle
-  KAM_RAND_UNTEN: 4,
+  KAM_RAND_OBEN: 4,         // Meter Luft über Kalle
+  KAM_RAND_UNTEN: 2,
   KAM_GLAETTE_ZOOM: 1.4,    // je größer, desto schneller folgt der Zoom (weich, kein Pumpen)
   KAM_GLAETTE_Y: 2.2,       // Höhe folgt weich
   KAM_TOLERANZ_ZOOM: 0.07,  // Zoom-Ziel ändert sich erst ab 7 % Unterschied (kein Nachregeln bei jedem Hüpfer)

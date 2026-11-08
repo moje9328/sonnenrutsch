@@ -5,6 +5,21 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Elfte Runde (8.11.2026): Handy – Bildgröße und „Zeitlupe“
+
+Rückmeldung: Auf dem Desktop läuft es gut, auf dem Handy passt die Bildgröße nicht und alles wirkt wie in Zeitlupe.
+
+**Gemessen (Chromium, Handy-Größen, CPU bis 8-fach gedrosselt):** Die Spielzeit lief schon vorher in Echtzeit (Spielzeit/Echtzeit 1,00 bei 4-, 6- und 8-facher Drosselung, 19–31 fps). Die Zeitlupe kam von der **Ansicht**: Auf flachen Handy-Bildschirmen bestimmt die Höhe den Zoom, und die Anzeige nahm 23–28 % der Höhe. Ergebnis 2,3 statt 4,8 Pixel je Meter, die Landschaft zog nur 0,35 statt 0,48 Bildbreiten pro Sekunde vorbei. Das fühlt sich auf einem kleinen Bildschirm doppelt langsam an.
+
+**Änderungen:**
+- Kompakte Anzeige auf flachen Querformat-Bildschirmen (`kopf.html`, Media-Query `max-height: 500px`): Name oben, Tageslicht und Strecke nebeneinander. Anzeige nur noch 12–16 % der Höhe (vorher 21–28 %). Tippflächen bleiben 40 px.
+- Kamerarand oben 7 → 4 m, unten 4 → 2 m (`KAM_RAND_OBEN/UNTEN`). Zoom bei festem Flug (844 px Breite): 4,5 statt 3,8 px/m, reale Läufe 0,41–0,46 statt 0,35–0,39 Bildbreiten/s (Desktop 0,49).
+- **Schärfer, aber nur wo das Gerät es schafft:** Auflösung bis ×2 (vorher fest ×1,5). Läuft die Bildrate 1,5 s lang unter 25 fps, wird sie in Schritten von 0,25 bis ×1 gesenkt (`Grafik.aufloesungSenken`, `bildzeitPruefen` in `9-app.js`). Gedrosselt gemessen: 60 fps ×2, 31 fps ×1,5, 25 fps ×1.
+- Echtzeit auch bei sehr langsamen Bildern: längste nachgerechnete Bildzeit 0,25 s statt 0,1 s, bis zu 60 statt 24 Physikschritte je Bild (`MAX_BILDZEIT`, `MAX_SCHRITTE`). Vorher hätte ein Gerät unter 10 fps tatsächlich in Zeitlupe gespielt.
+- `sw.js`: Cache `sonnenrutsch-v12`.
+- **Tests:** Chromium 183/183, WebKit 181/181. Neu: Anzeigehöhe und Kamera-Zoom bei 844×390, 667×375 und 568×320; gedrosselte CPU (nur Chromium): Echtzeit und sinkende Auflösung.
+- **Nicht geprüft:** echtes Handy (nur Emulation und CPU-Drosselung), Safari-Leiste und Notch auf echten iPhones, Bildrate auf echten Geräten.
+
 ## Zehnte Runde (8.11.2026): Sprungflächen, Luft-Reihen, mehr Abwechslung
 
 Wunsch (ausführlich): schnelleres, schwungvolleres Fluggefühl; mehr Muscheln auf den Hügeln; Sammelreihen in der Luft;

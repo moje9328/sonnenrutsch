@@ -492,6 +492,32 @@ async def main():
             ok(not pg.fehler, f'Sprungfläche ({bewegung}): keine Konsolenfehler {pg.fehler[:2]}')
             await ctx.close()
 
+        # Handy quer: kompakte Anzeige, Kamera nah genug, Auflösung passt sich an, Spiel läuft in Echtzeit
+        for (w, h) in [(844, 390), (667, 375), (568, 320)]:
+            ctx, pg = await neue_seite(b, w, h, touch=True, dpr=3)
+            await pg.evaluate('window.__sonne.starte(8)')
+            # Feste Flugsituationen (ohne Zufall): so nah zoomt die Kamera – vorher auf 844 px Breite bezogen 3,5 bis 4,2
+            zs = await pg.evaluate("""() => { const l = window.__sonne.lauf(); const out = []; const r = document.getElementById('bild').width / document.getElementById('bild').clientWidth;
+              for (const x of [300, 700, 1100, 1500, 1900, 2300, 2700]) { l.x = x; l.y = l.g.hoehe(x) + 25; l.boden = false; l.vx = 110; l.vy = 55; l.echterFlug = true; l.abflugX = x - 10; l.abflugY = l.y - 10; l.hoechstImFlug = l.y; out.push(Grafik.kameraZiel(l).z / r); } return out; }""")
+            hud = await pg.evaluate("document.getElementById('hud').getBoundingClientRect().bottom")
+            ok(hud <= h * 0.18, f'{w}x{h}: Anzeige nimmt höchstens 18 % der Höhe ({hud:.0f} px = {hud / h * 100:.0f} %)')
+            kleinster = min(zs) * 844 / w
+            ok(kleinster >= 4.0, f'{w}x{h}: Kamera nah genug – kleinster Zoom {kleinster:.2f} (auf 844 px Breite bezogen, mindestens 4,0)')
+            ok(not pg.fehler, f'{w}x{h}: keine Konsolenfehler {pg.fehler[:2]}')
+            await ctx.close()
+        # Gedrosselte CPU (wie ein schwaches Handy): Spielzeit = Echtzeit, Auflösung sinkt
+        ctx, pg = await neue_seite(b, 844, 390, touch=True, dpr=3)
+        if MOTOR == 'chromium':
+            cdp = await ctx.new_cdp_session(pg)
+            await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 8})
+            await pg.evaluate('window.__sonne.starte(8)')
+            await pg.evaluate(BOT_JS, 'gut')
+            await pg.wait_for_timeout(5000)
+            r = await pg.evaluate("new Promise(res => { const l = window.__sonne.lauf(); const z0 = l.zeit, t0 = performance.now(); setTimeout(() => res({ spiel: (l.zeit - z0) / ((performance.now() - t0) / 1000), dpr: Grafik.dprMax }), 4000); })")
+            ok(0.9 <= r['spiel'] <= 1.1, f'8-fach gedrosselte CPU: Spielzeit läuft in Echtzeit ({r["spiel"]:.2f})')
+            ok(r['dpr'] < 2, f'8-fach gedrosselte CPU: Auflösung wurde gesenkt (×{r["dpr"]})')
+        await ctx.close()
+
         # Weniger Bewegung
         ctx, pg = await neue_seite(b, 1280, 720, bewegung='reduce')
         await pg.evaluate('window.__sonne.starte(4)')

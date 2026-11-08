@@ -444,11 +444,23 @@
   }
 
   // ---------------------------------------------------------- Game Loop
+  // Schwaches Handy: Läuft die Bildrate länger deutlich unter 25 fps, wird die Auflösung stufenweise gesenkt
+  // (das Spiel selbst rechnet immer in Echtzeit). Pausen und Menüs zählen nicht.
+  let langsamZeit = 0, bildSumme = 0, bildAnzahl = 0;
+  function bildzeitPruefen(dt) {
+    if (!lauf || zustand !== 'lauf' || dt <= 0) { bildSumme = 0; bildAnzahl = 0; return; }
+    bildSumme += dt; bildAnzahl++;
+    if (bildSumme < 1.5) return;
+    const schnitt = bildSumme / bildAnzahl;
+    bildSumme = 0; bildAnzahl = 0;
+    if (schnitt > 0.04) { langsamZeit += 1; if (langsamZeit >= 1) { Grafik.aufloesungSenken(); langsamZeit = 0; } } else langsamZeit = 0;
+  }
   function rahmen(t) {
     requestAnimationFrame(rahmen);
     groesseAktuell();
-    const dt = Math.min(0.1, Math.max(0, (t - letzte) / 1000));
+    const dt = Math.min(K.MAX_BILDZEIT, Math.max(0, (t - letzte) / 1000));
     letzte = t;
+    bildzeitPruefen(dt);
     if (!lauf) { zeichneMenueHintergrund(dt); return; }
     const aktiv = zustand === 'lauf' || zustand === 'ende' || zustand === 'bereit';
     if (aktiv) {

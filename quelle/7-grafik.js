@@ -59,6 +59,7 @@ const Grafik = (() => {
   let leinwand, c, W = 1, H = 1, dpr = 1, cssW = 1, cssH = 1;
   const kam = { x: 0, b: 0, z: 10, bereit: false };
   let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
+  let dprMax = 2;          // höchste Bildauflösung (Pixel je CSS-Pixel); sinkt, wenn das Gerät nicht mitkommt
   let randLinks = 0;       // so viele CSS-Pixel von links deckt die Anzeige ab (für kurze Meldungen daneben)
   // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
   // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
@@ -83,7 +84,7 @@ const Grafik = (() => {
   function groesse() {
     const r = leinwand.getBoundingClientRect();
     cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);   // mehr sieht man kaum, kostet auf dem Handy aber viel Bildrate
+    dpr = Math.min(window.devicePixelRatio || 1, dprMax);   // scharf auf guten Handys; wird bei niedriger Bildrate schrittweise gesenkt (siehe aufloesungSenken)
     W = Math.round(cssW * dpr); H = Math.round(cssH * dpr);
     if (leinwand.width !== W || leinwand.height !== H) { leinwand.width = W; leinwand.height = H; }
   }
@@ -949,7 +950,10 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, meldung, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
+    init, groesse, zeichne, meldung,
+    // Gerät kommt nicht mit: Auflösung in Schritten senken (nie unter 1), das Bild bleibt gleich groß
+    aufloesungSenken() { if (dprMax <= 1.001) return false; dprMax = Math.max(1, dprMax - 0.25); groesse(); return true; },
+    get dprMax() { return dprMax; }, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
     // Ruf als kleine Sprechzeile über Kalle (fliegt mit)
     ruf(art) { text(0, 0, art === 'yippie' ? 'Yippie!' : 'Juhu!', art === 'yippie' ? '#ffd35a' : '#ffffff', art === 'yippie' ? 1.1 : 0.95); texte[texte.length - 1].folgt = true; }, ereignis, neuerLauf, profil, kamera, kameraZiel,
     get kam() { return kam; }, get hgX() { return hgX; }, get letztesF() { return letztesF; }, get sonneF() { return sonneF; },
