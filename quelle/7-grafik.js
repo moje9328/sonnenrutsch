@@ -60,6 +60,7 @@ const Grafik = (() => {
   const kam = { x: 0, b: 0, z: 10, bereit: false };
   let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
   let dprMax = 2;          // höchste Bildauflösung (Pixel je CSS-Pixel); sinkt, wenn das Gerät nicht mitkommt
+  let ansichtFaktor = 1;   // Kamera-Nähe (siehe K.ANSICHT)
   let randLinks = 0;       // so viele CSS-Pixel von links deckt die Anzeige ab (für kurze Meldungen daneben)
   // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
   // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
@@ -109,6 +110,8 @@ const Grafik = (() => {
     let z = Math.min(W / breite, (H - randOben * dpr) / hoeheNoetig);
     // Nie so nah, dass Kalle riesig wirkt, nie so weit, dass er verschwindet
     z = Math.min(z, W / (minB * 0.8));
+    // Gewählte Ansicht: näher heranzoomen. Kalle bleibt über das Sicherheitsnetz in kamera() immer im Bild.
+    z = Math.min(z * ansichtFaktor, W / (minB * 0.5));
     // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
     const frei = H / z - hoeheNoetig;
     const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.5 : 0.3), hoeheNoetig * (hochkant() ? 2 : 0.6)) : 0;
@@ -950,7 +953,7 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, meldung,
+    init, groesse, zeichne, meldung, setzeAnsicht(f) { ansichtFaktor = f; kam.bereit = false; }, get ansichtFaktor() { return ansichtFaktor; },
     // Gerät kommt nicht mit: Auflösung in Schritten senken (nie unter 1), das Bild bleibt gleich groß
     aufloesungSenken() { if (dprMax <= 1.001) return false; dprMax = Math.max(1, dprMax - 0.25); groesse(); return true; },
     get dprMax() { return dprMax; }, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },

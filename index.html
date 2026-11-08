@@ -380,20 +380,51 @@
     #erklaerung li { font-size: 14px; }
     #kette { top: 80px; }
   }
+  /* Flache Handy-Bildschirme (Querformat): Start- und Ergebnisfenster zweispaltig, damit sie ohne Scrollen auf den
+     Bildschirm passen (vorher 412–550 px hoch auf 320–390 px Bildschirmhöhe). Links Bild und Text, rechts Zahlen und Knöpfe. */
+  .links, .rechts { display: contents; }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #fenster { padding: max(6px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+    .tafel { padding: 10px 14px; }
+    #fStart, #fErfolg, #fNacht, #fEndlos { display: grid; grid-template-columns: minmax(130px, 0.7fr) 1.5fr; column-gap: 16px; align-items: center; }
+    #fStart.tafelInnen, .links, .rechts { display: block; }
+    #fErfolg > h2, #fNacht > h2, #fEndlos > h2 { grid-column: 1 / -1; text-align: center; margin-bottom: 4px; font-size: 14px; }
+    .tafel:has(#fStart:not([hidden])), .tafel:has(#fErfolg:not([hidden])), .tafel:has(#fNacht:not([hidden])), .tafel:has(#fEndlos:not([hidden])) { width: min(720px, 100%); }
+    #fStart h1 { font-size: 17px; }
+    #fStart .unterzeile { margin-top: 4px; font-size: 13px; }
+    #startKrabbe { width: 84px; height: 69px; margin: 2px auto 0; }
+    #erfolgKrabbe, #nachtKrabbe, #endlosKrabbe { width: 84px; height: 69px; margin: 0 auto; }
+    .spruch { margin: 4px 0 0; font-size: 13px; text-align: center; }
+    .sternreihe { font-size: 26px; margin: 4px 0 0; }
+    .zahlen { grid-template-columns: 1fr 1fr; gap: 3px 14px; margin-top: 0; }
+    .zahlen div { padding-bottom: 2px; gap: 6px; }
+    .zahlen dt { font-size: 11px; }
+    .zahlen dd { font-size: 11px; }
+    .zahlen .gross dd { font-size: 14px; }
+    .hervor { margin: 5px 0 0; padding: 4px 8px; font-size: 9px; }
+    .hinweistext { margin: 5px 0 0; font-size: 12px; }
+    .knoepfe { margin-top: 6px; gap: 6px; }
+    .knoepfe .knoepfe { margin-top: 0; }
+    .btn { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+    .btn.main { min-height: 42px; font-size: 13px; }
+    .btn.klein { min-height: 40px; font-size: 13px; }
+    .rekordzeile { margin: 3px 0 0; font-size: 12px; }
+    #fPause .knoepfe { margin-top: 8px; }
+  }
   /* Flache Handy-Bildschirme (Querformat): Anzeige kompakt, damit mehr vom Spiel zu sehen ist und die Kamera näher heranzoomt.
      Name oben, Tageslicht und Strecke nebeneinander, Punkte/Rekord klein darunter. */
   @media (orientation: landscape) and (max-height: 500px) {
     #hud { top: 4px; left: 6px; right: 6px; gap: 6px; }
     .hudblock { max-width: 460px; grid-template-columns: 1fr 1fr; column-gap: 10px; row-gap: 3px; padding: 4px 8px 5px; }
-    #hudName, #hudEndlos { grid-column: 1 / -1; font-size: 11px; line-height: 1.1; }
+    #hudName, #hudEndlos { grid-column: 1 / -1; font-size: 12px; line-height: 1.1; }
     .hudzeile { grid-template-columns: 16px 1fr auto; gap: 5px; }
     .hudzeile .ico { width: 16px; height: 16px; }
     .hudzeile .ico svg { width: 16px; height: 16px; }
-    .hudzeile b { font-size: 9px; min-width: 32px; }
-    .balken { height: 9px; border-radius: 5px; }
+    .hudzeile b { font-size: 10px; min-width: 34px; }
+    .balken { height: 10px; border-radius: 5px; }
     #wegKrabbe { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
-    #hudEndlos { font-size: 10px; }
-    #hudEndlos b { font-size: 9px; }
+    #hudEndlos { font-size: 11px; }
+    #hudEndlos b { font-size: 10px; }
     .hudrechts { gap: 4px; }
     #bonus { top: 66px; left: 8px; }
     #kette { top: 62px; }
@@ -466,10 +497,13 @@
   <div class="tafel" role="dialog" aria-modal="true" aria-labelledby="fStartTitel">
 
     <section id="fStart">
+      <div class="links">
       <p class="marke"><svg aria-hidden="true"><use href="#logo"/></svg>PIXELHAFEN</p>
       <h1 data-titel>SONNEN-<br>RUTSCH</h1>
       <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
       <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
+      </div>
+      <div class="rechts">
       <p class="duell" id="startDuell" hidden></p>
       <div class="knoepfe">
         <button class="btn main" id="spielenKnopf" type="button">Strecken</button>
@@ -481,9 +515,13 @@
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
         </div>
         <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein js-ansicht" type="button">Ansicht: Normal</button>
+        </div>
+        <div class="knoepfe zwei" style="margin-top:0">
           <button class="btn klein" id="freundeKnopf" type="button">Freunde herausfordern</button>
           <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
         </div>
+      </div>
       </div>
     </section>
 
@@ -512,15 +550,19 @@
           <button class="btn klein" id="pauseLevelKnopf" type="button">Streckenwahl</button>
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
         </div>
+        <button class="btn klein js-ansicht" type="button">Ansicht: Normal</button>
       </div>
     </section>
 
     <section id="fErfolg" hidden>
       <h2 data-titel id="erfolgTitel">Geschafft!</h2>
+      <div class="links">
       <canvas id="erfolgKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="erfolgSpruch"></p>
       <div class="sternreihe" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
       <p class="sr" id="sterneText"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Zeit</dt><dd id="eZeit">0</dd></div>
         <div><dt>Tageslicht übrig</dt><dd id="eRest">0</dd></div>
@@ -538,12 +580,16 @@
           <button class="btn klein" id="erfolgLevelKnopf" type="button">Streckenwahl</button>
         </div>
       </div>
+      </div>
     </section>
 
     <section id="fEndlos" hidden>
       <h2 data-titel id="endlosTitel">Die Sonne ist untergegangen</h2>
+      <div class="links">
       <canvas id="endlosKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="endlosSpruch"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Strecke</dt><dd id="enStrecke">0 m</dd></div>
         <div class="gross"><dt>Punkte</dt><dd id="enPunkte">0</dd></div>
@@ -560,12 +606,16 @@
         <button class="btn klein" id="endlosFreunde" type="button">Freunde herausfordern</button>
         <button class="btn klein" id="endlosMenue" type="button">Zum Menü</button>
       </div>
+      </div>
     </section>
 
     <section id="fNacht" hidden>
       <h2 data-titel>Die Sonne ist weg!</h2>
+      <div class="links">
       <canvas id="nachtKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="nachtSpruch"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Geschafft</dt><dd id="nAnteil">0 %</dd></div>
         <div><dt>Fehlten noch</dt><dd id="nRest">0 m</dd></div>
@@ -577,6 +627,7 @@
       <div class="knoepfe">
         <button class="btn main" id="nochmalKnopf" type="button">Sofort nochmal</button>
         <button class="btn klein" id="nachtLevelKnopf" type="button">Streckenwahl</button>
+      </div>
       </div>
     </section>
 
@@ -743,6 +794,11 @@ const K = {
   KAM_GLAETTE_Y: 2.2,       // Höhe folgt weich
   KAM_TOLERANZ_ZOOM: 0.07,  // Zoom-Ziel ändert sich erst ab 7 % Unterschied (kein Nachregeln bei jedem Hüpfer)
   KAM_TOLERANZ_Y: 4,        // Höhen-Ziel ändert sich erst ab 4 m Unterschied
+
+  // Ansicht (Knopf im Menü): wie nah die Kamera heranzoomt. Gilt zusätzlich zur automatischen Kamera.
+  ANSICHT: [1, 1.22, 1.45],  // normal, nah, sehr nah
+  ANSICHT_NAMEN: ['Normal', 'Nah', 'Sehr nah'],
+  ANSICHT_PHONE: 1,           // Standard auf flachen Touch-Bildschirmen, solange nichts gewählt wurde
 
   KRABBE_BREITE: 3.0,       // so breit wird Kalle gezeichnet (Meter)
   KRABBE_MIN_PIXEL: 54,     // aber nie schmaler als so viele CSS-Pixel
@@ -2356,7 +2412,7 @@ const Speicher = (() => {
   // Version 2 (Sprungflächen, Luft-Reihen, Bonuspunkte, Tempo-Anstieg): Endlos-Rekorde sind mit Version 1 nicht
   // vergleichbar. Die alten Rekorde bleiben unter endlosV1 erhalten, die neuen Rekorde beginnen bei null.
   const VERSION = 2;
-  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, mattenGesehen: false, endlos: { strecke: 0, punkte: 0 }, endlosV1: { strecke: 0, punkte: 0 } });
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, mattenGesehen: false, ansicht: null, endlos: { strecke: 0, punkte: 0 }, endlosV1: { strecke: 0, punkte: 0 } });
   const zahl = (v, max) => { const n = Math.floor(Number(v)); return n > 0 && n < max ? n : 0; };
   let daten = leer();
 
@@ -2370,6 +2426,7 @@ const Speicher = (() => {
     if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
     if (roh.lernGesehen === true) d.lernGesehen = true;
     if (roh.mattenGesehen === true) d.mattenGesehen = true;
+    if (roh.ansicht === 0 || roh.ansicht === 1 || roh.ansicht === 2) d.ansicht = roh.ansicht;   // null = noch nie gewählt (automatisch)
     // Endlos-Rekord: getrennt von den Streckenbestzeiten
     const endlosZiel = alt ? d.endlosV1 : d.endlos;
     if (roh.endlos && typeof roh.endlos === 'object') {
@@ -2413,6 +2470,8 @@ const Speicher = (() => {
     setzeKrabbe(n) { if (KRABBEN[n]) { daten.krabbe = n; sichern(); } },
     lernGesehen: () => daten.lernGesehen,
     setzeLernGesehen() { daten.lernGesehen = true; sichern(); },
+    ansicht: () => daten.ansicht,
+    setzeAnsicht(n) { if (n === 0 || n === 1 || n === 2) { daten.ansicht = n; sichern(); } },
     mattenGesehen: () => daten.mattenGesehen,
     setzeMattenGesehen() { daten.mattenGesehen = true; sichern(); },
     level: (id) => daten.level[id] || null,
@@ -2463,8 +2522,32 @@ const Speicher = (() => {
 // ===================================================================
 
 const Ton = (() => {
-  let ctx = null, haupt = null;
+  let ctx = null, haupt = null, stummAudio = null;
   let an = true;
+
+  // iPhone: Web-Audio ist bei aktivem Stumm-Schalter sonst stumm. „playback“ stellt die Audio-Sitzung wie bei
+  // einem Musikplayer ein (Safari ab 16.4). Ältere iOS-Versionen: ein unhörbarer Dauerton über ein Audio-Element.
+  function sitzung() {
+    try {
+      if (navigator.audioSession) { navigator.audioSession.type = 'playback'; return; }
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!ios) return;
+      if (!stummAudio) {
+        // 0,25 s Stille als WAV (8 kHz, 8 Bit)
+        const n = 2000, b = new Uint8Array(44 + n);
+        const w = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+        const d = new DataView(b.buffer);
+        w(0, 'RIFF'); d.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+        d.setUint32(24, 8000, true); d.setUint32(28, 8000, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true); w(36, 'data'); d.setUint32(40, n, true);
+        b.fill(128, 44);
+        let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+        stummAudio = new Audio('data:audio/wav;base64,' + btoa(bin));
+        stummAudio.loop = true; stummAudio.volume = 0.01;
+        stummAudio.setAttribute('playsinline', '');
+      }
+      stummAudio.play().catch(() => {});
+    } catch (e) { /* egal */ }
+  }
 
   function wecke() {
     if (!an) return;
@@ -2476,10 +2559,12 @@ const Ton = (() => {
         const komp = ctx.createDynamicsCompressor();
         komp.threshold.value = -16; komp.knee.value = 10; komp.ratio.value = 6;
         haupt = ctx.createGain();
-        haupt.gain.value = 0.5;
+        haupt.gain.value = 0.8;   // Handy-Lautsprecher sind leise: etwas mehr Grundlautstärke (der Kompressor fängt Spitzen ab)
         haupt.connect(komp).connect(ctx.destination);
       }
-      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      // Auch „interrupted“ (iOS nach Anruf/Appwechsel) wieder aufwecken, nicht nur „suspended“
+      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      sitzung();
     } catch (e) { ctx = null; }
   }
   const bereit = () => an && ctx && ctx.state === 'running';
@@ -2506,10 +2591,11 @@ const Ton = (() => {
   return {
     wecke,
     istAn: () => an,
+    status: () => ({ kontext: ctx ? ctx.state : 'keiner', an }),   // für Tests
     setze(wert) {
       an = !!wert;
       if (an) wecke();
-      else if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+      else { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); if (stummAudio) stummAudio.pause(); }
     },
     // Kein Rutsch- oder Windrauschen mehr (Wunsch: Rauschen entfernt). Bleibt als leere
     // Schnittstelle, damit der restliche Code unverändert bleibt.
@@ -2806,6 +2892,7 @@ const Grafik = (() => {
   const kam = { x: 0, b: 0, z: 10, bereit: false };
   let randOben = 0;        // so viele CSS-Pixel oben deckt die Anzeige ab
   let dprMax = 2;          // höchste Bildauflösung (Pixel je CSS-Pixel); sinkt, wenn das Gerät nicht mitkommt
+  let ansichtFaktor = 1;   // Kamera-Nähe (siehe K.ANSICHT)
   let randLinks = 0;       // so viele CSS-Pixel von links deckt die Anzeige ab (für kurze Meldungen daneben)
   // Hintergrund-Parallaxe: eigener Zähler, der NUR mit der waagerechten Kamerabewegung wächst
   // (in festen „Hintergrund-Pixeln“ je Meter). Früher hing die Verschiebung vom Produkt
@@ -2855,6 +2942,8 @@ const Grafik = (() => {
     let z = Math.min(W / breite, (H - randOben * dpr) / hoeheNoetig);
     // Nie so nah, dass Kalle riesig wirkt, nie so weit, dass er verschwindet
     z = Math.min(z, W / (minB * 0.8));
+    // Gewählte Ansicht: näher heranzoomen. Kalle bleibt über das Sicherheitsnetz in kamera() immer im Bild.
+    z = Math.min(z * ansichtFaktor, W / (minB * 0.5));
     // Übrige Höhe: zum Teil unter das Gelände legen, damit der Boden nicht am Rand klebt
     const frei = H / z - hoeheNoetig;
     const tiefer = frei > 0 ? Math.min(frei * (hochkant() ? 0.5 : 0.3), hoeheNoetig * (hochkant() ? 2 : 0.6)) : 0;
@@ -3696,7 +3785,7 @@ const Grafik = (() => {
   }
 
   return {
-    init, groesse, zeichne, meldung,
+    init, groesse, zeichne, meldung, setzeAnsicht(f) { ansichtFaktor = f; kam.bereit = false; }, get ansichtFaktor() { return ansichtFaktor; },
     // Gerät kommt nicht mit: Auflösung in Schritten senken (nie unter 1), das Bild bleibt gleich groß
     aufloesungSenken() { if (dprMax <= 1.001) return false; dprMax = Math.max(1, dprMax - 0.25); groesse(); return true; },
     get dprMax() { return dprMax; }, setzeRandOben(px, rechts) { randOben = px; randLinks = rechts || 0; },
@@ -4162,6 +4251,18 @@ const PixelDuell = (() => {
     $('tonKnopfHud').setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
   }
   function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) { Ton.still(); Rufe.stopp(); } }
+  // Ansicht (Kamera-Nähe): gewählter Wert, sonst auf flachen Touch-Bildschirmen „Nah“
+  function ansichtNr() {
+    const a = Speicher.ansicht();
+    if (a !== null) return a;
+    return matchMedia('(pointer: coarse)').matches && Math.min(innerWidth, innerHeight) <= 500 ? K.ANSICHT_PHONE : 0;
+  }
+  function ansichtAnwenden() {
+    const n = ansichtNr();
+    Grafik.setzeAnsicht(K.ANSICHT[n]);
+    for (const k of document.querySelectorAll('.js-ansicht')) k.textContent = 'Ansicht: ' + K.ANSICHT_NAMEN[n];
+  }
+  for (const k of document.querySelectorAll('.js-ansicht')) k.addEventListener('click', () => { Speicher.setzeAnsicht((ansichtNr() + 1) % K.ANSICHT.length); Ton.klick(); ansichtAnwenden(); });
   Ton.setze(Speicher.tonAn());
   tonKnoepfe();
   for (const k of document.querySelectorAll('.js-ton')) k.addEventListener('click', () => { tonUmschalten(); Ton.klick(); });
@@ -4695,6 +4796,7 @@ const PixelDuell = (() => {
 
   // ---------------------------------------------------------- Start
   Grafik.init(leinwand);
+  ansichtAnwenden();
   // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
   function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6, Math.max(0, r.right - b.left)); }
   window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
@@ -4742,6 +4844,7 @@ const PixelDuell = (() => {
     krabbeImBild: () => Grafik.krabbeImBild(lauf),
     bodenImBild: (x) => Grafik.bodenImBild(lauf, x),
     speicher: Speicher,
+    ansicht: () => ansichtNr(),
   };
 })();
 

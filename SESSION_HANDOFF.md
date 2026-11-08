@@ -5,6 +5,21 @@ Krabbenalarm als Hauptfigur. **Online:** https://moje9328.github.io/sonnenrutsch
 (Repo `moje9328/sonnenrutsch`, Pages von main /, Karte auf https://moje9328.github.io/spiele/).
 Krabbenalarm und Krabben-Krawall wurden nicht verändert.
 
+## Zwölfte Runde (8.11.2026): Handy – Fenster, Ansicht, Ton
+
+Rückmeldung: „Es ist immer noch zu klein, das Bildformat passt nicht. Schau, ob auch der Sound am Handy zu hören ist.“
+
+**Gefunden (Emulation 844×390, 667×375, 568×320):** Start-, Pause- und vor allem die Ergebnisfenster waren 412–550 px hoch, der Bildschirm nur 320–390 px. Sie wurden abgeschnitten und mussten gescrollt werden – das ist sehr wahrscheinlich das „Bildformat passt nicht“.
+
+**Änderungen:**
+- **Zweispaltige Fenster auf flachen Querformat-Bildschirmen** (`kopf.html`: Wrapper `.links`/`.rechts`, auf großen Bildschirmen `display: contents`, also unverändert). Start ≈ 205 px, Ergebnis 170–263 px hoch, alles ohne Scrollen. Tippflächen ≥ 40 px.
+- **Ansicht-Knopf** (Startmenü und Pause): Normal / Nah / Sehr nah (`K.ANSICHT` 1 / 1,22 / 1,45), wird gemerkt (`Speicher.ansicht`, `null` = automatisch). Auf flachen Touch-Bildschirmen ist „Nah“ der Standard, solange nichts gewählt wurde. Kalle bleibt über das Sicherheitsnetz der Kamera immer im Bild.
+- Anzeigeschrift auf dem Handy wieder etwas größer (10–12 px statt 9–11 px).
+- **Ton:** (1) `navigator.audioSession.type = 'playback'` (Safari ab 16.4), sonst ein unhörbarer Dauerton über ein Audio-Element auf älteren iPhones – sonst bleibt Web-Audio bei aktivem Stumm-Schalter stumm. (2) Ein unterbrochener Audio-Kontext (`interrupted`, iOS nach Anruf oder Appwechsel) wird bei der nächsten Berührung wieder geweckt, vorher nur `suspended`. (3) Grundlautstärke 0,5 → 0,8 (Handy-Lautsprecher sind leise, tiefe Töne kaum hörbar). `Ton.status()` für Tests.
+- `sw.js`: Cache `sonnenrutsch-v13`.
+- **Tests:** Chromium 198/198, WebKit 196/196. Neu: Fensterhöhen und -breiten bei drei Handy-Größen, Ansicht (Stufen, Zoom, Speichern, Standard), Audio-Kontext läuft nach dem ersten Tippen, Audio-Sitzung.
+- **Nicht geprüft:** Ob auf einem echten Handy wirklich etwas zu hören ist (Tests prüfen nur, dass der Audio-Kontext läuft), Stumm-Schalter, Lautstärke, Notch/Browserleiste auf echten Geräten.
+
 ## Elfte Runde (8.11.2026): Handy – Bildgröße und „Zeitlupe“
 
 Rückmeldung: Auf dem Desktop läuft es gut, auf dem Handy passt die Bildgröße nicht und alles wirkt wie in Zeitlupe.

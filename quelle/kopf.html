@@ -153,20 +153,51 @@
     #erklaerung li { font-size: 14px; }
     #kette { top: 80px; }
   }
+  /* Flache Handy-Bildschirme (Querformat): Start- und Ergebnisfenster zweispaltig, damit sie ohne Scrollen auf den
+     Bildschirm passen (vorher 412–550 px hoch auf 320–390 px Bildschirmhöhe). Links Bild und Text, rechts Zahlen und Knöpfe. */
+  .links, .rechts { display: contents; }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #fenster { padding: max(6px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+    .tafel { padding: 10px 14px; }
+    #fStart, #fErfolg, #fNacht, #fEndlos { display: grid; grid-template-columns: minmax(130px, 0.7fr) 1.5fr; column-gap: 16px; align-items: center; }
+    #fStart.tafelInnen, .links, .rechts { display: block; }
+    #fErfolg > h2, #fNacht > h2, #fEndlos > h2 { grid-column: 1 / -1; text-align: center; margin-bottom: 4px; font-size: 14px; }
+    .tafel:has(#fStart:not([hidden])), .tafel:has(#fErfolg:not([hidden])), .tafel:has(#fNacht:not([hidden])), .tafel:has(#fEndlos:not([hidden])) { width: min(720px, 100%); }
+    #fStart h1 { font-size: 17px; }
+    #fStart .unterzeile { margin-top: 4px; font-size: 13px; }
+    #startKrabbe { width: 84px; height: 69px; margin: 2px auto 0; }
+    #erfolgKrabbe, #nachtKrabbe, #endlosKrabbe { width: 84px; height: 69px; margin: 0 auto; }
+    .spruch { margin: 4px 0 0; font-size: 13px; text-align: center; }
+    .sternreihe { font-size: 26px; margin: 4px 0 0; }
+    .zahlen { grid-template-columns: 1fr 1fr; gap: 3px 14px; margin-top: 0; }
+    .zahlen div { padding-bottom: 2px; gap: 6px; }
+    .zahlen dt { font-size: 11px; }
+    .zahlen dd { font-size: 11px; }
+    .zahlen .gross dd { font-size: 14px; }
+    .hervor { margin: 5px 0 0; padding: 4px 8px; font-size: 9px; }
+    .hinweistext { margin: 5px 0 0; font-size: 12px; }
+    .knoepfe { margin-top: 6px; gap: 6px; }
+    .knoepfe .knoepfe { margin-top: 0; }
+    .btn { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+    .btn.main { min-height: 42px; font-size: 13px; }
+    .btn.klein { min-height: 40px; font-size: 13px; }
+    .rekordzeile { margin: 3px 0 0; font-size: 12px; }
+    #fPause .knoepfe { margin-top: 8px; }
+  }
   /* Flache Handy-Bildschirme (Querformat): Anzeige kompakt, damit mehr vom Spiel zu sehen ist und die Kamera näher heranzoomt.
      Name oben, Tageslicht und Strecke nebeneinander, Punkte/Rekord klein darunter. */
   @media (orientation: landscape) and (max-height: 500px) {
     #hud { top: 4px; left: 6px; right: 6px; gap: 6px; }
     .hudblock { max-width: 460px; grid-template-columns: 1fr 1fr; column-gap: 10px; row-gap: 3px; padding: 4px 8px 5px; }
-    #hudName, #hudEndlos { grid-column: 1 / -1; font-size: 11px; line-height: 1.1; }
+    #hudName, #hudEndlos { grid-column: 1 / -1; font-size: 12px; line-height: 1.1; }
     .hudzeile { grid-template-columns: 16px 1fr auto; gap: 5px; }
     .hudzeile .ico { width: 16px; height: 16px; }
     .hudzeile .ico svg { width: 16px; height: 16px; }
-    .hudzeile b { font-size: 9px; min-width: 32px; }
-    .balken { height: 9px; border-radius: 5px; }
+    .hudzeile b { font-size: 10px; min-width: 34px; }
+    .balken { height: 10px; border-radius: 5px; }
     #wegKrabbe { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
-    #hudEndlos { font-size: 10px; }
-    #hudEndlos b { font-size: 9px; }
+    #hudEndlos { font-size: 11px; }
+    #hudEndlos b { font-size: 10px; }
     .hudrechts { gap: 4px; }
     #bonus { top: 66px; left: 8px; }
     #kette { top: 62px; }
@@ -239,10 +270,13 @@
   <div class="tafel" role="dialog" aria-modal="true" aria-labelledby="fStartTitel">
 
     <section id="fStart">
+      <div class="links">
       <p class="marke"><svg aria-hidden="true"><use href="#logo"/></svg>PIXELHAFEN</p>
       <h1 data-titel>SONNEN-<br>RUTSCH</h1>
       <canvas id="startKrabbe" width="352" height="288" aria-hidden="true"></canvas>
       <p class="unterzeile">Kalle will zum Strand, bevor die Sonne untergeht.</p>
+      </div>
+      <div class="rechts">
       <p class="duell" id="startDuell" hidden></p>
       <div class="knoepfe">
         <button class="btn main" id="spielenKnopf" type="button">Strecken</button>
@@ -254,9 +288,13 @@
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
         </div>
         <div class="knoepfe zwei" style="margin-top:0">
+          <button class="btn klein js-ansicht" type="button">Ansicht: Normal</button>
+        </div>
+        <div class="knoepfe zwei" style="margin-top:0">
           <button class="btn klein" id="freundeKnopf" type="button">Freunde herausfordern</button>
           <a class="btn klein" href="https://moje9328.github.io/spiele/">Zur Pixelhafen-Seite</a>
         </div>
+      </div>
       </div>
     </section>
 
@@ -285,15 +323,19 @@
           <button class="btn klein" id="pauseLevelKnopf" type="button">Streckenwahl</button>
           <button class="btn klein js-ton" type="button" aria-pressed="true">Ton: an</button>
         </div>
+        <button class="btn klein js-ansicht" type="button">Ansicht: Normal</button>
       </div>
     </section>
 
     <section id="fErfolg" hidden>
       <h2 data-titel id="erfolgTitel">Geschafft!</h2>
+      <div class="links">
       <canvas id="erfolgKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="erfolgSpruch"></p>
       <div class="sternreihe" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
       <p class="sr" id="sterneText"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Zeit</dt><dd id="eZeit">0</dd></div>
         <div><dt>Tageslicht übrig</dt><dd id="eRest">0</dd></div>
@@ -311,12 +353,16 @@
           <button class="btn klein" id="erfolgLevelKnopf" type="button">Streckenwahl</button>
         </div>
       </div>
+      </div>
     </section>
 
     <section id="fEndlos" hidden>
       <h2 data-titel id="endlosTitel">Die Sonne ist untergegangen</h2>
+      <div class="links">
       <canvas id="endlosKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="endlosSpruch"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Strecke</dt><dd id="enStrecke">0 m</dd></div>
         <div class="gross"><dt>Punkte</dt><dd id="enPunkte">0</dd></div>
@@ -333,12 +379,16 @@
         <button class="btn klein" id="endlosFreunde" type="button">Freunde herausfordern</button>
         <button class="btn klein" id="endlosMenue" type="button">Zum Menü</button>
       </div>
+      </div>
     </section>
 
     <section id="fNacht" hidden>
       <h2 data-titel>Die Sonne ist weg!</h2>
+      <div class="links">
       <canvas id="nachtKrabbe" width="220" height="180" aria-hidden="true"></canvas>
       <p class="spruch" id="nachtSpruch"></p>
+      </div>
+      <div class="rechts">
       <dl class="zahlen">
         <div class="gross"><dt>Geschafft</dt><dd id="nAnteil">0 %</dd></div>
         <div><dt>Fehlten noch</dt><dd id="nRest">0 m</dd></div>
@@ -350,6 +400,7 @@
       <div class="knoepfe">
         <button class="btn main" id="nochmalKnopf" type="button">Sofort nochmal</button>
         <button class="btn klein" id="nachtLevelKnopf" type="button">Streckenwahl</button>
+      </div>
       </div>
     </section>
 

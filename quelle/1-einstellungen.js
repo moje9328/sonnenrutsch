@@ -158,6 +158,11 @@ const K = {
   KAM_TOLERANZ_ZOOM: 0.07,  // Zoom-Ziel ändert sich erst ab 7 % Unterschied (kein Nachregeln bei jedem Hüpfer)
   KAM_TOLERANZ_Y: 4,        // Höhen-Ziel ändert sich erst ab 4 m Unterschied
 
+  // Ansicht (Knopf im Menü): wie nah die Kamera heranzoomt. Gilt zusätzlich zur automatischen Kamera.
+  ANSICHT: [1, 1.22, 1.45],  // normal, nah, sehr nah
+  ANSICHT_NAMEN: ['Normal', 'Nah', 'Sehr nah'],
+  ANSICHT_PHONE: 1,           // Standard auf flachen Touch-Bildschirmen, solange nichts gewählt wurde
+
   KRABBE_BREITE: 3.0,       // so breit wird Kalle gezeichnet (Meter)
   KRABBE_MIN_PIXEL: 54,     // aber nie schmaler als so viele CSS-Pixel
 };

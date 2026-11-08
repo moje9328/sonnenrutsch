@@ -5,8 +5,32 @@
 // ===================================================================
 
 const Ton = (() => {
-  let ctx = null, haupt = null;
+  let ctx = null, haupt = null, stummAudio = null;
   let an = true;
+
+  // iPhone: Web-Audio ist bei aktivem Stumm-Schalter sonst stumm. „playback“ stellt die Audio-Sitzung wie bei
+  // einem Musikplayer ein (Safari ab 16.4). Ältere iOS-Versionen: ein unhörbarer Dauerton über ein Audio-Element.
+  function sitzung() {
+    try {
+      if (navigator.audioSession) { navigator.audioSession.type = 'playback'; return; }
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!ios) return;
+      if (!stummAudio) {
+        // 0,25 s Stille als WAV (8 kHz, 8 Bit)
+        const n = 2000, b = new Uint8Array(44 + n);
+        const w = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+        const d = new DataView(b.buffer);
+        w(0, 'RIFF'); d.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+        d.setUint32(24, 8000, true); d.setUint32(28, 8000, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true); w(36, 'data'); d.setUint32(40, n, true);
+        b.fill(128, 44);
+        let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+        stummAudio = new Audio('data:audio/wav;base64,' + btoa(bin));
+        stummAudio.loop = true; stummAudio.volume = 0.01;
+        stummAudio.setAttribute('playsinline', '');
+      }
+      stummAudio.play().catch(() => {});
+    } catch (e) { /* egal */ }
+  }
 
   function wecke() {
     if (!an) return;
@@ -18,10 +42,12 @@ const Ton = (() => {
         const komp = ctx.createDynamicsCompressor();
         komp.threshold.value = -16; komp.knee.value = 10; komp.ratio.value = 6;
         haupt = ctx.createGain();
-        haupt.gain.value = 0.5;
+        haupt.gain.value = 0.8;   // Handy-Lautsprecher sind leise: etwas mehr Grundlautstärke (der Kompressor fängt Spitzen ab)
         haupt.connect(komp).connect(ctx.destination);
       }
-      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      // Auch „interrupted“ (iOS nach Anruf/Appwechsel) wieder aufwecken, nicht nur „suspended“
+      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      sitzung();
     } catch (e) { ctx = null; }
   }
   const bereit = () => an && ctx && ctx.state === 'running';
@@ -48,10 +74,11 @@ const Ton = (() => {
   return {
     wecke,
     istAn: () => an,
+    status: () => ({ kontext: ctx ? ctx.state : 'keiner', an }),   // für Tests
     setze(wert) {
       an = !!wert;
       if (an) wecke();
-      else if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+      else { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); if (stummAudio) stummAudio.pause(); }
     },
     // Kein Rutsch- oder Windrauschen mehr (Wunsch: Rauschen entfernt). Bleibt als leere
     // Schnittstelle, damit der restliche Code unverändert bleibt.

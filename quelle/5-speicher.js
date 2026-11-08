@@ -10,7 +10,7 @@ const Speicher = (() => {
   // Version 2 (Sprungflächen, Luft-Reihen, Bonuspunkte, Tempo-Anstieg): Endlos-Rekorde sind mit Version 1 nicht
   // vergleichbar. Die alten Rekorde bleiben unter endlosV1 erhalten, die neuen Rekorde beginnen bei null.
   const VERSION = 2;
-  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, mattenGesehen: false, endlos: { strecke: 0, punkte: 0 }, endlosV1: { strecke: 0, punkte: 0 } });
+  const leer = () => ({ version: VERSION, ton: true, krabbe: 'kalle', frei: 1, level: {}, lernGesehen: false, mattenGesehen: false, ansicht: null, endlos: { strecke: 0, punkte: 0 }, endlosV1: { strecke: 0, punkte: 0 } });
   const zahl = (v, max) => { const n = Math.floor(Number(v)); return n > 0 && n < max ? n : 0; };
   let daten = leer();
 
@@ -24,6 +24,7 @@ const Speicher = (() => {
     if (typeof roh.krabbe === 'string' && KRABBEN[roh.krabbe]) d.krabbe = roh.krabbe;
     if (roh.lernGesehen === true) d.lernGesehen = true;
     if (roh.mattenGesehen === true) d.mattenGesehen = true;
+    if (roh.ansicht === 0 || roh.ansicht === 1 || roh.ansicht === 2) d.ansicht = roh.ansicht;   // null = noch nie gewählt (automatisch)
     // Endlos-Rekord: getrennt von den Streckenbestzeiten
     const endlosZiel = alt ? d.endlosV1 : d.endlos;
     if (roh.endlos && typeof roh.endlos === 'object') {
@@ -67,6 +68,8 @@ const Speicher = (() => {
     setzeKrabbe(n) { if (KRABBEN[n]) { daten.krabbe = n; sichern(); } },
     lernGesehen: () => daten.lernGesehen,
     setzeLernGesehen() { daten.lernGesehen = true; sichern(); },
+    ansicht: () => daten.ansicht,
+    setzeAnsicht(n) { if (n === 0 || n === 1 || n === 2) { daten.ansicht = n; sichern(); } },
     mattenGesehen: () => daten.mattenGesehen,
     setzeMattenGesehen() { daten.mattenGesehen = true; sichern(); },
     level: (id) => daten.level[id] || null,

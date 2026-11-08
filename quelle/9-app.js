@@ -53,6 +53,18 @@
     $('tonKnopfHud').setAttribute('aria-pressed', Ton.istAn() ? 'true' : 'false');
   }
   function tonUmschalten() { Ton.setze(!Ton.istAn()); Speicher.setzeTon(Ton.istAn()); tonKnoepfe(); if (!Ton.istAn()) { Ton.still(); Rufe.stopp(); } }
+  // Ansicht (Kamera-Nähe): gewählter Wert, sonst auf flachen Touch-Bildschirmen „Nah“
+  function ansichtNr() {
+    const a = Speicher.ansicht();
+    if (a !== null) return a;
+    return matchMedia('(pointer: coarse)').matches && Math.min(innerWidth, innerHeight) <= 500 ? K.ANSICHT_PHONE : 0;
+  }
+  function ansichtAnwenden() {
+    const n = ansichtNr();
+    Grafik.setzeAnsicht(K.ANSICHT[n]);
+    for (const k of document.querySelectorAll('.js-ansicht')) k.textContent = 'Ansicht: ' + K.ANSICHT_NAMEN[n];
+  }
+  for (const k of document.querySelectorAll('.js-ansicht')) k.addEventListener('click', () => { Speicher.setzeAnsicht((ansichtNr() + 1) % K.ANSICHT.length); Ton.klick(); ansichtAnwenden(); });
   Ton.setze(Speicher.tonAn());
   tonKnoepfe();
   for (const k of document.querySelectorAll('.js-ton')) k.addEventListener('click', () => { tonUmschalten(); Ton.klick(); });
@@ -586,6 +598,7 @@
 
   // ---------------------------------------------------------- Start
   Grafik.init(leinwand);
+  ansichtAnwenden();
   // Platz der Anzeige oben an die Kamera melden (Kalle soll nie dahinter fliegen)
   function randMessen() { const r = $('hud').getBoundingClientRect(), b = $('buehne').getBoundingClientRect(); Grafik.setzeRandOben(Math.max(0, r.bottom - b.top) + 6, Math.max(0, r.right - b.left)); }
   window.addEventListener('resize', () => { Grafik.groesse(); randMessen(); });
@@ -633,5 +646,6 @@
     krabbeImBild: () => Grafik.krabbeImBild(lauf),
     bodenImBild: (x) => Grafik.bodenImBild(lauf, x),
     speicher: Speicher,
+    ansicht: () => ansichtNr(),
   };
 })();

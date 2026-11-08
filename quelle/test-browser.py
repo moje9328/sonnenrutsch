@@ -518,6 +518,50 @@ async def main():
             ok(r['dpr'] < 2, f'8-fach gedrosselte CPU: Auflösung wurde gesenkt (×{r["dpr"]})')
         await ctx.close()
 
+        # Handy quer: Start- und Ergebnisfenster passen ohne Scrollen auf den Bildschirm (vorher 412–550 px hoch auf 320–390 px)
+        for (w, h) in [(844, 390), (667, 375), (568, 320)]:
+            ctx, pg = await neue_seite(b, w, h, touch=True, dpr=2)
+            hoehen = {}
+            for sek in ['fStart', 'fPause', 'fKrabben', 'fErfolg', 'fNacht', 'fEndlos']:
+                hoehen[sek] = await pg.evaluate("""(id) => { for (const s of ['fStart','fKrabben','fLevel','fPause','fErfolg','fNacht','fEndlos']) document.getElementById(s).hidden = s !== id; const f = document.getElementById('fenster'); f.hidden = false; const t = f.querySelector('.tafel'); t.classList.toggle('breit', false); const r = t.getBoundingClientRect(); return [r.height, r.width, r.right, innerWidth]; }""", sek)
+            zu_hoch = {k: round(v[0]) for k, v in hoehen.items() if v[0] > h - 12}
+            ok(not zu_hoch, f'{w}x{h}: Fenster passen ohne Scrollen auf den Bildschirm ({zu_hoch or "alle"}; Höchstes {max(round(v[0]) for v in hoehen.values())} px)')
+            ok(all(v[2] <= v[3] + 0.5 for v in hoehen.values()), f'{w}x{h}: kein Fenster ragt seitlich heraus')
+            await ctx.close()
+
+        # Ansicht (Kamera-Nähe): Knopf wechselt Normal → Nah → Sehr nah, wird gemerkt, Standard auf dem Handy „Nah“
+        ctx, pg = await neue_seite(b, 844, 390, touch=True, dpr=2)
+        ok(await pg.evaluate('window.__sonne.ansicht()') == 1, 'Handy-Standard: Ansicht „Nah“, solange nichts gewählt wurde')
+        z = []
+        for i in range(3):
+            await pg.evaluate("window.__sonne.starte(8)")
+            z.append(await pg.evaluate("(() => { const l = window.__sonne.lauf(); l.x = 700; l.y = l.g.hoehe(700); l.boden = true; l.v = 120; Grafik.kamera(l, 0, true); return Grafik.kam.z; })()"))
+            await pg.evaluate("window.__sonne.speicher.setzeAnsicht(%d); document.querySelector('.js-ansicht').click(); " % (i % 3))   # klickt eine Stufe weiter
+        txt = await pg.evaluate("document.querySelector('.js-ansicht').textContent")
+        ok(txt.startswith('Ansicht: '), f'Ansichts-Knopf zeigt die Stufe ({txt})')
+        for n, name in [(0, 'Normal'), (1, 'Nah'), (2, 'Sehr nah')]:
+            await pg.evaluate("window.__sonne.speicher.setzeAnsicht(%d); Grafik.setzeAnsicht(K.ANSICHT[%d])" % (n, n))
+            z[n] = await pg.evaluate("(() => { window.__sonne.starte(8); const l = window.__sonne.lauf(); l.x = 700; l.y = l.g.hoehe(700); l.boden = true; l.v = 120; Grafik.kamera(l, 0, true); return Grafik.kam.z; })()")
+        ok(z[0] < z[1] < z[2], f'Ansicht: Normal < Nah < Sehr nah im Zoom ({z[0]:.2f} < {z[1]:.2f} < {z[2]:.2f})')
+        await pg.evaluate("window.__sonne.speicher.setzeAnsicht(2)")
+        await pg.reload(); await pg.wait_for_timeout(400)
+        ok(await pg.evaluate('window.__sonne.ansicht()') == 2, 'gewählte Ansicht bleibt nach dem Neuladen')
+        ok(not pg.fehler, f'Ansicht: keine Konsolenfehler {pg.fehler[:2]}')
+        await ctx.close()
+
+        # Ton: nach Berühren ist der Audio-Kontext „running“, auch wenn kein Menü-Knopf gedrückt wurde; iPhone-Sitzung auf „playback“
+        ctx, pg = await neue_seite(b, 844, 390, touch=True, dpr=2)
+        vor = await pg.evaluate("Ton.status().kontext")
+        ok(isinstance(vor, str), f'Ton: Status abrufbar ({vor})')
+        await pg.tap('#spielenKnopf')
+        await pg.wait_for_timeout(300)
+        st = await pg.evaluate("Ton.status()")
+        ok(st['kontext'] == 'running' and st['an'], f'Ton: Audio-Kontext läuft nach dem ersten Tippen ({st})')
+        at = await pg.evaluate("navigator.audioSession ? navigator.audioSession.type : 'nicht vorhanden'")
+        ok(at in ('playback', 'nicht vorhanden'), f'Ton: Audio-Sitzung auf „playback“ (oder Browser kennt sie nicht): {at}')
+        ok(not pg.fehler, f'Ton: keine Konsolenfehler {pg.fehler[:2]}')
+        await ctx.close()
+
         # Weniger Bewegung
         ctx, pg = await neue_seite(b, 1280, 720, bewegung='reduce')
         await pg.evaluate('window.__sonne.starte(4)')
