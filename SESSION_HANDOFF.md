@@ -447,3 +447,7 @@ ein paar Zwischenbuckel und weniger Zeitpuffer (Tageslicht/guter Bot von ×1,9 a
 - Wie die Juhuu-Stimme klingt, konnte ich nicht hören – bitte am Gerät beurteilen (Tonhöhe in `abflug()` in `6-ton.js`).
 - Bei Updates: `sw.js` CACHE (zurzeit `sonnenrutsch-v8`) hochzählen, committen, pushen. In `~/spiele-seite` nur gezielt stagen – Hafenlotse und Bewertungen liegen dort uncommittet und dürfen nicht mit hoch.
 - Ideen für später: Freundes-Rangliste per Link wie bei Steinbrecher, leise Musik, Geist-Kalle der Bestzeit.
+
+
+## Runde 9. November 2026: Ton erst nach Nutzeraktion
+`Ton.setze()` erzeugte beim Laden (gespeichertes „Ton an“) schon einen Audiokontext, bevor es eine Berührung gab. Jetzt wird er erst nach der ersten Nutzeraktion erzeugt (`navigator.userActivation`), vorher nicht. Cache `sonnenrutsch-v14`.

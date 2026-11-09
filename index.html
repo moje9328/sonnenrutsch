@@ -2594,7 +2594,8 @@ const Ton = (() => {
     status: () => ({ kontext: ctx ? ctx.state : 'keiner', an }),   // für Tests
     setze(wert) {
       an = !!wert;
-      if (an) wecke();
+      // Beim Laden (noch keine Berührung) wird kein Audiokontext erzeugt: Ton startet erst nach Nutzeraktion
+      if (an) { if (ctx || !navigator.userActivation || navigator.userActivation.hasBeenActive) wecke(); }
       else { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); if (stummAudio) stummAudio.pause(); }
     },
     // Kein Rutsch- oder Windrauschen mehr (Wunsch: Rauschen entfernt). Bleibt als leere
